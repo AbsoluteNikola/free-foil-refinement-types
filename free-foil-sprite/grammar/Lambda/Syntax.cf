@@ -1,0 +1,36 @@
+
+token VarIdent lower (letter | digit | '_')* ;
+
+-- expr terms
+ConstInt.     Term ::= Integer ;
+Var.          Term ::= VarIdent ;
+Let.          Term ::= "let" Term "=" Pattern ";" ScopedTerm ;  -- FIXME: requires fix in Template Haskell (mkFreeFoil)
+Fun.          Term ::= "(" Pattern ")" "=>" "{" ScopedTerm "}" ;
+App.          Term ::= Term Term ;
+Ann.          Term ::= Term ":" Term ;
+-- type terms
+TypeRefined.  Term ::= BaseType "[" Pattern "|" ScopedTerm "]" ;
+TypeFun.      Term ::= Term ":" Pattern "=>" ScopedTerm ;   -- FIXME: same problem as with Let
+-- predicate terms
+-- PVar.       Term ::= VarIdent ;
+PTrue.      Term ::= "true" ;
+PFalse.     Term ::= "false" ;
+-- PInt.       Term ::= Integer ;
+PLessThan.  Term ::= Term "<" Term ;
+
+
+PatternVar. Pattern ::= VarIdent ;
+ScopedTerm. ScopedTerm ::= Term ;
+
+-- Refinement. Refinement ::= Pattern "|" Term ;
+
+BaseTypeInt.  BaseType ::= "int" ;
+
+KindBase.   Kind ::= "B" ;
+KindStar.   Kind ::= "*" ;
+
+EnvironmentEmpty.     Environment ::= "∅";
+EnvironmentNonEmpty.  Environment ::= [VarBinding];
+
+VarBinding. VarBinding ::= VarIdent ":" Term ;
+separator nonempty VarBinding ";" ;

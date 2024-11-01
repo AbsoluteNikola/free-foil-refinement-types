@@ -1,0 +1,101 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.37.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           free-foil-sprite
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/free-foil-sprite#readme>
+homepage:       https://github.com/githubuser/free-foil-sprite#readme
+bug-reports:    https://github.com/githubuser/free-foil-sprite/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2024 Author name here
+license:        BSD-3-Clause
+license-file:   LICENSE
+build-type:     Custom
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/free-foil-sprite
+
+custom-setup
+  setup-depends:
+      Cabal >=2.4.0.1 && <4.0
+    , PyF
+    , base >=4.11.0.0 && <5.0
+    , process >=1.6.3.0
+
+library
+  exposed-modules:
+      Language.Lambda.FreeFoilConfig
+      Language.Lambda.Syntax
+      Language.Lambda.Syntax.Abs
+      Language.Lambda.Syntax.Lex
+      Language.Lambda.Syntax.Par
+      Language.Lambda.Syntax.Print
+      Lib
+  other-modules:
+      Paths_free_foil_sprite
+  autogen-modules:
+      Paths_free_foil_sprite
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-tools:
+      alex >=3.2.4
+    , happy >=1.19.9
+  build-tool-depends:
+      BNFC:bnfc >=2.9.4.1
+  build-depends:
+      array
+    , base >=4.7 && <5
+    , free-foil >=0.2.0
+  default-language: Haskell2010
+
+executable free-foil-sprite-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_free_foil_sprite
+  autogen-modules:
+      Paths_free_foil_sprite
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-tools:
+      alex >=3.2.4
+    , happy >=1.19.9
+  build-tool-depends:
+      BNFC:bnfc >=2.9.4.1
+  build-depends:
+      array
+    , base >=4.7 && <5
+    , free-foil >=0.2.0
+    , free-foil-sprite
+  default-language: Haskell2010
+
+test-suite free-foil-sprite-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_free_foil_sprite
+  autogen-modules:
+      Paths_free_foil_sprite
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-tools:
+      alex >=3.2.4
+    , happy >=1.19.9
+  build-tool-depends:
+      BNFC:bnfc >=2.9.4.1
+  build-depends:
+      array
+    , base >=4.7 && <5
+    , free-foil >=0.2.0
+    , free-foil-sprite
+  default-language: Haskell2010
