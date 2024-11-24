@@ -9,6 +9,7 @@ copyright: "2024 Author name here"
 extra-source-files:
   - README.md
   - CHANGELOG.md
+  - grammar/Sprite/Syntax.cf
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -37,6 +38,7 @@ dependencies:
   - array
   - bifunctors
   - containers
+  - pretty-simple
 
 ghc-options:
   - -Wall
@@ -54,9 +56,9 @@ library:
   when:
     - condition: false
       other-modules:
-        - Language.Lambda.Syntax.Test
-        - Language.Lambda.Syntax.ErrM
-        - Language.Lambda.Syntax.Skel
+        - Language.Sprite.Syntax.Test
+        - Language.Sprite.Syntax.ErrM
+        # - Language.Sprite.Syntax.Skel
 
 executables:
   free-foil-sprite-exe:

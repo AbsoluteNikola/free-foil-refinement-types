@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Language.Lambda.FreeFoilConfig where
+module Language.Sprite.FreeFoilConfig where
 
-import qualified Language.Lambda.Syntax.Abs    as Raw
+import qualified Language.Sprite.Syntax.Abs    as Raw
 import           Control.Monad.Free.Foil.TH.MkFreeFoil
 
 intToVarIdent :: Int -> Raw.VarIdent
@@ -16,8 +16,8 @@ rawScopedTerm = Raw.ScopedTerm
 rawScopeToTerm :: Raw.ScopedTerm -> Raw.Term
 rawScopeToTerm (Raw.ScopedTerm expr) = expr
 
-lambdaConfig :: FreeFoilConfig
-lambdaConfig = FreeFoilConfig
+spriteConfig :: FreeFoilConfig
+spriteConfig = FreeFoilConfig
   { rawQuantifiedNames = [ ]
   , freeFoilTermConfigs =
       [ FreeFoilTermConfig

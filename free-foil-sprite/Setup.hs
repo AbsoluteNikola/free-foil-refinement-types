@@ -35,8 +35,8 @@ main =
                 [ "set -ex" ] <>
                 [ "chcp.com" | isWindows ] <>
                 [ "chcp.com 65001" | isWindows ] <>
-                [ "bnfc --haskell -d -p Language.Lambda --generic -o src/ grammar/Lambda/Syntax.cf"
-                , "cd src/Language/Lambda/Syntax"
+                [ "bnfc --haskell -d -p Language.Sprite --generic -o src/ grammar/Sprite/Syntax.cf"
+                , "cd src/Language/Sprite/Syntax"
                 , "alex Lex.x"
                 , "happy Par.y"
                 , "true"

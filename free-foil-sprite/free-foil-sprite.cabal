@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -18,6 +18,7 @@ build-type:     Custom
 extra-source-files:
     README.md
     CHANGELOG.md
+    grammar/Sprite/Syntax.cf
 
 source-repository head
   type: git
@@ -32,13 +33,14 @@ custom-setup
 
 library
   exposed-modules:
-      Language.Lambda.FreeFoilConfig
-      Language.Lambda.Syntax
-      Language.Lambda.Syntax.Abs
-      Language.Lambda.Syntax.Lex
-      Language.Lambda.Syntax.Par
-      Language.Lambda.Syntax.Print
-      Language.Lambda.TypeCheck
+      Language.Sprite.FreeFoilConfig
+      Language.Sprite.Syntax
+      Language.Sprite.Syntax.Abs
+      Language.Sprite.Syntax.Lex
+      Language.Sprite.Syntax.Par
+      Language.Sprite.Syntax.Print
+      Language.Sprite.Syntax.Skel
+      Language.Sprite.TypeCheck
       Lib
   other-modules:
       Paths_free_foil_sprite
@@ -58,6 +60,7 @@ library
     , bifunctors
     , containers
     , free-foil >=0.2.0
+    , pretty-simple
   default-language: Haskell2010
 
 executable free-foil-sprite-exe
@@ -81,6 +84,7 @@ executable free-foil-sprite-exe
     , containers
     , free-foil >=0.2.0
     , free-foil-sprite
+    , pretty-simple
   default-language: Haskell2010
 
 test-suite free-foil-sprite-test
@@ -105,4 +109,5 @@ test-suite free-foil-sprite-test
     , containers
     , free-foil >=0.2.0
     , free-foil-sprite
+    , pretty-simple
   default-language: Haskell2010

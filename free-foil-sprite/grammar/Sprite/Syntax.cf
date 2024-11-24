@@ -1,0 +1,52 @@
+
+token VarIdent lower (letter | digit | '_')* ;
+
+-- expr terms
+ConstInt.     Term ::= Integer ;
+Var.          Term ::= VarIdent ;
+Let.          Term ::= PlainDecl ScopedTerm ;  -- FIXME: requires fix in Template Haskell (mkFreeFoil)
+Fun.          Term ::= "(" VarIdent ")" "=>" "{" ScopedTerm "}" ;
+App.          Term ::= Term "(" [ArgList] ")";
+Op.           Term ::= Term IntOp Term;
+_.            Term ::= "(" Term ")";
+
+Ann.          Ann ::= "/*@" "val" VarIdent ":" RType "*/";
+
+PlainDecl.  PlainDecl ::= "let" VarIdent "=" Term ";";
+
+AnnotaedDecl.         Decl ::= Ann PlainDecl;
+UnannotaedDecl.       Decl ::= PlainDecl;
+separator Decl "";
+
+IntPlus. IntOp ::= "+";
+-- IntMinus. IntOp ::= "+";
+-- IntMultiply. IntOp ::= "*";
+
+-- type terms
+TypeRefined.      RType ::= BaseType "[" VarIdent "|" Pred "]" ;
+TypeRefinedBase.  RType ::= BaseType;
+TypeFun.          RType ::= VarIdent ":" RType "=>" ScopedRType ;   -- FIXME: same problem as with Let
+ScopedRType.      ScopedRType ::= RType;
+
+-- predicates
+PVar.           Pred ::= VarIdent;
+PTrue.          Pred ::= "true" ;
+PFalse.         Pred ::= "false" ;
+PInt.           Pred ::= Integer ;
+PEq.            Pred ::= Pred "==" Pred ;
+PLessThan.      Pred ::= Pred "<" Pred ;
+PLessOrEqThan.  Pred ::= Pred "<=" Pred ;
+PPlus.          Pred ::= Pred "+" Pred ;
+PMinus.         Pred ::= Pred "-" Pred ;
+PMultiply.      Pred ::= Pred "*" Pred ;
+
+PatternVar. Pattern ::= VarIdent ;
+ScopedTerm. ScopedTerm ::= Term ;
+
+
+BaseTypeInt.  BaseType ::= "int" ;
+
+ArgList. ArgList ::= VarIdent ;
+separator nonempty ArgList "," ;
+
+entrypoints [Decl];

@@ -18,11 +18,11 @@ import System.Environment ( getArgs )
 import System.Exit        ( exitFailure )
 import Control.Monad      ( when )
 
-import Language.Lambda.Syntax.Abs   ()
-import Language.Lambda.Syntax.Lex   ( Token, mkPosToken )
-import Language.Lambda.Syntax.Par   ( pTerm, myLexer )
-import Language.Lambda.Syntax.Print ( Print, printTree )
-import Language.Lambda.Syntax.Skel  ()
+import Language.Sprite.Syntax.Abs   ()
+import Language.Sprite.Syntax.Lex   ( Token, mkPosToken )
+import Language.Sprite.Syntax.Par   ( pListDecl, myLexer )
+import Language.Sprite.Syntax.Print ( Print, printTree )
+import Language.Sprite.Syntax.Skel  ()
 
 type Err        = Either String
 type ParseFun a = [Token] -> Err a
@@ -70,7 +70,7 @@ main = do
   args <- getArgs
   case args of
     ["--help"] -> usage
-    []         -> getContents >>= run 2 pTerm
-    "-s":fs    -> mapM_ (runFile 0 pTerm) fs
-    fs         -> mapM_ (runFile 2 pTerm) fs
+    []         -> getContents >>= run 2 pListDecl
+    "-s":fs    -> mapM_ (runFile 0 pListDecl) fs
+    fs         -> mapM_ (runFile 2 pListDecl) fs
 
