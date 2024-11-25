@@ -40,7 +40,7 @@ run v p s =
     Left err -> do
       putStrLn "\nParse              Failed...\n"
       putStrV v "Tokens:"
-      mapM_ (putStrV v . showPosToken . mkPosToken) ts
+      -- mapM_ (putStrV v . showPosToken . mkPosToken) ts
       putStrLn err
       exitFailure
     Right tree -> do

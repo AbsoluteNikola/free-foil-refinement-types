@@ -12,7 +12,8 @@ import Distribution.Simple (defaultMainWithHooks, hookedPrograms, postConf, preB
 import Distribution.Simple.Program (Program (..), findProgramVersion, simpleProgram)
 import PyF (fmt)
 import System.Exit (ExitCode (..))
-import System.Process (callCommand)
+import System.Process (callCommand, readCreateProcess, shell)
+import Control.Monad (when)
 
 -- | Run BNFC, happy, and alex on the grammar before the actual build step.
 --
@@ -44,10 +45,10 @@ main =
 
             fullCommand = [fmt|bash -c ' {command} '|]
 
-          putStrLn fullCommand
-
-          _ <- callCommand fullCommand
-
+          isCfChanged <- readCreateProcess (shell "git ls-files -m | grep '.cf' || true") ""
+          if not $ null isCfChanged
+            then callCommand fullCommand
+            else putStrLn "No changes in grammar"
           postConf simpleUserHooks args flags packageDesc localBuildInfo
       }
 

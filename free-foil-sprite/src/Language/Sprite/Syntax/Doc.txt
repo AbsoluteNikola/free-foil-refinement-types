@@ -30,9 +30,9 @@ The reserved words used in Syntax are the following:
 The symbols used in Syntax are the following:
   | ( | ) | => | {
   | } | /*@ | : | */
-  | = | ; | + | [
-  | | | ] | == | <
-  | <= | - | * | ,
+  | = | ; | + | -
+  | * | [ | | | ]
+  | == | < | <= | ,
 
 ===Comments===
 There are no single-line comments in the grammar.There are no multiple-line comments in the grammar.
@@ -45,8 +45,8 @@ All other symbols are terminals.
 
   | //Term// | -> | //Integer//
   |  |  **|**  | //VarIdent//
-  |  |  **|**  | //PlainDecl// //ScopedTerm//
-  |  |  **|**  | ``(`` //VarIdent// ``)`` ``=>`` ``{`` //ScopedTerm// ``}``
+  |  |  **|**  | //Decl// //ScopedTerm//
+  |  |  **|**  | ``(`` //[FunArgsName]// ``)`` ``=>`` ``{`` //ScopedTerm// ``}``
   |  |  **|**  | //Term// ``(`` //[ArgList]// ``)``
   |  |  **|**  | //Term// //IntOp// //Term//
   |  |  **|**  | ``(`` //Term// ``)``
@@ -57,10 +57,15 @@ All other symbols are terminals.
   | //[Decl]// | -> | **eps**
   |  |  **|**  | //Decl// //[Decl]//
   | //IntOp// | -> | ``+``
+  |  |  **|**  | ``-``
+  |  |  **|**  | ``*``
   | //RType// | -> | //BaseType// ``[`` //VarIdent// ``|`` //Pred// ``]``
   |  |  **|**  | //BaseType//
-  |  |  **|**  | //VarIdent// ``:`` //RType// ``=>`` //ScopedRType//
+  |  |  **|**  | //FuncArg// ``=>`` //ScopedRType//
+  |  |  **|**  | ``(`` //RType// ``)``
   | //ScopedRType// | -> | //RType//
+  | //FuncArg// | -> | //RType//
+  |  |  **|**  | //VarIdent// ``:`` //RType//
   | //Pred// | -> | //VarIdent//
   |  |  **|**  | ``true``
   |  |  **|**  | ``false``
@@ -74,7 +79,10 @@ All other symbols are terminals.
   | //Pattern// | -> | //VarIdent//
   | //ScopedTerm// | -> | //Term//
   | //BaseType// | -> | ``int``
-  | //ArgList// | -> | //VarIdent//
+  | //FunArgsName// | -> | //VarIdent//
+  | //[FunArgsName]// | -> | //FunArgsName//
+  |  |  **|**  | //FunArgsName// ``,`` //[FunArgsName]//
+  | //ArgList// | -> | //Term//
   | //[ArgList]// | -> | //ArgList//
   |  |  **|**  | //ArgList// ``,`` //[ArgList]//
 

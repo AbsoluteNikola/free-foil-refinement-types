@@ -4,8 +4,8 @@ token VarIdent lower (letter | digit | '_')* ;
 -- expr terms
 ConstInt.     Term ::= Integer ;
 Var.          Term ::= VarIdent ;
-Let.          Term ::= PlainDecl ScopedTerm ;  -- FIXME: requires fix in Template Haskell (mkFreeFoil)
-Fun.          Term ::= "(" VarIdent ")" "=>" "{" ScopedTerm "}" ;
+Let.          Term ::= Decl ScopedTerm ;  -- FIXME: requires fix in Template Haskell (mkFreeFoil)
+Fun.          Term ::= "(" [FunArgsName] ")" "=>" "{" ScopedTerm "}" ;
 App.          Term ::= Term "(" [ArgList] ")";
 Op.           Term ::= Term IntOp Term;
 _.            Term ::= "(" Term ")";
@@ -19,14 +19,18 @@ UnannotaedDecl.       Decl ::= PlainDecl;
 separator Decl "";
 
 IntPlus. IntOp ::= "+";
--- IntMinus. IntOp ::= "+";
--- IntMultiply. IntOp ::= "*";
+IntMinus. IntOp ::= "-";
+IntMultiply. IntOp ::= "*";
 
 -- type terms
 TypeRefined.      RType ::= BaseType "[" VarIdent "|" Pred "]" ;
 TypeRefinedBase.  RType ::= BaseType;
-TypeFun.          RType ::= VarIdent ":" RType "=>" ScopedRType ;   -- FIXME: same problem as with Let
+TypeFun.          RType ::= FuncArg "=>" ScopedRType ;   -- FIXME: same problem as with Let
+_.                RType ::= "(" RType ")";
 ScopedRType.      ScopedRType ::= RType;
+
+UnNamedFuncArg. FuncArg ::= RType;
+NamedFuncArg.   FuncArg ::= VarIdent ":" RType;
 
 -- predicates
 PVar.           Pred ::= VarIdent;
@@ -46,7 +50,10 @@ ScopedTerm. ScopedTerm ::= Term ;
 
 BaseTypeInt.  BaseType ::= "int" ;
 
-ArgList. ArgList ::= VarIdent ;
+FunArgsName. FunArgsName ::= VarIdent;
+separator nonempty FunArgsName "," ;
+
+ArgList. ArgList ::= Term ;
 separator nonempty ArgList "," ;
 
 entrypoints [Decl];

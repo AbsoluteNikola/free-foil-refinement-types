@@ -18,8 +18,8 @@ import qualified GHC.Generics as C (Generic)
 data Term
     = ConstInt Integer
     | Var VarIdent
-    | Let PlainDecl ScopedTerm
-    | Fun VarIdent ScopedTerm
+    | Let Decl ScopedTerm
+    | Fun [FunArgsName] ScopedTerm
     | App Term [ArgList]
     | Op Term IntOp Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
@@ -33,16 +33,19 @@ data PlainDecl = PlainDecl VarIdent Term
 data Decl = AnnotaedDecl Ann PlainDecl | UnannotaedDecl PlainDecl
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data IntOp = IntPlus
+data IntOp = IntPlus | IntMinus | IntMultiply
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data RType
     = TypeRefined BaseType VarIdent Pred
     | TypeRefinedBase BaseType
-    | TypeFun VarIdent RType ScopedRType
+    | TypeFun FuncArg ScopedRType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data ScopedRType = ScopedRType RType
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data FuncArg = UnNamedFuncArg RType | NamedFuncArg VarIdent RType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data Pred
@@ -67,7 +70,10 @@ data ScopedTerm = ScopedTerm Term
 data BaseType = BaseTypeInt
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data ArgList = ArgList VarIdent
+data FunArgsName = FunArgsName VarIdent
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data ArgList = ArgList Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 newtype VarIdent = VarIdent String

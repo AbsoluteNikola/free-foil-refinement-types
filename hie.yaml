@@ -1,0 +1,10 @@
+cradle:
+  cabal:
+    - path: "free-foil-sprite/src"
+      component: "lib:free-foil-sprite"
+
+    - path: "free-foil-sprite/app/Main.hs"
+      component: "free-foil-sprite:exe:free-foil-sprite-exe"
+
+    - path: "free-foil-sprite/test"
+      component: "free-foil-sprite:test:free-foil-sprite-test"

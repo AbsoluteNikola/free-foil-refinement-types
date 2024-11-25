@@ -63,8 +63,8 @@ Term :: { Language.Sprite.Syntax.Abs.Term }
 Term
   : Integer { Language.Sprite.Syntax.Abs.ConstInt $1 }
   | VarIdent { Language.Sprite.Syntax.Abs.Var $1 }
-  | PlainDecl ScopedTerm { Language.Sprite.Syntax.Abs.Let $1 $2 }
-  | '(' VarIdent ')' '=>' '{' ScopedTerm '}' { Language.Sprite.Syntax.Abs.Fun $2 $6 }
+  | Decl ScopedTerm { Language.Sprite.Syntax.Abs.Let $1 $2 }
+  | '(' ListFunArgsName ')' '=>' '{' ScopedTerm '}' { Language.Sprite.Syntax.Abs.Fun $2 $6 }
   | Term '(' ListArgList ')' { Language.Sprite.Syntax.Abs.App $1 $3 }
   | Term IntOp Term { Language.Sprite.Syntax.Abs.Op $1 $2 $3 }
   | '(' Term ')' { $2 }
@@ -86,16 +86,25 @@ ListDecl :: { [Language.Sprite.Syntax.Abs.Decl] }
 ListDecl : {- empty -} { [] } | Decl ListDecl { (:) $1 $2 }
 
 IntOp :: { Language.Sprite.Syntax.Abs.IntOp }
-IntOp : '+' { Language.Sprite.Syntax.Abs.IntPlus }
+IntOp
+  : '+' { Language.Sprite.Syntax.Abs.IntPlus }
+  | '-' { Language.Sprite.Syntax.Abs.IntMinus }
+  | '*' { Language.Sprite.Syntax.Abs.IntMultiply }
 
 RType :: { Language.Sprite.Syntax.Abs.RType }
 RType
   : BaseType '[' VarIdent '|' Pred ']' { Language.Sprite.Syntax.Abs.TypeRefined $1 $3 $5 }
   | BaseType { Language.Sprite.Syntax.Abs.TypeRefinedBase $1 }
-  | VarIdent ':' RType '=>' ScopedRType { Language.Sprite.Syntax.Abs.TypeFun $1 $3 $5 }
+  | FuncArg '=>' ScopedRType { Language.Sprite.Syntax.Abs.TypeFun $1 $3 }
+  | '(' RType ')' { $2 }
 
 ScopedRType :: { Language.Sprite.Syntax.Abs.ScopedRType }
 ScopedRType : RType { Language.Sprite.Syntax.Abs.ScopedRType $1 }
+
+FuncArg :: { Language.Sprite.Syntax.Abs.FuncArg }
+FuncArg
+  : RType { Language.Sprite.Syntax.Abs.UnNamedFuncArg $1 }
+  | VarIdent ':' RType { Language.Sprite.Syntax.Abs.NamedFuncArg $1 $3 }
 
 Pred :: { Language.Sprite.Syntax.Abs.Pred }
 Pred
@@ -119,8 +128,17 @@ ScopedTerm : Term { Language.Sprite.Syntax.Abs.ScopedTerm $1 }
 BaseType :: { Language.Sprite.Syntax.Abs.BaseType }
 BaseType : 'int' { Language.Sprite.Syntax.Abs.BaseTypeInt }
 
+FunArgsName :: { Language.Sprite.Syntax.Abs.FunArgsName }
+FunArgsName
+  : VarIdent { Language.Sprite.Syntax.Abs.FunArgsName $1 }
+
+ListFunArgsName :: { [Language.Sprite.Syntax.Abs.FunArgsName] }
+ListFunArgsName
+  : FunArgsName { (:[]) $1 }
+  | FunArgsName ',' ListFunArgsName { (:) $1 $3 }
+
 ArgList :: { Language.Sprite.Syntax.Abs.ArgList }
-ArgList : VarIdent { Language.Sprite.Syntax.Abs.ArgList $1 }
+ArgList : Term { Language.Sprite.Syntax.Abs.ArgList $1 }
 
 ListArgList :: { [Language.Sprite.Syntax.Abs.ArgList] }
 ListArgList

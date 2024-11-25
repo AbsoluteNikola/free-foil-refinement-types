@@ -1,14 +1,10 @@
-cabal-version: 2.2
-
--- This file has been generated from package.yaml by hpack version 0.36.0.
---
--- see: https://github.com/sol/hpack
+cabal-version: 3.0
 
 name:           free-foil-sprite
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/free-foil-sprite#readme>
-homepage:       https://github.com/githubuser/free-foil-sprite#readme
-bug-reports:    https://github.com/githubuser/free-foil-sprite/issues
+description:    Please see the README on GitHub at <https://github.com/AbsoluteNikola/free-foil-sprite#readme>
+homepage:       https://github.com/AbsoluteNikola/free-foil-sprite#readme
+bug-reports:    https://github.com/AbsoluteNikola/free-foil-sprite/issues
 author:         Author name here
 maintainer:     example@example.com
 copyright:      2024 Author name here
@@ -19,10 +15,12 @@ extra-source-files:
     README.md
     CHANGELOG.md
     grammar/Sprite/Syntax.cf
+    src/Language/Sprite/Syntax/Lex.x
+    src/Language/Sprite/Syntax/Par.y
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/free-foil-sprite
+  location: https://github.com/AbsoluteNikola/free-foil-sprite
 
 custom-setup
   setup-depends:
@@ -39,7 +37,6 @@ library
       Language.Sprite.Syntax.Lex
       Language.Sprite.Syntax.Par
       Language.Sprite.Syntax.Print
-      Language.Sprite.Syntax.Skel
       Language.Sprite.TypeCheck
       Lib
   other-modules:
@@ -48,12 +45,12 @@ library
       Paths_free_foil_sprite
   hs-source-dirs:
       src
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
-  build-tools:
-      alex >=3.2.4
-    , happy >=1.19.9
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-tool-depends:
       BNFC:bnfc >=2.9.4.1
+    , alex:alex >=3.2.4
+    , happy:happy >=1.19.9
+
   build-depends:
       array
     , base >=4.7 && <5
@@ -72,11 +69,6 @@ executable free-foil-sprite-exe
   hs-source-dirs:
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
-  build-tools:
-      alex >=3.2.4
-    , happy >=1.19.9
-  build-tool-depends:
-      BNFC:bnfc >=2.9.4.1
   build-depends:
       array
     , base >=4.7 && <5
@@ -97,11 +89,6 @@ test-suite free-foil-sprite-test
   hs-source-dirs:
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
-  build-tools:
-      alex >=3.2.4
-    , happy >=1.19.9
-  build-tool-depends:
-      BNFC:bnfc >=2.9.4.1
   build-depends:
       array
     , base >=4.7 && <5

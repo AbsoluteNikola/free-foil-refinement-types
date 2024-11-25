@@ -23,8 +23,8 @@ transTerm :: Language.Sprite.Syntax.Abs.Term -> Result
 transTerm x = case x of
   Language.Sprite.Syntax.Abs.ConstInt integer -> failure x
   Language.Sprite.Syntax.Abs.Var varident -> failure x
-  Language.Sprite.Syntax.Abs.Let plaindecl scopedterm -> failure x
-  Language.Sprite.Syntax.Abs.Fun varident scopedterm -> failure x
+  Language.Sprite.Syntax.Abs.Let decl scopedterm -> failure x
+  Language.Sprite.Syntax.Abs.Fun funargsnames scopedterm -> failure x
   Language.Sprite.Syntax.Abs.App term arglists -> failure x
   Language.Sprite.Syntax.Abs.Op term1 intop term2 -> failure x
 
@@ -44,16 +44,23 @@ transDecl x = case x of
 transIntOp :: Language.Sprite.Syntax.Abs.IntOp -> Result
 transIntOp x = case x of
   Language.Sprite.Syntax.Abs.IntPlus -> failure x
+  Language.Sprite.Syntax.Abs.IntMinus -> failure x
+  Language.Sprite.Syntax.Abs.IntMultiply -> failure x
 
 transRType :: Language.Sprite.Syntax.Abs.RType -> Result
 transRType x = case x of
   Language.Sprite.Syntax.Abs.TypeRefined basetype varident pred -> failure x
   Language.Sprite.Syntax.Abs.TypeRefinedBase basetype -> failure x
-  Language.Sprite.Syntax.Abs.TypeFun varident rtype scopedrtype -> failure x
+  Language.Sprite.Syntax.Abs.TypeFun funcarg scopedrtype -> failure x
 
 transScopedRType :: Language.Sprite.Syntax.Abs.ScopedRType -> Result
 transScopedRType x = case x of
   Language.Sprite.Syntax.Abs.ScopedRType rtype -> failure x
+
+transFuncArg :: Language.Sprite.Syntax.Abs.FuncArg -> Result
+transFuncArg x = case x of
+  Language.Sprite.Syntax.Abs.UnNamedFuncArg rtype -> failure x
+  Language.Sprite.Syntax.Abs.NamedFuncArg varident rtype -> failure x
 
 transPred :: Language.Sprite.Syntax.Abs.Pred -> Result
 transPred x = case x of
@@ -80,6 +87,10 @@ transBaseType :: Language.Sprite.Syntax.Abs.BaseType -> Result
 transBaseType x = case x of
   Language.Sprite.Syntax.Abs.BaseTypeInt -> failure x
 
+transFunArgsName :: Language.Sprite.Syntax.Abs.FunArgsName -> Result
+transFunArgsName x = case x of
+  Language.Sprite.Syntax.Abs.FunArgsName varident -> failure x
+
 transArgList :: Language.Sprite.Syntax.Abs.ArgList -> Result
 transArgList x = case x of
-  Language.Sprite.Syntax.Abs.ArgList varident -> failure x
+  Language.Sprite.Syntax.Abs.ArgList term -> failure x
