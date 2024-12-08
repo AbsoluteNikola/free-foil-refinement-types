@@ -32,7 +32,7 @@ The symbols used in Syntax are the following:
   | } | /*@ | : | */
   | = | ; | + | -
   | * | [ | | | ]
-  | == | < | <= | ,
+  | == | < | <= |
 
 ===Comments===
 There are no single-line comments in the grammar.There are no multiple-line comments in the grammar.
@@ -46,13 +46,13 @@ All other symbols are terminals.
   | //Term// | -> | //Integer//
   |  |  **|**  | //VarIdent//
   |  |  **|**  | //Decl// //ScopedTerm//
-  |  |  **|**  | ``(`` //[FunArgsName]// ``)`` ``=>`` ``{`` //ScopedTerm// ``}``
-  |  |  **|**  | //Term// ``(`` //[ArgList]// ``)``
+  |  |  **|**  | ``(`` //VarIdent// ``)`` ``=>`` ``{`` //ScopedTerm// ``}``
+  |  |  **|**  | //Term// ``(`` //Term// ``)``
   |  |  **|**  | //Term// //IntOp// //Term//
   |  |  **|**  | ``(`` //Term// ``)``
-  | //Ann// | -> | ``/*@`` ``val`` //VarIdent// ``:`` //RType// ``*/``
+  | //Annotation// | -> | ``/*@`` ``val`` //VarIdent// ``:`` //RType// ``*/``
   | //PlainDecl// | -> | ``let`` //VarIdent// ``=`` //Term// ``;``
-  | //Decl// | -> | //Ann// //PlainDecl//
+  | //Decl// | -> | //Annotation// //PlainDecl//
   |  |  **|**  | //PlainDecl//
   | //[Decl]// | -> | **eps**
   |  |  **|**  | //Decl// //[Decl]//
@@ -79,12 +79,6 @@ All other symbols are terminals.
   | //Pattern// | -> | //VarIdent//
   | //ScopedTerm// | -> | //Term//
   | //BaseType// | -> | ``int``
-  | //FunArgsName// | -> | //VarIdent//
-  | //[FunArgsName]// | -> | //FunArgsName//
-  |  |  **|**  | //FunArgsName// ``,`` //[FunArgsName]//
-  | //ArgList// | -> | //Term//
-  | //[ArgList]// | -> | //ArgList//
-  |  |  **|**  | //ArgList// ``,`` //[ArgList]//
 
 
 

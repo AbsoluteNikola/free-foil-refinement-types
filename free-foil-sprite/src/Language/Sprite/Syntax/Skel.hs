@@ -24,13 +24,13 @@ transTerm x = case x of
   Language.Sprite.Syntax.Abs.ConstInt integer -> failure x
   Language.Sprite.Syntax.Abs.Var varident -> failure x
   Language.Sprite.Syntax.Abs.Let decl scopedterm -> failure x
-  Language.Sprite.Syntax.Abs.Fun funargsnames scopedterm -> failure x
-  Language.Sprite.Syntax.Abs.App term arglists -> failure x
+  Language.Sprite.Syntax.Abs.Fun varident scopedterm -> failure x
+  Language.Sprite.Syntax.Abs.App term1 term2 -> failure x
   Language.Sprite.Syntax.Abs.Op term1 intop term2 -> failure x
 
-transAnn :: Language.Sprite.Syntax.Abs.Ann -> Result
-transAnn x = case x of
-  Language.Sprite.Syntax.Abs.Ann varident rtype -> failure x
+transAnnotation :: Language.Sprite.Syntax.Abs.Annotation -> Result
+transAnnotation x = case x of
+  Language.Sprite.Syntax.Abs.Annotation varident rtype -> failure x
 
 transPlainDecl :: Language.Sprite.Syntax.Abs.PlainDecl -> Result
 transPlainDecl x = case x of
@@ -38,8 +38,8 @@ transPlainDecl x = case x of
 
 transDecl :: Language.Sprite.Syntax.Abs.Decl -> Result
 transDecl x = case x of
-  Language.Sprite.Syntax.Abs.AnnotaedDecl ann plaindecl -> failure x
-  Language.Sprite.Syntax.Abs.UnannotaedDecl plaindecl -> failure x
+  Language.Sprite.Syntax.Abs.AnnotatedDecl annotation plaindecl -> failure x
+  Language.Sprite.Syntax.Abs.UnAnnotatedDecl plaindecl -> failure x
 
 transIntOp :: Language.Sprite.Syntax.Abs.IntOp -> Result
 transIntOp x = case x of
@@ -86,11 +86,3 @@ transScopedTerm x = case x of
 transBaseType :: Language.Sprite.Syntax.Abs.BaseType -> Result
 transBaseType x = case x of
   Language.Sprite.Syntax.Abs.BaseTypeInt -> failure x
-
-transFunArgsName :: Language.Sprite.Syntax.Abs.FunArgsName -> Result
-transFunArgsName x = case x of
-  Language.Sprite.Syntax.Abs.FunArgsName varident -> failure x
-
-transArgList :: Language.Sprite.Syntax.Abs.ArgList -> Result
-transArgList x = case x of
-  Language.Sprite.Syntax.Abs.ArgList term -> failure x

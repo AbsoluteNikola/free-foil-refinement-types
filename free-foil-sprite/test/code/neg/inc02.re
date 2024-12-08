@@ -11,3 +11,4 @@ let incf = (x) => {
     };
     tmp(dec)
 };
+incf(4)

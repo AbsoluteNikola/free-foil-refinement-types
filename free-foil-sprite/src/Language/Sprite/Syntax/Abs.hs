@@ -19,18 +19,19 @@ data Term
     = ConstInt Integer
     | Var VarIdent
     | Let Decl ScopedTerm
-    | Fun [FunArgsName] ScopedTerm
-    | App Term [ArgList]
+    | Fun VarIdent ScopedTerm
+    | App Term Term
     | Op Term IntOp Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data Ann = Ann VarIdent RType
+data Annotation = Annotation VarIdent RType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data PlainDecl = PlainDecl VarIdent Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data Decl = AnnotaedDecl Ann PlainDecl | UnannotaedDecl PlainDecl
+data Decl
+    = AnnotatedDecl Annotation PlainDecl | UnAnnotatedDecl PlainDecl
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data IntOp = IntPlus | IntMinus | IntMultiply
@@ -68,12 +69,6 @@ data ScopedTerm = ScopedTerm Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data BaseType = BaseTypeInt
-  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
-
-data FunArgsName = FunArgsName VarIdent
-  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
-
-data ArgList = ArgList Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 newtype VarIdent = VarIdent String

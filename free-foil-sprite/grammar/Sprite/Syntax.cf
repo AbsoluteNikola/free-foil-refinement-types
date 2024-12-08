@@ -5,17 +5,17 @@ token VarIdent lower (letter | digit | '_')* ;
 ConstInt.     Term ::= Integer ;
 Var.          Term ::= VarIdent ;
 Let.          Term ::= Decl ScopedTerm ;  -- FIXME: requires fix in Template Haskell (mkFreeFoil)
-Fun.          Term ::= "(" [FunArgsName] ")" "=>" "{" ScopedTerm "}" ;
-App.          Term ::= Term "(" [ArgList] ")";
+Fun.          Term ::= "(" VarIdent ")" "=>" "{" ScopedTerm "}" ;
+App.          Term ::= Term "(" Term ")";
 Op.           Term ::= Term IntOp Term;
 _.            Term ::= "(" Term ")";
 
-Ann.          Ann ::= "/*@" "val" VarIdent ":" RType "*/";
+Annotation.          Annotation ::= "/*@" "val" VarIdent ":" RType "*/";
 
 PlainDecl.  PlainDecl ::= "let" VarIdent "=" Term ";";
 
-AnnotaedDecl.         Decl ::= Ann PlainDecl;
-UnannotaedDecl.       Decl ::= PlainDecl;
+AnnotatedDecl.         Decl ::= Annotation PlainDecl;
+UnAnnotatedDecl.       Decl ::= PlainDecl;
 separator Decl "";
 
 IntPlus. IntOp ::= "+";
@@ -50,10 +50,10 @@ ScopedTerm. ScopedTerm ::= Term ;
 
 BaseTypeInt.  BaseType ::= "int" ;
 
-FunArgsName. FunArgsName ::= VarIdent;
-separator nonempty FunArgsName "," ;
+-- FunArgName. FunArgName ::= VarIdent;
+-- separator nonempty FunArgsName "," ;
 
-ArgList. ArgList ::= Term ;
-separator nonempty ArgList "," ;
+-- ArgList. ArgList ::= Term ;
+-- separator nonempty ArgList "," ;
 
-entrypoints [Decl];
+entrypoints Term;

@@ -8,7 +8,7 @@
 module Language.Sprite.Syntax.Par
   ( happyError
   , myLexer
-  , pListDecl
+  , pTerm
   ) where
 
 import Prelude
@@ -18,7 +18,7 @@ import Language.Sprite.Syntax.Lex
 
 }
 
-%name pListDecl ListDecl
+%name pTerm Term
 -- no lexer declaration
 %monad { Err } { (>>=) } { return }
 %tokentype {Token}
@@ -28,26 +28,25 @@ import Language.Sprite.Syntax.Lex
   '*'        { PT _ (TS _ 3)        }
   '*/'       { PT _ (TS _ 4)        }
   '+'        { PT _ (TS _ 5)        }
-  ','        { PT _ (TS _ 6)        }
-  '-'        { PT _ (TS _ 7)        }
-  '/*@'      { PT _ (TS _ 8)        }
-  ':'        { PT _ (TS _ 9)        }
-  ';'        { PT _ (TS _ 10)       }
-  '<'        { PT _ (TS _ 11)       }
-  '<='       { PT _ (TS _ 12)       }
-  '='        { PT _ (TS _ 13)       }
-  '=='       { PT _ (TS _ 14)       }
-  '=>'       { PT _ (TS _ 15)       }
-  '['        { PT _ (TS _ 16)       }
-  ']'        { PT _ (TS _ 17)       }
-  'false'    { PT _ (TS _ 18)       }
-  'int'      { PT _ (TS _ 19)       }
-  'let'      { PT _ (TS _ 20)       }
-  'true'     { PT _ (TS _ 21)       }
-  'val'      { PT _ (TS _ 22)       }
-  '{'        { PT _ (TS _ 23)       }
-  '|'        { PT _ (TS _ 24)       }
-  '}'        { PT _ (TS _ 25)       }
+  '-'        { PT _ (TS _ 6)        }
+  '/*@'      { PT _ (TS _ 7)        }
+  ':'        { PT _ (TS _ 8)        }
+  ';'        { PT _ (TS _ 9)        }
+  '<'        { PT _ (TS _ 10)       }
+  '<='       { PT _ (TS _ 11)       }
+  '='        { PT _ (TS _ 12)       }
+  '=='       { PT _ (TS _ 13)       }
+  '=>'       { PT _ (TS _ 14)       }
+  '['        { PT _ (TS _ 15)       }
+  ']'        { PT _ (TS _ 16)       }
+  'false'    { PT _ (TS _ 17)       }
+  'int'      { PT _ (TS _ 18)       }
+  'let'      { PT _ (TS _ 19)       }
+  'true'     { PT _ (TS _ 20)       }
+  'val'      { PT _ (TS _ 21)       }
+  '{'        { PT _ (TS _ 22)       }
+  '|'        { PT _ (TS _ 23)       }
+  '}'        { PT _ (TS _ 24)       }
   L_integ    { PT _ (TI $$)         }
   L_VarIdent { PT _ (T_VarIdent $$) }
 
@@ -64,14 +63,14 @@ Term
   : Integer { Language.Sprite.Syntax.Abs.ConstInt $1 }
   | VarIdent { Language.Sprite.Syntax.Abs.Var $1 }
   | Decl ScopedTerm { Language.Sprite.Syntax.Abs.Let $1 $2 }
-  | '(' ListFunArgsName ')' '=>' '{' ScopedTerm '}' { Language.Sprite.Syntax.Abs.Fun $2 $6 }
-  | Term '(' ListArgList ')' { Language.Sprite.Syntax.Abs.App $1 $3 }
+  | '(' VarIdent ')' '=>' '{' ScopedTerm '}' { Language.Sprite.Syntax.Abs.Fun $2 $6 }
+  | Term '(' Term ')' { Language.Sprite.Syntax.Abs.App $1 $3 }
   | Term IntOp Term { Language.Sprite.Syntax.Abs.Op $1 $2 $3 }
   | '(' Term ')' { $2 }
 
-Ann :: { Language.Sprite.Syntax.Abs.Ann }
-Ann
-  : '/*@' 'val' VarIdent ':' RType '*/' { Language.Sprite.Syntax.Abs.Ann $3 $5 }
+Annotation :: { Language.Sprite.Syntax.Abs.Annotation }
+Annotation
+  : '/*@' 'val' VarIdent ':' RType '*/' { Language.Sprite.Syntax.Abs.Annotation $3 $5 }
 
 PlainDecl :: { Language.Sprite.Syntax.Abs.PlainDecl }
 PlainDecl
@@ -79,8 +78,8 @@ PlainDecl
 
 Decl :: { Language.Sprite.Syntax.Abs.Decl }
 Decl
-  : Ann PlainDecl { Language.Sprite.Syntax.Abs.AnnotaedDecl $1 $2 }
-  | PlainDecl { Language.Sprite.Syntax.Abs.UnannotaedDecl $1 }
+  : Annotation PlainDecl { Language.Sprite.Syntax.Abs.AnnotatedDecl $1 $2 }
+  | PlainDecl { Language.Sprite.Syntax.Abs.UnAnnotatedDecl $1 }
 
 ListDecl :: { [Language.Sprite.Syntax.Abs.Decl] }
 ListDecl : {- empty -} { [] } | Decl ListDecl { (:) $1 $2 }
@@ -127,22 +126,6 @@ ScopedTerm : Term { Language.Sprite.Syntax.Abs.ScopedTerm $1 }
 
 BaseType :: { Language.Sprite.Syntax.Abs.BaseType }
 BaseType : 'int' { Language.Sprite.Syntax.Abs.BaseTypeInt }
-
-FunArgsName :: { Language.Sprite.Syntax.Abs.FunArgsName }
-FunArgsName
-  : VarIdent { Language.Sprite.Syntax.Abs.FunArgsName $1 }
-
-ListFunArgsName :: { [Language.Sprite.Syntax.Abs.FunArgsName] }
-ListFunArgsName
-  : FunArgsName { (:[]) $1 }
-  | FunArgsName ',' ListFunArgsName { (:) $1 $3 }
-
-ArgList :: { Language.Sprite.Syntax.Abs.ArgList }
-ArgList : Term { Language.Sprite.Syntax.Abs.ArgList $1 }
-
-ListArgList :: { [Language.Sprite.Syntax.Abs.ArgList] }
-ListArgList
-  : ArgList { (:[]) $1 } | ArgList ',' ListArgList { (:) $1 $3 }
 
 {
 

@@ -6,8 +6,11 @@ let inc = (x) => {
 };
 
 /*@ val foo: int => int => int[v|v == 0] */
-let foo = (x, y) => {
-    0
+let foo = (x) => {
+    (y) => {
+        0
+    }
 };
 
 let bar = inc(10);
+bar
