@@ -20,8 +20,8 @@ data Term
     | Var VarIdent
     | Let Decl ScopedTerm
     | Fun VarIdent ScopedTerm
-    | App Term Term
-    | Op Term IntOp Term
+    | App Term FuncAppArg
+    | Op FuncAppArg IntOp FuncAppArg
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data Annotation = Annotation VarIdent RType
@@ -38,15 +38,13 @@ data IntOp = IntPlus | IntMinus | IntMultiply
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data RType
-    = TypeRefined BaseType VarIdent Pred
-    | TypeRefinedBase BaseType
-    | TypeFun FuncArg ScopedRType
+    = TypeRefined BaseType VarIdent Pred | TypeFun FuncArg ScopedRType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data ScopedRType = ScopedRType RType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data FuncArg = UnNamedFuncArg RType | NamedFuncArg VarIdent RType
+data FuncArg = NamedFuncArg VarIdent RType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data Pred
@@ -69,6 +67,9 @@ data ScopedTerm = ScopedTerm Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data BaseType = BaseTypeInt
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data FuncAppArg = FuncAppArgInt Integer | FuncAppArgVar VarIdent
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 newtype VarIdent = VarIdent String

@@ -25,8 +25,8 @@ transTerm x = case x of
   Language.Sprite.Syntax.Abs.Var varident -> failure x
   Language.Sprite.Syntax.Abs.Let decl scopedterm -> failure x
   Language.Sprite.Syntax.Abs.Fun varident scopedterm -> failure x
-  Language.Sprite.Syntax.Abs.App term1 term2 -> failure x
-  Language.Sprite.Syntax.Abs.Op term1 intop term2 -> failure x
+  Language.Sprite.Syntax.Abs.App term funcapparg -> failure x
+  Language.Sprite.Syntax.Abs.Op funcapparg1 intop funcapparg2 -> failure x
 
 transAnnotation :: Language.Sprite.Syntax.Abs.Annotation -> Result
 transAnnotation x = case x of
@@ -50,7 +50,6 @@ transIntOp x = case x of
 transRType :: Language.Sprite.Syntax.Abs.RType -> Result
 transRType x = case x of
   Language.Sprite.Syntax.Abs.TypeRefined basetype varident pred -> failure x
-  Language.Sprite.Syntax.Abs.TypeRefinedBase basetype -> failure x
   Language.Sprite.Syntax.Abs.TypeFun funcarg scopedrtype -> failure x
 
 transScopedRType :: Language.Sprite.Syntax.Abs.ScopedRType -> Result
@@ -59,7 +58,6 @@ transScopedRType x = case x of
 
 transFuncArg :: Language.Sprite.Syntax.Abs.FuncArg -> Result
 transFuncArg x = case x of
-  Language.Sprite.Syntax.Abs.UnNamedFuncArg rtype -> failure x
   Language.Sprite.Syntax.Abs.NamedFuncArg varident rtype -> failure x
 
 transPred :: Language.Sprite.Syntax.Abs.Pred -> Result
@@ -86,3 +84,8 @@ transScopedTerm x = case x of
 transBaseType :: Language.Sprite.Syntax.Abs.BaseType -> Result
 transBaseType x = case x of
   Language.Sprite.Syntax.Abs.BaseTypeInt -> failure x
+
+transFuncAppArg :: Language.Sprite.Syntax.Abs.FuncAppArg -> Result
+transFuncAppArg x = case x of
+  Language.Sprite.Syntax.Abs.FuncAppArgInt integer -> failure x
+  Language.Sprite.Syntax.Abs.FuncAppArgVar varident -> failure x

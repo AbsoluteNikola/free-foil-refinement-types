@@ -145,8 +145,8 @@ instance Print Language.Sprite.Syntax.Abs.Term where
     Language.Sprite.Syntax.Abs.Var varident -> prPrec i 0 (concatD [prt 0 varident])
     Language.Sprite.Syntax.Abs.Let decl scopedterm -> prPrec i 0 (concatD [prt 0 decl, prt 0 scopedterm])
     Language.Sprite.Syntax.Abs.Fun varident scopedterm -> prPrec i 0 (concatD [doc (showString "("), prt 0 varident, doc (showString ")"), doc (showString "=>"), doc (showString "{"), prt 0 scopedterm, doc (showString "}")])
-    Language.Sprite.Syntax.Abs.App term1 term2 -> prPrec i 0 (concatD [prt 0 term1, doc (showString "("), prt 0 term2, doc (showString ")")])
-    Language.Sprite.Syntax.Abs.Op term1 intop term2 -> prPrec i 0 (concatD [prt 0 term1, prt 0 intop, prt 0 term2])
+    Language.Sprite.Syntax.Abs.App term funcapparg -> prPrec i 0 (concatD [prt 0 term, doc (showString "("), prt 0 funcapparg, doc (showString ")")])
+    Language.Sprite.Syntax.Abs.Op funcapparg1 intop funcapparg2 -> prPrec i 0 (concatD [prt 0 funcapparg1, prt 0 intop, prt 0 funcapparg2])
 
 instance Print Language.Sprite.Syntax.Abs.Annotation where
   prt i = \case
@@ -174,7 +174,6 @@ instance Print Language.Sprite.Syntax.Abs.IntOp where
 instance Print Language.Sprite.Syntax.Abs.RType where
   prt i = \case
     Language.Sprite.Syntax.Abs.TypeRefined basetype varident pred -> prPrec i 0 (concatD [prt 0 basetype, doc (showString "["), prt 0 varident, doc (showString "|"), prt 0 pred, doc (showString "]")])
-    Language.Sprite.Syntax.Abs.TypeRefinedBase basetype -> prPrec i 0 (concatD [prt 0 basetype])
     Language.Sprite.Syntax.Abs.TypeFun funcarg scopedrtype -> prPrec i 0 (concatD [prt 0 funcarg, doc (showString "=>"), prt 0 scopedrtype])
 
 instance Print Language.Sprite.Syntax.Abs.ScopedRType where
@@ -183,7 +182,6 @@ instance Print Language.Sprite.Syntax.Abs.ScopedRType where
 
 instance Print Language.Sprite.Syntax.Abs.FuncArg where
   prt i = \case
-    Language.Sprite.Syntax.Abs.UnNamedFuncArg rtype -> prPrec i 0 (concatD [prt 0 rtype])
     Language.Sprite.Syntax.Abs.NamedFuncArg varident rtype -> prPrec i 0 (concatD [prt 0 varident, doc (showString ":"), prt 0 rtype])
 
 instance Print Language.Sprite.Syntax.Abs.Pred where
@@ -210,3 +208,8 @@ instance Print Language.Sprite.Syntax.Abs.ScopedTerm where
 instance Print Language.Sprite.Syntax.Abs.BaseType where
   prt i = \case
     Language.Sprite.Syntax.Abs.BaseTypeInt -> prPrec i 0 (concatD [doc (showString "int")])
+
+instance Print Language.Sprite.Syntax.Abs.FuncAppArg where
+  prt i = \case
+    Language.Sprite.Syntax.Abs.FuncAppArgInt n -> prPrec i 0 (concatD [prt 0 n])
+    Language.Sprite.Syntax.Abs.FuncAppArgVar varident -> prPrec i 0 (concatD [prt 0 varident])

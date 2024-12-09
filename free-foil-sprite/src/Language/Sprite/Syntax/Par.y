@@ -64,8 +64,8 @@ Term
   | VarIdent { Language.Sprite.Syntax.Abs.Var $1 }
   | Decl ScopedTerm { Language.Sprite.Syntax.Abs.Let $1 $2 }
   | '(' VarIdent ')' '=>' '{' ScopedTerm '}' { Language.Sprite.Syntax.Abs.Fun $2 $6 }
-  | Term '(' Term ')' { Language.Sprite.Syntax.Abs.App $1 $3 }
-  | Term IntOp Term { Language.Sprite.Syntax.Abs.Op $1 $2 $3 }
+  | Term '(' FuncAppArg ')' { Language.Sprite.Syntax.Abs.App $1 $3 }
+  | FuncAppArg IntOp FuncAppArg { Language.Sprite.Syntax.Abs.Op $1 $2 $3 }
   | '(' Term ')' { $2 }
 
 Annotation :: { Language.Sprite.Syntax.Abs.Annotation }
@@ -93,7 +93,6 @@ IntOp
 RType :: { Language.Sprite.Syntax.Abs.RType }
 RType
   : BaseType '[' VarIdent '|' Pred ']' { Language.Sprite.Syntax.Abs.TypeRefined $1 $3 $5 }
-  | BaseType { Language.Sprite.Syntax.Abs.TypeRefinedBase $1 }
   | FuncArg '=>' ScopedRType { Language.Sprite.Syntax.Abs.TypeFun $1 $3 }
   | '(' RType ')' { $2 }
 
@@ -102,8 +101,7 @@ ScopedRType : RType { Language.Sprite.Syntax.Abs.ScopedRType $1 }
 
 FuncArg :: { Language.Sprite.Syntax.Abs.FuncArg }
 FuncArg
-  : RType { Language.Sprite.Syntax.Abs.UnNamedFuncArg $1 }
-  | VarIdent ':' RType { Language.Sprite.Syntax.Abs.NamedFuncArg $1 $3 }
+  : VarIdent ':' RType { Language.Sprite.Syntax.Abs.NamedFuncArg $1 $3 }
 
 Pred :: { Language.Sprite.Syntax.Abs.Pred }
 Pred
@@ -126,6 +124,11 @@ ScopedTerm : Term { Language.Sprite.Syntax.Abs.ScopedTerm $1 }
 
 BaseType :: { Language.Sprite.Syntax.Abs.BaseType }
 BaseType : 'int' { Language.Sprite.Syntax.Abs.BaseTypeInt }
+
+FuncAppArg :: { Language.Sprite.Syntax.Abs.FuncAppArg }
+FuncAppArg
+  : Integer { Language.Sprite.Syntax.Abs.FuncAppArgInt $1 }
+  | VarIdent { Language.Sprite.Syntax.Abs.FuncAppArgVar $1 }
 
 {
 
