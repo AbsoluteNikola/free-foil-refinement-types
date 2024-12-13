@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications #-}
 module Language.Sprite.Naive.Check where
 
 import Data.Map.Strict qualified as M
@@ -10,18 +11,26 @@ import Control.Monad.Trans.Reader (ReaderT)
 import Control.Monad.Reader (MonadReader(..), asks)
 import Language.Sprite.Naive.Constraints
 import Language.Sprite.Naive.Predicates
-import Text.Pretty.Simple (pShow)
-import qualified Data.Text.Lazy as Text
+import Text.Pretty.Simple (pShow, pPrint)
 import Language.Sprite.Naive.Substitution (substType, substPred)
 import Data.Function ((&))
+import Data.Text (Text)
+import qualified Data.Text.Lazy as TL
+import qualified Data.Text as T
 
 newtype Env = Env {unEnv :: M.Map VarIdent RType }
 
-newtype CheckerM a = CheckerM {runCheckerM :: ReaderT Env (ExceptT String IO) a }
-  deriving newtype (Functor, Applicative, Monad, MonadError String, MonadIO, MonadReader Env)
+newtype CheckerM a = CheckerM {runCheckerM :: ReaderT Env (ExceptT Text IO) a }
+  deriving newtype (Functor, Applicative, Monad, MonadError Text, MonadIO, MonadReader Env)
 
-pShowS :: Show a => a -> String
-pShowS = Text.unpack . pShow
+pShowT :: Show a => a -> Text
+pShowT = TL.toStrict . pShow
+
+showT :: Show a => a -> Text
+showT = T.pack . show
+
+debugPrint :: Show a => a -> CheckerM ()
+debugPrint = pPrint
 
 emptyEnv :: Env
 emptyEnv = Env M.empty
@@ -39,12 +48,18 @@ subtype :: RType -> RType -> CheckerM Constraint
      -------------------
      b{v:p} <= b{w:q}
  -}
-subtype (TypeRefined lb leftVarId leftPredicate) (TypeRefined rb rightVarId rightPredicate)
+subtype lt@(TypeRefined lb leftVarId leftPredicate) rt@(TypeRefined rb rightVarId rightPredicate)
   | lb /= rb = throwError
-    $ "Invalid subtyping. Different refined base: " <> show lb <> " and " <> show rb
-  | otherwise = pure $
-    CImplication leftVarId lb leftPredicate
-      (CPred $ substPred rightVarId (PVar leftVarId) rightPredicate)
+    $ "Invalid subtyping. Different refined base: " <> pShowT lb <> " and " <> pShowT rb
+  | otherwise = do
+    let
+      implMsg = "Refinement subtype error: (v::t) => q[w := v]. Where v="
+        <> showT leftVarId
+      predMsg = "Refinement subtype error: q[w := v]. Where w="
+        <> showT rightVarId <> " and v=" <> showT leftVarId
+    pure $
+      buildImplicationFromType implMsg leftVarId lt (CPred (substPred rightVarId (PVar leftVarId) rightPredicate) predMsg)
+
 
 {- | [Sub-Fun]
 
@@ -64,12 +79,13 @@ subtype
   returnTypesSubtypingConstraints <- subtype leftFunReturnTypeSubstituted rightFunReturnType
   -- x2:s2 |- t1[x1:=x2] <: t2
   let
+    implMsg = "Function subtype error: x2:s2 |- t1[x1:=x2] <: t2. Where x2="  <> showT rightFunArgId
     returnTypesConstraints =
-      buildImplicationFromType rightFunArgT returnTypesSubtypingConstraints
+      buildImplicationFromType implMsg rightFunArgId rightFunArgT returnTypesSubtypingConstraints
   pure $ CAnd [argSubtypingConstrains, returnTypesConstraints]
 
 subtype t1 t2 = throwError
-    $ "Invalid subtyping. Different types" <> show t1 <> " and " <> show t2
+    $ "Invalid subtyping. Different types" <> pShowT t1 <> "\nand\n" <> pShowT t2
 
 check :: Term -> RType -> CheckerM Constraint
 check currentTerm currentType = case currentTerm of
@@ -80,17 +96,18 @@ check currentTerm currentType = case currentTerm of
  -}
   Fun argId (ScopedTerm funcBody) -> case currentType of
     TypeRefined{} -> throwError $
-      "Function type should be Function, not: " <> show currentType
+      "Function type should be Function, not: " <> pShowT currentType
     TypeFun (NamedFuncArg argId' funcArgType) (ScopedRType funcReturnType)
       | argId' /= argId -> throwError $
         "Function argument identifier and identifier in its type are different:  "
-        <> "type arg name = " <> show argId' <> ", "
-        <> "func arg name = " <> show argId
+        <> "type arg name = " <> pShowT argId' <> ", "
+        <> "func arg name = " <> pShowT argId
       | otherwise-> do
         -- G, x:s |- e <== t
         bodyCheckConstraints <- withExtendedEnv argId funcArgType $
           check funcBody funcReturnType
-        pure $ buildImplicationFromType funcArgType bodyCheckConstraints
+        pure $ buildImplicationFromType "Chk-Lam"
+          argId funcArgType bodyCheckConstraints
 
   {- [Chk-Let]
       G |- e1 ==> t1        G, x:t1 |- e2 <== t2
@@ -103,7 +120,7 @@ check currentTerm currentType = case currentTerm of
     checkBodyConstraints <- withExtendedEnv (getDeclVarId decl) declType $
       check body currentType
     -- G, x:t1 |- e2 <== t2
-    let implicationConstraint = buildImplicationFromType declType checkBodyConstraints
+    let implicationConstraint = buildImplicationFromType "Chk-Let" (getDeclVarId decl) declType checkBodyConstraints
     pure $ CAnd [synthsDeclConstraint, implicationConstraint]
 
 
@@ -130,8 +147,8 @@ synthsDecl currentDecl = case currentDecl of
     | annVarId /= declVarId ->
         throwError
           $ "Annotated identifier and declaration identifier should match. "
-          <> "Annotation: " <> pShowS annVarId
-          <> "Declaration: " <> pShowS declVarId
+          <> "Annotation: " <> pShowT annVarId
+          <> "Declaration: " <> pShowT declVarId
     | otherwise -> do
       -- G |- e <== t
       checkConstraints <- check declTerm annType
@@ -148,47 +165,57 @@ synths currentTerm = case currentTerm of
   -}
   Var varId -> lookupEnv varId >>= \case
     Just typ -> pure (cTrue, typ)
-    Nothing -> throwError $ "Unbound variable: " <> show varId
+    Nothing -> throwError $ "Unbound variable: " <> pShowT varId
 
   {- [Syn-Con]
    -----------------
     G |- x ==> G(x)
   -}
-  ConstInt x -> pure $ (cTrue, constIntT x)
+  ConstInt x -> pure (cTrue, constIntT x)
 
   {- [Syn-Con] + [Syn-App] for bin operation
   -}
   Op leftTerm op rightTerm  -> do
     let
       opTypes = intBinOpTypes op
+    debugPrint @String "Syn op"
+    debugPrint leftTerm
+    debugPrint opTypes.leftArgT
+    debugPrint rightTerm
+    debugPrint opTypes.rightArgT
     lc <- check (funcAppArgToTerm leftTerm) opTypes.leftArgT
     rc <- check (funcAppArgToTerm rightTerm) opTypes.rightArgT
+    debugPrint @String "Syn op check args ok"
     let
       -- the same as two applications (Syn-App)
       substitutedReturnType =
         substType opTypes.leftArgId (funcArgTermToPred leftTerm) opTypes.resultType
-          & substType opTypes.leftArgId (funcArgTermToPred leftTerm)
+          & substType opTypes.rightArgId (funcArgTermToPred rightTerm)
+    debugPrint @String "Syn op substituted res"
+    debugPrint substitutedReturnType
     pure (CAnd [lc, rc], substitutedReturnType)
 
   {- [Syn-App]
-   G |- e ==> x:s -> t
-   G |- y <== s
-   -----------------------
+   G |- e ==> x:s -> t       G |- y <== s
+   --------------------------------------
    G |- e y ==> t[x := y]
   -}
   App funcTerm argTerm -> do
+    -- G |- e ==> x:s -> t
     (funcConstraints, funcType) <- synths funcTerm
     case funcType of
       TypeFun (NamedFuncArg argId argT) (ScopedRType returnT) -> do
+        -- G |- y <== s
         argConstraints <- check (funcAppArgToTerm argTerm) argT
         let
           -- y aka application argument in ANF form
           substitutedReturnType = substType argId (funcArgTermToPred argTerm) returnT
         pure (CAnd [funcConstraints, argConstraints], substitutedReturnType)
       _ -> throwError $
-        "Application to non-function: " <> pShowS funcTerm
-        <> "\nActual type: " <> pShowS funcType
-  other -> throwError $ "Can't synths case: " <> pShowS other
+        "Application to non-function: " <> pShowT funcTerm
+        <> "\nActual type: " <> pShowT funcType
+
+  other -> throwError $ "Can't synths case: " <> pShowT other
 
 funcAppArgToTerm :: FuncAppArg -> Term
 funcAppArgToTerm = \case

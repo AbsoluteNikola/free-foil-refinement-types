@@ -23,6 +23,7 @@ import Language.Sprite.Syntax.Lex   ( Token )
 import Language.Sprite.Syntax.Par   ( myLexer, pTerm)
 import Language.Sprite.Syntax.Print ( Print, printTree )
 import Text.Pretty.Simple (pPrint)
+import qualified Language.Sprite.Naive.Run as S
 
 type Err        = Either String
 type ParseFun a = [Token] -> Err a
@@ -31,12 +32,12 @@ type Verbosity  = Int
 putStrV :: Verbosity -> String -> IO ()
 putStrV v s = when (v > 1) $ putStrLn s
 
-runFile :: (Print a, Show a) => Verbosity -> ParseFun a -> FilePath -> IO ()
-runFile v p f = putStrLn f >> readFile f >>= run v p
+runFile :: Verbosity -> FilePath -> IO ()
+runFile v f = putStrLn f >> readFile f >>= run f v
 
-run :: (Print a, Show a) => Verbosity -> ParseFun a -> String -> IO ()
-run v p s =
-  case p ts of
+run :: FilePath -> Verbosity -> String -> IO ()
+run f v s =
+  case pTerm ts of
     Left err -> do
       putStrLn "\nParse              Failed...\n"
       putStrV v "Tokens:"
@@ -46,15 +47,18 @@ run v p s =
     Right tree -> do
       putStrLn "\nParse Successful!"
       showTree v tree
+      putStrV v $ "\n[Type check result]\n\n"
+      S.run f tree
+
   where
   ts = myLexer s
   showPosToken ((l,c),t) = concat [ show l, ":", show c, "\t", show t ]
 
 showTree :: (Show a, Print a) => Int -> a -> IO ()
 showTree v tree = do
-  putStrV v $ "\n[Abstract Syntax]\n\n"
-  pPrint tree
   putStrV v $ "\n[Linearized tree]\n\n" ++ printTree tree
+  -- putStrV v $ "\n[Abstract Syntax]\n\n"
+  -- pPrint tree
 
 usage :: IO ()
 usage = do
@@ -71,6 +75,5 @@ main = do
   args <- getArgs
   case args of
     ["--help"] -> usage
-    []         -> getContents >>= run 2 pTerm
-    "-s":fs    -> mapM_ (runFile 0 pTerm) fs
-    fs         -> mapM_ (runFile 2 pTerm) fs
+    "-s":fs    -> mapM_ (runFile 0) fs
+    fs         -> mapM_ (runFile 2) fs

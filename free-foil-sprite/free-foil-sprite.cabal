@@ -54,6 +54,7 @@ library
       Language.Sprite.Naive.Check
       Language.Sprite.Naive.Substitution
       Language.Sprite.Naive.Predicates
+      Language.Sprite.Naive.Run
       Lib
   other-modules:
       Paths_free_foil_sprite
