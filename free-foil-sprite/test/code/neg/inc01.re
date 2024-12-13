@@ -13,4 +13,4 @@ let inc2 = (x) => {
     let tmp = inc(x);
     dec(tmp)
 };
-
+0

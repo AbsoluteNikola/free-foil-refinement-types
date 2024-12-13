@@ -6,3 +6,4 @@ let inc = (x) => {
 };
 
 let bar = inc(10);
+0

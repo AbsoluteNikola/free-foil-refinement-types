@@ -20,7 +20,7 @@ import Control.Monad      ( when )
 
 import Language.Sprite.Syntax.Abs   ()
 import Language.Sprite.Syntax.Lex   ( Token, mkPosToken )
-import Language.Sprite.Syntax.Par   ( pListDecl, myLexer )
+import Language.Sprite.Syntax.Par   ( pTerm, myLexer )
 import Language.Sprite.Syntax.Print ( Print, printTree )
 import Language.Sprite.Syntax.Skel  ()
 
@@ -70,7 +70,7 @@ main = do
   args <- getArgs
   case args of
     ["--help"] -> usage
-    []         -> getContents >>= run 2 pListDecl
-    "-s":fs    -> mapM_ (runFile 0 pListDecl) fs
-    fs         -> mapM_ (runFile 2 pListDecl) fs
+    []         -> getContents >>= run 2 pTerm
+    "-s":fs    -> mapM_ (runFile 0 pTerm) fs
+    fs         -> mapM_ (runFile 2 pTerm) fs
 

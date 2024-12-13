@@ -22,6 +22,16 @@ source-repository head
   type: git
   location: https://github.com/AbsoluteNikola/free-foil-sprite
 
+common extensions
+    default-extensions:
+      ImportQualifiedPost
+      LambdaCase
+      DerivingStrategies
+      GeneralizedNewtypeDeriving
+      OverloadedStrings
+      RecordWildCards
+      OverloadedRecordDot
+
 custom-setup
   setup-depends:
       Cabal >=2.4.0.1 && <4.0
@@ -30,6 +40,7 @@ custom-setup
     , process >=1.6.3.0
 
 library
+  import: extensions
   exposed-modules:
       Language.Sprite.FreeFoilConfig
       Language.Sprite.Syntax
@@ -38,6 +49,12 @@ library
       Language.Sprite.Syntax.Par
       Language.Sprite.Syntax.Print
       Language.Sprite.TypeCheck
+
+      Language.Sprite.Naive.Constraints
+      Language.Sprite.Naive.Check
+      Language.Sprite.Naive.Substitution
+      Language.Sprite.Naive.Predicates
+      Language.Sprite.Naive.Run
       Lib
   other-modules:
       Paths_free_foil_sprite
@@ -58,6 +75,11 @@ library
     , containers
     , free-foil >=0.2.0
     , pretty-simple
+    , transformers
+    , mtl
+    , text
+    , liquid-fixpoint
+
   default-language: Haskell2010
 
 executable free-foil-sprite-exe
