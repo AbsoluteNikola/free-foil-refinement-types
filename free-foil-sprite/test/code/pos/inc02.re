@@ -13,3 +13,4 @@ let incf = (x) => {
     };
     tmp(inc)
 };
+incf(10)

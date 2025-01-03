@@ -19,33 +19,32 @@ data Term
     = ConstInt Integer
     | Var VarIdent
     | Let Decl ScopedTerm
-    | Fun [FunArgsName] ScopedTerm
-    | App Term [ArgList]
-    | Op Term IntOp Term
+    | Fun VarIdent ScopedTerm
+    | App Term FuncAppArg
+    | Op FuncAppArg IntOp FuncAppArg
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data Ann = Ann VarIdent RType
+data Annotation = Annotation VarIdent RType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data PlainDecl = PlainDecl VarIdent Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data Decl = AnnotaedDecl Ann PlainDecl | UnannotaedDecl PlainDecl
+data Decl
+    = AnnotatedDecl Annotation PlainDecl | UnAnnotatedDecl PlainDecl
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data IntOp = IntPlus | IntMinus | IntMultiply
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data RType
-    = TypeRefined BaseType VarIdent Pred
-    | TypeRefinedBase BaseType
-    | TypeFun FuncArg ScopedRType
+    = TypeRefined BaseType VarIdent Pred | TypeFun FuncArg ScopedRType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data ScopedRType = ScopedRType RType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data FuncArg = UnNamedFuncArg RType | NamedFuncArg VarIdent RType
+data FuncArg = NamedFuncArg VarIdent RType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data Pred
@@ -70,12 +69,8 @@ data ScopedTerm = ScopedTerm Term
 data BaseType = BaseTypeInt
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data FunArgsName = FunArgsName VarIdent
-  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
-
-data ArgList = ArgList Term
+data FuncAppArg = FuncAppArgInt Integer | FuncAppArgVar VarIdent
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 newtype VarIdent = VarIdent String
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic, Data.String.IsString)
-

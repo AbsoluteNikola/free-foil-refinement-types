@@ -28,7 +28,7 @@ $u = [. \n]          -- universal: any character
 
 -- Symbols and non-identifier-like reserved words
 
-@rsyms = \( | \) | \= \> | \{ | \} | \/ \* \@ | \: | \* \/ | \= | \; | \+ | \- | \* | \[ | \| | \] | \= \= | \< | \< \= | \,
+@rsyms = \( | \) | \= \> | \{ | \} | \/ \* \@ | \: | \* \/ | \= | \; | \+ | \- | \* | \[ | \| | \] | \= \= | \< | \< \=
 
 :-
 
@@ -154,18 +154,16 @@ eitherResIdent tv s = treeFind resWords
 -- | The keywords and symbols of the language organized as binary search tree.
 resWords :: BTree
 resWords =
-  b "=" 13
-    (b "-" 7
+  b "==" 13
+    (b "/*@" 7
        (b "*/" 4
-          (b ")" 2 (b "(" 1 N N) (b "*" 3 N N)) (b "," 6 (b "+" 5 N N) N))
-       (b ";" 10
-          (b ":" 9 (b "/*@" 8 N N) N) (b "<=" 12 (b "<" 11 N N) N)))
-    (b "let" 20
-       (b "]" 17
-          (b "=>" 15 (b "==" 14 N N) (b "[" 16 N N))
-          (b "int" 19 (b "false" 18 N N) N))
-       (b "{" 23
-          (b "val" 22 (b "true" 21 N N) N) (b "}" 25 (b "|" 24 N N) N)))
+          (b ")" 2 (b "(" 1 N N) (b "*" 3 N N)) (b "-" 6 (b "+" 5 N N) N))
+       (b "<" 10 (b ";" 9 (b ":" 8 N N) N) (b "=" 12 (b "<=" 11 N N) N)))
+    (b "let" 19
+       (b "]" 16
+          (b "[" 15 (b "=>" 14 N N) N) (b "int" 18 (b "false" 17 N N) N))
+       (b "{" 22
+          (b "val" 21 (b "true" 20 N N) N) (b "}" 24 (b "|" 23 N N) N)))
   where
   b s n = B bs (TS bs n)
     where

@@ -9,3 +9,4 @@ let inc2 = (x) => {
     let tmp = inc(x);
     inc(tmp)
 };
+inc2(10)
