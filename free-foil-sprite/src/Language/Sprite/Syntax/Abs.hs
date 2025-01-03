@@ -74,4 +74,3 @@ data FuncAppArg = FuncAppArgInt Integer | FuncAppArgVar VarIdent
 
 newtype VarIdent = VarIdent String
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic, Data.String.IsString)
-

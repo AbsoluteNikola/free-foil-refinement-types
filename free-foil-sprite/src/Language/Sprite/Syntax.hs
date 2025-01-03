@@ -15,7 +15,7 @@ import Data.String (IsString(..))
 import qualified Data.Map as Map
 import qualified Language.Sprite.Syntax.Print as Raw
 import qualified Language.Sprite.Syntax.Par as Raw
-import Data.Bifunctor.TH
+import Data.Bifunctor.TH ()
 import qualified Control.Monad.Foil as Foil
 import Control.Monad.Free.Foil.TH.MkFreeFoil
 import Language.Sprite.FreeFoilConfig (spriteConfig)

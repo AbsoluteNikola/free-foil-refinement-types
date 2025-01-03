@@ -17,6 +17,8 @@ import Data.Function ((&))
 import Data.Text (Text)
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text as T
+import qualified Data.Text.IO as TIO
+import Control.Monad.IO.Class (liftIO)
 
 newtype Env = Env {unEnv :: M.Map VarIdent RType }
 
@@ -31,6 +33,9 @@ showT = T.pack . show
 
 debugPrint :: Show a => a -> CheckerM ()
 debugPrint = pPrint
+
+debugPrintT :: Text -> CheckerM ()
+debugPrintT = liftIO . TIO.putStrLn
 
 emptyEnv :: Env
 emptyEnv = Env M.empty
@@ -55,10 +60,12 @@ subtype lt@(TypeRefined lb leftVarId leftPredicate) rt@(TypeRefined rb rightVarI
     let
       implMsg = "Refinement subtype error: (v::t) => q[w := v]. Where v="
         <> showT leftVarId
+        <> ", w=" <> showT rightVarId
       predMsg = "Refinement subtype error: q[w := v]. Where w="
         <> showT rightVarId <> " and v=" <> showT leftVarId
+      predSubst = CPred (substPred rightVarId (PVar leftVarId) rightPredicate) predMsg
     pure $
-      buildImplicationFromType implMsg leftVarId lt (CPred (substPred rightVarId (PVar leftVarId) rightPredicate) predMsg)
+      buildImplicationFromType implMsg leftVarId lt predSubst
 
 
 {- | [Sub-Fun]
@@ -178,21 +185,13 @@ synths currentTerm = case currentTerm of
   Op leftTerm op rightTerm  -> do
     let
       opTypes = intBinOpTypes op
-    debugPrint @String "Syn op"
-    debugPrint leftTerm
-    debugPrint opTypes.leftArgT
-    debugPrint rightTerm
-    debugPrint opTypes.rightArgT
     lc <- check (funcAppArgToTerm leftTerm) opTypes.leftArgT
     rc <- check (funcAppArgToTerm rightTerm) opTypes.rightArgT
-    debugPrint @String "Syn op check args ok"
     let
       -- the same as two applications (Syn-App)
       substitutedReturnType =
         substType opTypes.leftArgId (funcArgTermToPred leftTerm) opTypes.resultType
           & substType opTypes.rightArgId (funcArgTermToPred rightTerm)
-    debugPrint @String "Syn op substituted res"
-    debugPrint substitutedReturnType
     pure (CAnd [lc, rc], substitutedReturnType)
 
   {- [Syn-App]
