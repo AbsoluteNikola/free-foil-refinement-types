@@ -5,12 +5,12 @@ version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/AbsoluteNikola/free-foil-sprite#readme>
 homepage:       https://github.com/AbsoluteNikola/free-foil-sprite#readme
 bug-reports:    https://github.com/AbsoluteNikola/free-foil-sprite/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2024 Author name here
+author:         Nikolay Rulev
+maintainer:     nikolayr2001@gmail.com
+copyright:      2024 Nikolay Rulev
 license:        BSD-3-Clause
 license-file:   LICENSE
-build-type:     Custom
+build-type:     Simple
 extra-source-files:
     README.md
     CHANGELOG.md
@@ -31,23 +31,21 @@ common extensions
       OverloadedStrings
       RecordWildCards
       OverloadedRecordDot
-
-custom-setup
-  setup-depends:
-      Cabal >=2.4.0.1 && <4.0
-    , PyF
-    , base >=4.11.0.0 && <5.0
-    , process >=1.6.3.0
+      ViewPatterns
 
 library
   import: extensions
   exposed-modules:
       Language.Sprite.FreeFoilConfig
       Language.Sprite.Syntax
-      Language.Sprite.Syntax.Abs
-      Language.Sprite.Syntax.Lex
-      Language.Sprite.Syntax.Par
-      Language.Sprite.Syntax.Print
+      Language.Sprite.Syntax.Front.Abs
+      Language.Sprite.Syntax.Front.Lex
+      Language.Sprite.Syntax.Front.Par
+      Language.Sprite.Syntax.Front.Print
+      Language.Sprite.Syntax.Inner.Abs
+      Language.Sprite.Syntax.Inner.Lex
+      Language.Sprite.Syntax.Inner.Par
+      Language.Sprite.Syntax.Inner.Print
       Language.Sprite.TypeCheck
 
       Language.Sprite.Naive.Constraints

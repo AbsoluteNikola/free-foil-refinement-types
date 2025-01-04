@@ -3,7 +3,7 @@ module Language.Sprite.Naive.Check where
 
 import Data.Map.Strict qualified as M
 
-import Language.Sprite.Syntax.Abs
+import Language.Sprite.Syntax.Front.Abs
 import Control.Monad.Except (ExceptT)
 import Control.Monad.Error.Class (MonadError(..))
 import Control.Monad.IO.Class (MonadIO)
@@ -53,7 +53,7 @@ subtype :: RType -> RType -> CheckerM Constraint
      -------------------
      b{v:p} <= b{w:q}
  -}
-subtype lt@(TypeRefined lb leftVarId leftPredicate) rt@(TypeRefined rb rightVarId rightPredicate)
+subtype lt@(TypeRefined lb leftVarId _leftPredicate) (TypeRefined rb rightVarId rightPredicate)
   | lb /= rb = throwError
     $ "Invalid subtyping. Different refined base: " <> pShowT lb <> " and " <> pShowT rb
   | otherwise = do

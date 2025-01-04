@@ -1,2 +1,3 @@
 free-foil-sprite/src/Language/Sprite/Syntax/* linguist-generated=true
-free-foil-sprite/src/Language/Sprite/Syntax/Abs.hs linguist-generated=false
+free-foil-sprite/src/Language/Sprite/Syntax/Front/Abs.hs linguist-generated=false
+free-foil-sprite/src/Language/Sprite/Syntax/Inner/Abs.hs linguist-generated=false
