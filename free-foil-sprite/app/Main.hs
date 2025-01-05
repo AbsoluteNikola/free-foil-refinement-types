@@ -24,10 +24,8 @@ import Language.Sprite.Syntax.Front.Lex   ( Token )
 import Language.Sprite.Syntax.Front.Par   ( myLexer, pTerm)
 import Language.Sprite.Syntax.Front.Print ( Print, printTree )
 import Text.Pretty.Simple (pPrint)
-import qualified Language.Sprite.Naive.Run as S
+import qualified Language.Sprite.TypeCheck.Run as S
 
-type Err        = Either String
-type ParseFun a = [Token] -> Err a
 type Verbosity  = Int
 
 putStrV :: Verbosity -> String -> IO ()
@@ -53,9 +51,9 @@ run f v s =
 
   where
   ts = myLexer s
-  showPosToken ((l,c),t) = concat [ show l, ":", show c, "\t", show t ]
+  -- showPosToken ((l,c),t) = concat [ show l, ":", show c, "\t", show t ]
 
-showTree :: (Show a, Print a) => Int -> a -> IO ()
+showTree :: (Print a) => Int -> a -> IO ()
 showTree v tree = do
   putStrV v $ "\n[Linearized tree]\n\n" ++ printTree tree
   -- putStrV v $ "\n[Abstract Syntax]\n\n"

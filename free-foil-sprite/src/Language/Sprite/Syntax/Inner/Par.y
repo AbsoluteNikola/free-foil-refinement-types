@@ -71,12 +71,12 @@ Term :: { Language.Sprite.Syntax.Inner.Abs.Term }
 Term
   : Integer { Language.Sprite.Syntax.Inner.Abs.ConstInt $1 }
   | VarIdent { Language.Sprite.Syntax.Inner.Abs.Var $1 }
-  | 'let' Term '=' Pattern ';' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.Let $2 $4 $6 }
+  | 'let' Pattern '=' Term ';' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.Let $2 $4 $6 }
   | '(' Pattern ')' '=>' '{' ScopedTerm '}' { Language.Sprite.Syntax.Inner.Abs.Fun $2 $6 }
   | Term '(' Term ')' { Language.Sprite.Syntax.Inner.Abs.App $1 $3 }
   | '/*@' Term '*/' Term { Language.Sprite.Syntax.Inner.Abs.Ann $2 $4 }
   | BaseType '[' Pattern '|' ScopedTerm ']' { Language.Sprite.Syntax.Inner.Abs.TypeRefined $1 $3 $5 }
-  | Term ':' Pattern '=>' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.TypeFun $1 $3 $5 }
+  | Pattern ':' Term '=>' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.TypeFun $1 $3 $5 }
   | 'true' { Language.Sprite.Syntax.Inner.Abs.ConstTrue }
   | 'false' { Language.Sprite.Syntax.Inner.Abs.ConstFalse }
   | '(' Term '==' Term ')' { Language.Sprite.Syntax.Inner.Abs.PEq $2 $4 }

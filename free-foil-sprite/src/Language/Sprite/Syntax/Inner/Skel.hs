@@ -23,12 +23,12 @@ transTerm :: Language.Sprite.Syntax.Inner.Abs.Term -> Result
 transTerm x = case x of
   Language.Sprite.Syntax.Inner.Abs.ConstInt integer -> failure x
   Language.Sprite.Syntax.Inner.Abs.Var varident -> failure x
-  Language.Sprite.Syntax.Inner.Abs.Let term pattern_ scopedterm -> failure x
+  Language.Sprite.Syntax.Inner.Abs.Let pattern_ term scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.Fun pattern_ scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.App term1 term2 -> failure x
   Language.Sprite.Syntax.Inner.Abs.Ann term1 term2 -> failure x
   Language.Sprite.Syntax.Inner.Abs.TypeRefined basetype pattern_ scopedterm -> failure x
-  Language.Sprite.Syntax.Inner.Abs.TypeFun term pattern_ scopedterm -> failure x
+  Language.Sprite.Syntax.Inner.Abs.TypeFun pattern_ term scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.ConstTrue -> failure x
   Language.Sprite.Syntax.Inner.Abs.ConstFalse -> failure x
   Language.Sprite.Syntax.Inner.Abs.PEq term1 term2 -> failure x

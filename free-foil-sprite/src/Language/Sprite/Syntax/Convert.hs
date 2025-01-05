@@ -8,6 +8,7 @@ data ConvertError
       F.VarIdent {- Annotation identifier -}
       F.VarIdent {- Binding identifier -}
       F.Decl {- Part of code -}
+  deriving (Show) -- TODO: add pretty printer
 
 convert :: F.Term -> Either ConvertError I.Term
 convert ft = case ft of
@@ -52,11 +53,11 @@ convertDecl decl = case decl of
     | otherwise -> do
       convertedVarValue <- convert varValue
       pure $ \letBody -> I.Ann (convertRType typ)
-        $ I.Let convertedVarValue (convertVarIdToPattern varId) letBody
+        $ I.Let (convertVarIdToPattern varId) convertedVarValue letBody
   F.UnAnnotatedDecl (F.PlainDecl varId varValue) ->  do
       convertedVarValue <- convert varValue
       pure $ \letBody ->
-        I.Let convertedVarValue (convertVarIdToPattern varId) letBody
+        I.Let (convertVarIdToPattern varId) convertedVarValue  letBody
 
 convertRType :: F.RType -> I.Term
 convertRType rType = case rType of
@@ -68,8 +69,8 @@ convertRType rType = case rType of
 
   F.TypeFun (F.NamedFuncArg argId argType) (F.ScopedRType retType) ->
     I.TypeFun
-      (convertRType argType)
       (convertVarIdToPattern argId)
+      (convertRType argType)
       (I.ScopedTerm $ convertRType retType)
 
 convertBaseType :: F.BaseType -> I.BaseType

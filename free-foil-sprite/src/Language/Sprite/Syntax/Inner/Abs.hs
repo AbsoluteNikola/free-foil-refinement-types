@@ -18,12 +18,12 @@ import qualified GHC.Generics as C (Generic)
 data Term
     = ConstInt Integer
     | Var VarIdent
-    | Let Term Pattern ScopedTerm
+    | Let Pattern Term ScopedTerm
     | Fun Pattern ScopedTerm
     | App Term Term
     | Ann Term Term
     | TypeRefined BaseType Pattern ScopedTerm
-    | TypeFun Term Pattern ScopedTerm
+    | TypeFun Pattern Term ScopedTerm
     | ConstTrue
     | ConstFalse
     | PEq Term Term

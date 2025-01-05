@@ -23,3 +23,5 @@ cabal.project.local~
 .ghc.environment.*
 *.bak
 .vscode
+.liquid
+haddocks

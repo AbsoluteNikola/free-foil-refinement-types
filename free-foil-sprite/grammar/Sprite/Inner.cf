@@ -4,13 +4,13 @@ token VarIdent lower (letter | digit | '_')* ;
 -- expr terms
 ConstInt.     Term ::= Integer ;
 Var.          Term ::= VarIdent ;
-Let.          Term ::= "let" Term "=" Pattern ";" ScopedTerm ;  -- FIXME: requires fix in Template Haskell (mkFreeFoil)
+Let.          Term ::= "let" Pattern "=" Term ";" ScopedTerm ;  -- FIXME: requires fix in Template Haskell (mkFreeFoil)
 Fun.          Term ::= "(" Pattern ")" "=>" "{" ScopedTerm "}" ;
 App.          Term ::= Term "(" Term ")" ;
 Ann.          Term ::= "/*@" Term "*/" Term; -- FIXME: Problem with TH generations when "/*@" Pattern : Term "*/" Term;
 -- type terms
 TypeRefined.  Term ::= BaseType "[" Pattern "|" ScopedTerm "]" ;
-TypeFun.      Term ::= Term ":" Pattern "=>" ScopedTerm ;   -- FIXME: same problem as with Let
+TypeFun.      Term ::= Pattern ":" Term "=>" ScopedTerm ;   -- FIXME: same problem as with Let
 -- predicate terms
 ConstTrue.      Term ::= "true" ;
 ConstFalse.     Term ::= "false" ;

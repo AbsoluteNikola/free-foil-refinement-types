@@ -38,6 +38,7 @@ library
   exposed-modules:
       Language.Sprite.FreeFoilConfig
       Language.Sprite.Syntax
+      Language.Sprite.Syntax.Convert
       Language.Sprite.Syntax.Front.Abs
       Language.Sprite.Syntax.Front.Lex
       Language.Sprite.Syntax.Front.Par
@@ -47,6 +48,8 @@ library
       Language.Sprite.Syntax.Inner.Par
       Language.Sprite.Syntax.Inner.Print
       Language.Sprite.TypeCheck
+      Language.Sprite.TypeCheck.Check
+      Language.Sprite.TypeCheck.Run
 
       Language.Sprite.Naive.Constraints
       Language.Sprite.Naive.Check

@@ -1,5 +1,5 @@
 
-/*@ val inc: x:int => int[v | x < v] */
+/*@ val inc: x:int[x|true] => int[v | x < v] */
 let inc = (x) => {
     x + 1
 };
