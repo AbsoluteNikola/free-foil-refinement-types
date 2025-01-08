@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeApplications #-}
 module Language.Sprite.Naive.Check where
 
 import Data.Map.Strict qualified as M
@@ -6,7 +5,7 @@ import Data.Map.Strict qualified as M
 import Language.Sprite.Syntax.Front.Abs
 import Control.Monad.Except (ExceptT)
 import Control.Monad.Error.Class (MonadError(..))
-import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Control.Monad.Trans.Reader (ReaderT)
 import Control.Monad.Reader (MonadReader(..), asks)
 import Language.Sprite.Naive.Constraints
@@ -18,7 +17,6 @@ import Data.Text (Text)
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
-import Control.Monad.IO.Class (liftIO)
 
 newtype Env = Env {unEnv :: M.Map VarIdent RType }
 

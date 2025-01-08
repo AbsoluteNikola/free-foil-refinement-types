@@ -32,6 +32,9 @@ common extensions
       RecordWildCards
       OverloadedRecordDot
       ViewPatterns
+      TypeApplications
+      ScopedTypeVariables
+      GADTs
 
 library
   import: extensions
@@ -49,6 +52,8 @@ library
       Language.Sprite.Syntax.Inner.Print
       Language.Sprite.TypeCheck
       Language.Sprite.TypeCheck.Check
+      Language.Sprite.TypeCheck.Constraints
+      Language.Sprite.TypeCheck.Predicates
       Language.Sprite.TypeCheck.Run
 
       Language.Sprite.Naive.Constraints

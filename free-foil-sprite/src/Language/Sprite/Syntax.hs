@@ -9,6 +9,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE InstanceSigs #-}
 module Language.Sprite.Syntax where
 
 import Data.String (IsString(..))
@@ -24,8 +25,8 @@ import qualified Language.Sprite.Syntax.Inner.Abs
 import qualified GHC.Generics
 import qualified Control.Monad.Free.Foil
 
--- There is issue with generating patterns and instances for AST nodes with pattern and multiple Terms/Scoped terms.
--- Code below just copy paste of generated code via TH and some fixes. I hope I will find some time to fix it in free-foil
+-- There is issue with generating patterns and instances for AST nodes with Pattern and multiple Terms/Scoped terms.
+-- Code below just copy paste of generated code via TH and some fixes (marked as FIXED HERE). I hope I will find some time to fix it in free-foil
 -- the same issue with mkFreeFoilConversions
 -- mkFreeFoil spriteConfig
 data Pattern o i
@@ -249,6 +250,7 @@ instance Show (Term n) where
   show = Raw.printTree . fromTerm
 
 instance IsString (Term Foil.VoidS) where
+  fromString :: String -> Term Foil.VoidS
   fromString = toTerm Foil.emptyScope Map.empty . unsafeParseTerm
     where
       unsafeParseTerm input =
