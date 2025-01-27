@@ -4,9 +4,9 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
--- | The abstract syntax of language Syntax.
+-- | The abstract syntax of language Front.
 
-module Language.Sprite.Syntax.Abs where
+module Language.Sprite.Syntax.Front.Abs where
 
 import Prelude (Integer, String)
 import qualified Prelude as C (Eq, Ord, Show, Read)
@@ -74,3 +74,4 @@ data FuncAppArg = FuncAppArgInt Integer | FuncAppArgVar VarIdent
 
 newtype VarIdent = VarIdent String
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic, Data.String.IsString)
+

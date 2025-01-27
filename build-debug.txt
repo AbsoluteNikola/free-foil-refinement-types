@@ -1,0 +1,375 @@
+Build profile: -w ghc-9.8.2 -O1
+In order, the following will be built (use -v for more details):
+ - free-foil-sprite-0.1.0.0 (lib) (file src/Language/Sprite/Syntax.hs changed)
+ - free-foil-sprite-0.1.0.0 (exe:free-foil-sprite-exe) (dependency rebuilt)
+Preprocessing library for free-foil-sprite-0.1.0.0..
+Building library for free-foil-sprite-0.1.0.0..
+[15 of 18] Compiling Language.Sprite.Syntax ( src/Language/Sprite/Syntax.hs, /Users/n.rulev/Documents/itmo/free-foil-refinement-types/dist-newstyle/build/aarch64-osx/ghc-9.8.2/free-foil-sprite-0.1.0.0/build/Language/Sprite/Syntax.o, /Users/n.rulev/Documents/itmo/free-foil-refinement-types/dist-newstyle/build/aarch64-osx/ghc-9.8.2/free-foil-sprite-0.1.0.0/build/Language/Sprite/Syntax.dyn_o ) [Source file changed]
+src/Language/Sprite/Syntax.hs:24:1-23: Splicing declarations
+    mkFreeFoil spriteConfig
+  ======>
+    data Pattern o i
+      where
+        PatternVar :: (Foil.NameBinder o i0_a91x) -> Pattern o i0_a91x
+    data TermSig scope term
+      where
+        ConstIntSig :: Integer -> TermSig scope term
+        LetSig :: term -> scope -> TermSig scope term
+        FunSig :: scope -> TermSig scope term
+        AppSig :: term -> term -> TermSig scope term
+        AnnSig :: term -> term -> TermSig scope term
+        TypeRefinedSig :: Language.Sprite.Syntax.Inner.Abs.BaseType ->
+                          scope ->
+                          TermSig scope term
+        TypeFunSig :: term -> scope -> TermSig scope term
+        ConstTrueSig :: TermSig scope term
+        ConstFalseSig :: TermSig scope term
+        PEqSig :: term -> term -> TermSig scope term
+        PLessOrEqThanSig :: term -> term -> TermSig scope term
+        PLessThanSig :: term -> term -> TermSig scope term
+        PlusSig :: term -> term -> TermSig scope term
+        MinusSig :: term -> term -> TermSig scope term
+        MultiplySig :: term -> term -> TermSig scope term
+      deriving (GHC.Generics.Generic, Functor, Foldable, Traversable)
+    type Term = Control.Monad.Free.Foil.AST Pattern TermSig
+    type ScopedTerm = Control.Monad.Free.Foil.ScopedAST Pattern TermSig
+    pattern ConstInt :: Integer -> Term o
+    pattern ConstInt x_a91y = Control.Monad.Free.Foil.Node (ConstIntSig x_a91y)
+    pattern Let :: Term o -> Pattern o i -> Term i -> Term o
+    pattern Let x_a91z binder_a91A body_a91B = Control.Monad.Free.Foil.Node (LetSig x_a91z
+                                                                                    (Control.Monad.Free.Foil.ScopedAST binder_a91A
+                                                                                                                       body_a91B))
+    pattern Fun :: Pattern o i -> Term i -> Term o
+    pattern Fun binder_a91C body_a91D = Control.Monad.Free.Foil.Node (FunSig (Control.Monad.Free.Foil.ScopedAST binder_a91C
+                                                                                                                body_a91D))
+    pattern App :: Term o -> Term o -> Term o
+    pattern App x_a91E x_a91F = Control.Monad.Free.Foil.Node (AppSig x_a91E
+                                                                     x_a91F)
+    pattern Ann :: Term o -> Term o -> Term o
+    pattern Ann x_a91G x_a91H = Control.Monad.Free.Foil.Node (AnnSig x_a91G
+                                                                     x_a91H)
+    pattern TypeRefined ::
+              Language.Sprite.Syntax.Inner.Abs.BaseType
+              -> Pattern o i -> Term i -> Term o
+    pattern TypeRefined x_a91I binder_a91J body_a91K = Control.Monad.Free.Foil.Node (TypeRefinedSig x_a91I
+                                                                                                    (Control.Monad.Free.Foil.ScopedAST binder_a91J
+                                                                                                                                       body_a91K))
+    pattern TypeFun :: Term o -> Pattern o i -> Term i -> Term o
+    pattern TypeFun x_a91L binder_a91M body_a91N = Control.Monad.Free.Foil.Node (TypeFunSig x_a91L
+                                                                                            (Control.Monad.Free.Foil.ScopedAST binder_a91M
+                                                                                                                               body_a91N))
+    pattern ConstTrue :: Term o
+    pattern ConstTrue = Control.Monad.Free.Foil.Node ConstTrueSig
+    pattern ConstFalse :: Term o
+    pattern ConstFalse = Control.Monad.Free.Foil.Node ConstFalseSig
+    pattern PEq :: Term o -> Term o -> Term o
+    pattern PEq x_a91O x_a91P = Control.Monad.Free.Foil.Node (PEqSig x_a91O
+                                                                     x_a91P)
+    pattern PLessOrEqThan :: Term o -> Term o -> Term o
+    pattern PLessOrEqThan x_a91Q x_a91R = Control.Monad.Free.Foil.Node (PLessOrEqThanSig x_a91Q
+                                                                                         x_a91R)
+    pattern PLessThan :: Term o -> Term o -> Term o
+    pattern PLessThan x_a91S x_a91T = Control.Monad.Free.Foil.Node (PLessThanSig x_a91S
+                                                                                 x_a91T)
+    pattern Plus :: Term o -> Term o -> Term o
+    pattern Plus x_a91U x_a91V = Control.Monad.Free.Foil.Node (PlusSig x_a91U
+                                                                       x_a91V)
+    pattern Minus :: Term o -> Term o -> Term o
+    pattern Minus x_a91W x_a91X = Control.Monad.Free.Foil.Node (MinusSig x_a91W
+                                                                         x_a91X)
+    pattern Multiply :: Term o -> Term o -> Term o
+    pattern Multiply x_a91Y x_a91Z = Control.Monad.Free.Foil.Node (MultiplySig x_a91Y
+                                                                               x_a91Z)
+    {-# COMPLETE Control.Monad.Free.Foil.Var, ConstInt, Let, Fun, App, Ann, TypeRefined, TypeFun, ConstTrue, ConstFalse, PEq, PLessOrEqThan, PLessThan, Plus, Minus, Multiply #-}
+src/Language/Sprite/Syntax.hs:26:1-25: Splicing declarations
+    deriveBifunctor ''TermSig
+  ======>
+    instance Data.Bifunctor.Bifunctor TermSig where
+      Data.Bifunctor.bimap
+        = \ f_abBq g_abBr value_abBt
+            -> bfnctrs-5.6.2-a8b5d53d:Data.Bifunctor.TH.Internal.bimapConst
+                 (case value_abBt of
+                    ConstIntSig _arg1_abBu -> ConstIntSig _arg1_abBu
+                    LetSig _arg1_abBv _arg2_abBw
+                      -> LetSig (g_abBr _arg1_abBv) (f_abBq _arg2_abBw)
+                    FunSig _arg1_abBx -> FunSig (f_abBq _arg1_abBx)
+                    AppSig _arg1_abBy _arg2_abBz
+                      -> AppSig (g_abBr _arg1_abBy) (g_abBr _arg2_abBz)
+                    AnnSig _arg1_abBA _arg2_abBB
+                      -> AnnSig (g_abBr _arg1_abBA) (g_abBr _arg2_abBB)
+                    TypeRefinedSig _arg1_abBC _arg2_abBD
+                      -> TypeRefinedSig _arg1_abBC (f_abBq _arg2_abBD)
+                    TypeFunSig _arg1_abBE _arg2_abBF
+                      -> TypeFunSig (g_abBr _arg1_abBE) (f_abBq _arg2_abBF)
+                    ConstTrueSig -> ConstTrueSig
+                    ConstFalseSig -> ConstFalseSig
+                    PEqSig _arg1_abBG _arg2_abBH
+                      -> PEqSig (g_abBr _arg1_abBG) (g_abBr _arg2_abBH)
+                    PLessOrEqThanSig _arg1_abBI _arg2_abBJ
+                      -> PLessOrEqThanSig (g_abBr _arg1_abBI) (g_abBr _arg2_abBJ)
+                    PLessThanSig _arg1_abBK _arg2_abBL
+                      -> PLessThanSig (g_abBr _arg1_abBK) (g_abBr _arg2_abBL)
+                    PlusSig _arg1_abBM _arg2_abBN
+                      -> PlusSig (g_abBr _arg1_abBM) (g_abBr _arg2_abBN)
+                    MinusSig _arg1_abBO _arg2_abBP
+                      -> MinusSig (g_abBr _arg1_abBO) (g_abBr _arg2_abBP)
+                    MultiplySig _arg1_abBQ _arg2_abBR
+                      -> MultiplySig (g_abBr _arg1_abBQ) (g_abBr _arg2_abBR))
+                 f_abBq g_abBr value_abBt
+src/Language/Sprite/Syntax.hs:27:1-26: Splicing declarations
+    deriveBifoldable ''TermSig
+  ======>
+    instance Data.Bifoldable.Bifoldable TermSig where
+      Data.Bifoldable.bifoldr
+        = \ f_abSv g_abSw z_abSx value_abSy
+            -> bfnctrs-5.6.2-a8b5d53d:Data.Bifunctor.TH.Internal.bifoldrConst
+                 (case value_abSy of
+                    ConstIntSig _arg1_abSB -> z_abSx
+                    LetSig _arg1_abSC _arg2_abSD
+                      -> g_abSw _arg1_abSC (f_abSv _arg2_abSD z_abSx)
+                    FunSig _arg1_abSG -> f_abSv _arg1_abSG z_abSx
+                    AppSig _arg1_abSI _arg2_abSJ
+                      -> g_abSw _arg1_abSI (g_abSw _arg2_abSJ z_abSx)
+                    AnnSig _arg1_abSM _arg2_abSN
+                      -> g_abSw _arg1_abSM (g_abSw _arg2_abSN z_abSx)
+                    TypeRefinedSig _arg1_abSS _arg2_abST -> f_abSv _arg2_abST z_abSx
+                    TypeFunSig _arg1_abSW _arg2_abSX
+                      -> g_abSw _arg1_abSW (f_abSv _arg2_abSX z_abSx)
+                    ConstTrueSig -> z_abSx
+                    ConstFalseSig -> z_abSx
+                    PEqSig _arg1_abT0 _arg2_abT1
+                      -> g_abSw _arg1_abT0 (g_abSw _arg2_abT1 z_abSx)
+                    PLessOrEqThanSig _arg1_abT4 _arg2_abT5
+                      -> g_abSw _arg1_abT4 (g_abSw _arg2_abT5 z_abSx)
+                    PLessThanSig _arg1_abT8 _arg2_abT9
+                      -> g_abSw _arg1_abT8 (g_abSw _arg2_abT9 z_abSx)
+                    PlusSig _arg1_abTc _arg2_abTd
+                      -> g_abSw _arg1_abTc (g_abSw _arg2_abTd z_abSx)
+                    MinusSig _arg1_abTg _arg2_abTh
+                      -> g_abSw _arg1_abTg (g_abSw _arg2_abTh z_abSx)
+                    MultiplySig _arg1_abTk _arg2_abTl
+                      -> g_abSw _arg1_abTk (g_abSw _arg2_abTl z_abSx))
+                 f_abSv g_abSw z_abSx value_abSy
+      Data.Bifoldable.bifoldMap
+        = \ f_abTo g_abTp value_abTr
+            -> bfnctrs-5.6.2-a8b5d53d:Data.Bifunctor.TH.Internal.bifoldMapConst
+                 (case value_abTr of
+                    ConstIntSig _arg1_abTt -> mempty
+                    LetSig _arg1_abTu _arg2_abTv
+                      -> mappend (g_abTp _arg1_abTu) (f_abTo _arg2_abTv)
+                    FunSig _arg1_abTy -> f_abTo _arg1_abTy
+                    AppSig _arg1_abTA _arg2_abTB
+                      -> mappend (g_abTp _arg1_abTA) (g_abTp _arg2_abTB)
+                    AnnSig _arg1_abTE _arg2_abTF
+                      -> mappend (g_abTp _arg1_abTE) (g_abTp _arg2_abTF)
+                    TypeRefinedSig _arg1_abTJ _arg2_abTK -> f_abTo _arg2_abTK
+                    TypeFunSig _arg1_abTN _arg2_abTO
+                      -> mappend (g_abTp _arg1_abTN) (f_abTo _arg2_abTO)
+                    ConstTrueSig -> mempty
+                    ConstFalseSig -> mempty
+                    PEqSig _arg1_abTR _arg2_abTS
+                      -> mappend (g_abTp _arg1_abTR) (g_abTp _arg2_abTS)
+                    PLessOrEqThanSig _arg1_abTV _arg2_abTW
+                      -> mappend (g_abTp _arg1_abTV) (g_abTp _arg2_abTW)
+                    PLessThanSig _arg1_abTZ _arg2_abU0
+                      -> mappend (g_abTp _arg1_abTZ) (g_abTp _arg2_abU0)
+                    PlusSig _arg1_abU3 _arg2_abU4
+                      -> mappend (g_abTp _arg1_abU3) (g_abTp _arg2_abU4)
+                    MinusSig _arg1_abU7 _arg2_abU8
+                      -> mappend (g_abTp _arg1_abU7) (g_abTp _arg2_abU8)
+                    MultiplySig _arg1_abUb _arg2_abUc
+                      -> mappend (g_abTp _arg1_abUb) (g_abTp _arg2_abUc))
+                 f_abTo g_abTp value_abTr
+src/Language/Sprite/Syntax.hs:28:1-29: Splicing declarations
+    deriveBitraversable ''TermSig
+  ======>
+    instance Data.Bitraversable.Bitraversable TermSig where
+      Data.Bitraversable.bitraverse
+        = \ f_ac8V g_ac8W value_ac8Y
+            -> bfnctrs-5.6.2-a8b5d53d:Data.Bifunctor.TH.Internal.bitraverseConst
+                 (case value_ac8Y of
+                    ConstIntSig _arg1_ac8Z -> pure (ConstIntSig _arg1_ac8Z)
+                    LetSig _arg1_ac90 _arg2_ac91
+                      -> liftA2
+                           (\ b1_ac92 b2_ac93 -> LetSig b1_ac92 b2_ac93) (g_ac8W _arg1_ac90)
+                           (f_ac8V _arg2_ac91)
+                    FunSig _arg1_ac94
+                      -> fmap (\ b1_ac95 -> FunSig b1_ac95) (f_ac8V _arg1_ac94)
+                    AppSig _arg1_ac96 _arg2_ac97
+                      -> liftA2
+                           (\ b1_ac98 b2_ac99 -> AppSig b1_ac98 b2_ac99) (g_ac8W _arg1_ac96)
+                           (g_ac8W _arg2_ac97)
+                    AnnSig _arg1_ac9a _arg2_ac9b
+                      -> liftA2
+                           (\ b1_ac9c b2_ac9d -> AnnSig b1_ac9c b2_ac9d) (g_ac8W _arg1_ac9a)
+                           (g_ac8W _arg2_ac9b)
+                    TypeRefinedSig _arg1_ac9e _arg2_ac9f
+                      -> fmap
+                           (\ b2_ac9h -> TypeRefinedSig _arg1_ac9e b2_ac9h)
+                           (f_ac8V _arg2_ac9f)
+                    TypeFunSig _arg1_ac9i _arg2_ac9j
+                      -> liftA2
+                           (\ b1_ac9k b2_ac9l -> TypeFunSig b1_ac9k b2_ac9l)
+                           (g_ac8W _arg1_ac9i) (f_ac8V _arg2_ac9j)
+                    ConstTrueSig -> pure ConstTrueSig
+                    ConstFalseSig -> pure ConstFalseSig
+                    PEqSig _arg1_ac9m _arg2_ac9n
+                      -> liftA2
+                           (\ b1_ac9o b2_ac9p -> PEqSig b1_ac9o b2_ac9p) (g_ac8W _arg1_ac9m)
+                           (g_ac8W _arg2_ac9n)
+                    PLessOrEqThanSig _arg1_ac9q _arg2_ac9r
+                      -> liftA2
+                           (\ b1_ac9s b2_ac9t -> PLessOrEqThanSig b1_ac9s b2_ac9t)
+                           (g_ac8W _arg1_ac9q) (g_ac8W _arg2_ac9r)
+                    PLessThanSig _arg1_ac9u _arg2_ac9v
+                      -> liftA2
+                           (\ b1_ac9w b2_ac9x -> PLessThanSig b1_ac9w b2_ac9x)
+                           (g_ac8W _arg1_ac9u) (g_ac8W _arg2_ac9v)
+                    PlusSig _arg1_ac9y _arg2_ac9z
+                      -> liftA2
+                           (\ b1_ac9A b2_ac9B -> PlusSig b1_ac9A b2_ac9B) (g_ac8W _arg1_ac9y)
+                           (g_ac8W _arg2_ac9z)
+                    MinusSig _arg1_ac9C _arg2_ac9D
+                      -> liftA2
+                           (\ b1_ac9E b2_ac9F -> MinusSig b1_ac9E b2_ac9F) (g_ac8W _arg1_ac9C)
+                           (g_ac8W _arg2_ac9D)
+                    MultiplySig _arg1_ac9G _arg2_ac9H
+                      -> liftA2
+                           (\ b1_ac9I b2_ac9J -> MultiplySig b1_ac9I b2_ac9J)
+                           (g_ac8W _arg1_ac9G) (g_ac8W _arg2_ac9H))
+                 f_ac8V g_ac8W value_ac8Y
+src/Language/Sprite/Syntax.hs:39:1-34: Splicing declarations
+    mkFreeFoilConversions spriteConfig
+  ======>
+    fromTermSig ::
+      TermSig (Language.Sprite.Syntax.Inner.Abs.Pattern,
+               Language.Sprite.Syntax.Inner.Abs.ScopedTerm) Language.Sprite.Syntax.Inner.Abs.Term
+      -> Language.Sprite.Syntax.Inner.Abs.Term
+    fromTermSig (ConstIntSig x_achB)
+      = Language.Sprite.Syntax.Inner.Abs.ConstInt x_achB
+    fromTermSig (LetSig x_achC (binder_achD, body_achE))
+      = Language.Sprite.Syntax.Inner.Abs.Let x_achC binder_achD body_achE
+    fromTermSig (FunSig (binder_achF, body_achG))
+      = Language.Sprite.Syntax.Inner.Abs.Fun binder_achF body_achG
+    fromTermSig (AppSig x_achH x_achI)
+      = Language.Sprite.Syntax.Inner.Abs.App x_achH x_achI
+    fromTermSig (AnnSig x_achJ x_achK)
+      = Language.Sprite.Syntax.Inner.Abs.Ann x_achJ x_achK
+    fromTermSig (TypeRefinedSig x_achL (binder_achM, body_achN))
+      = Language.Sprite.Syntax.Inner.Abs.TypeRefined
+          x_achL binder_achM body_achN
+    fromTermSig (TypeFunSig x_achO (binder_achP, body_achQ))
+      = Language.Sprite.Syntax.Inner.Abs.TypeFun
+          x_achO binder_achP body_achQ
+    fromTermSig ConstTrueSig
+      = Language.Sprite.Syntax.Inner.Abs.ConstTrue
+    fromTermSig ConstFalseSig
+      = Language.Sprite.Syntax.Inner.Abs.ConstFalse
+    fromTermSig (PEqSig x_achR x_achS)
+      = Language.Sprite.Syntax.Inner.Abs.PEq x_achR x_achS
+    fromTermSig (PLessOrEqThanSig x_achT x_achU)
+      = Language.Sprite.Syntax.Inner.Abs.PLessOrEqThan x_achT x_achU
+    fromTermSig (PLessThanSig x_achV x_achW)
+      = Language.Sprite.Syntax.Inner.Abs.PLessThan x_achV x_achW
+    fromTermSig (PlusSig x_achX x_achY)
+      = Language.Sprite.Syntax.Inner.Abs.Plus x_achX x_achY
+    fromTermSig (MinusSig x_achZ x_aci0)
+      = Language.Sprite.Syntax.Inner.Abs.Minus x_achZ x_aci0
+    fromTermSig (MultiplySig x_aci1 x_aci2)
+      = Language.Sprite.Syntax.Inner.Abs.Multiply x_aci1 x_aci2
+    fromPattern ::
+      Pattern o i -> Language.Sprite.Syntax.Inner.Abs.Pattern
+    fromPattern (PatternVar x_aci3)
+      = Language.Sprite.Syntax.Inner.Abs.PatternVar
+          (Language.Sprite.FreeFoilConfig.intToVarIdent
+             (Foil.nameId (Foil.nameOf x_aci3)))
+    fromTerm :: Term o -> Language.Sprite.Syntax.Inner.Abs.Term
+    fromTerm
+      = Control.Monad.Free.Foil.convertFromAST
+          fromTermSig Language.Sprite.FreeFoilConfig.rawVar fromPattern
+          Language.Sprite.FreeFoilConfig.rawScopedTerm
+          Language.Sprite.FreeFoilConfig.intToVarIdent
+    toTermSig ::
+      Language.Sprite.Syntax.Inner.Abs.Term
+      -> Either Language.Sprite.Syntax.Inner.Abs.VarIdent (TermSig (Language.Sprite.Syntax.Inner.Abs.Pattern,
+                                                                    Language.Sprite.Syntax.Inner.Abs.ScopedTerm) Language.Sprite.Syntax.Inner.Abs.Term)
+    toTermSig (Language.Sprite.Syntax.Inner.Abs.ConstInt _x_aci5)
+      = Right (ConstIntSig _x_aci5)
+    toTermSig (Language.Sprite.Syntax.Inner.Abs.Var _theRawIdent_aci6)
+      = Left _theRawIdent_aci6
+    toTermSig
+      (Language.Sprite.Syntax.Inner.Abs.Let _x_aci8 binder_aci9
+                                            body_acia)
+      = Right (LetSig _x_aci8 (binder_aci9, body_acia))
+    toTermSig
+      (Language.Sprite.Syntax.Inner.Abs.Fun binder_acic body_acid)
+      = Right (FunSig (binder_acic, body_acid))
+    toTermSig (Language.Sprite.Syntax.Inner.Abs.App _x_acif _x_acig)
+      = Right (AppSig _x_acif _x_acig)
+    toTermSig (Language.Sprite.Syntax.Inner.Abs.Ann _x_acii _x_acij)
+      = Right (AnnSig _x_acii _x_acij)
+    toTermSig
+      (Language.Sprite.Syntax.Inner.Abs.TypeRefined _x_acil binder_acim
+                                                    body_acin)
+      = Right (TypeRefinedSig _x_acil (binder_acim, body_acin))
+    toTermSig
+      (Language.Sprite.Syntax.Inner.Abs.TypeFun _x_acip binder_aciq
+                                                body_acir)
+      = Right (TypeFunSig _x_acip (binder_aciq, body_acir))
+    toTermSig Language.Sprite.Syntax.Inner.Abs.ConstTrue
+      = Right ConstTrueSig
+    toTermSig Language.Sprite.Syntax.Inner.Abs.ConstFalse
+      = Right ConstFalseSig
+    toTermSig (Language.Sprite.Syntax.Inner.Abs.PEq _x_aciv _x_aciw)
+      = Right (PEqSig _x_aciv _x_aciw)
+    toTermSig
+      (Language.Sprite.Syntax.Inner.Abs.PLessOrEqThan _x_aciy _x_aciz)
+      = Right (PLessOrEqThanSig _x_aciy _x_aciz)
+    toTermSig
+      (Language.Sprite.Syntax.Inner.Abs.PLessThan _x_aciB _x_aciC)
+      = Right (PLessThanSig _x_aciB _x_aciC)
+    toTermSig (Language.Sprite.Syntax.Inner.Abs.Plus _x_aciE _x_aciF)
+      = Right (PlusSig _x_aciE _x_aciF)
+    toTermSig (Language.Sprite.Syntax.Inner.Abs.Minus _x_aciH _x_aciI)
+      = Right (MinusSig _x_aciH _x_aciI)
+    toTermSig
+      (Language.Sprite.Syntax.Inner.Abs.Multiply _x_aciK _x_aciL)
+      = Right (MultiplySig _x_aciK _x_aciL)
+    toPattern ::
+      forall o r_aciT. (Foil.Distinct o,
+                        Ord Language.Sprite.Syntax.Inner.Abs.VarIdent) =>
+                       Foil.Scope o
+                       -> Map.Map Language.Sprite.Syntax.Inner.Abs.VarIdent (Foil.Name o)
+                          -> Language.Sprite.Syntax.Inner.Abs.Pattern
+                             -> (forall i.
+                                 Foil.DExt o i =>
+                                 Pattern o i
+                                 -> Map.Map Language.Sprite.Syntax.Inner.Abs.VarIdent (Foil.Name i)
+                                    -> r_aciT)
+                                -> r_aciT
+    toPattern
+      _scope_aciM
+      _env_aciN
+      (Language.Sprite.Syntax.Inner.Abs.PatternVar _x_aciP)
+      _cont_aciO
+      = Foil.withFresh
+          _scope_aciM
+          (\ _x'_aciQ
+             -> let
+                  _scope_aciR = Foil.extendScope _x'_aciQ _scope_aciM
+                  _env_aciS
+                    = Map.insert
+                        _x_aciP (Foil.nameOf _x'_aciQ) (fmap Foil.sink _env_aciN)
+                in _cont_aciO (PatternVar _x'_aciQ) _env_aciS)
+    toTerm ::
+      forall o. (Foil.Distinct o,
+                 Ord Language.Sprite.Syntax.Inner.Abs.VarIdent) =>
+                Foil.Scope o
+                -> Map.Map Language.Sprite.Syntax.Inner.Abs.VarIdent (Foil.Name o)
+                   -> Language.Sprite.Syntax.Inner.Abs.Term -> Term o
+    toTerm
+      = Control.Monad.Free.Foil.convertToAST
+          toTermSig toPattern Language.Sprite.FreeFoilConfig.rawScopeToTerm
+Preprocessing executable 'free-foil-sprite-exe' for free-foil-sprite-0.1.0.0..
+Building executable 'free-foil-sprite-exe' for free-foil-sprite-0.1.0.0..
+[3 of 3] Linking /Users/n.rulev/Documents/itmo/free-foil-refinement-types/dist-newstyle/build/aarch64-osx/ghc-9.8.2/free-foil-sprite-0.1.0.0/x/free-foil-sprite-exe/build/free-foil-sprite-exe/free-foil-sprite-exe [Library changed]

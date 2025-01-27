@@ -1,6 +1,6 @@
 module Language.Sprite.Naive.Predicates where
 
-import Language.Sprite.Syntax.Abs (Pred(..), VarIdent (..), RType(..), BaseType(..), FuncAppArg(..), IntOp(..), FuncArg (NamedFuncArg), ScopedRType (ScopedRType))
+import Language.Sprite.Syntax.Front.Abs (Pred(..), VarIdent (..), RType(..), BaseType(..), FuncAppArg(..), IntOp(..))
 import Language.Fixpoint.Types.Refinements qualified as T
 
 constIntP :: VarIdent -> Integer -> Pred

@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Language.Sprite.FreeFoilConfig where
 
-import qualified Language.Sprite.Syntax.Abs    as Raw
+import qualified Language.Sprite.Syntax.Inner.Abs    as Raw
 import           Control.Monad.Free.Foil.TH.MkFreeFoil
 
 intToVarIdent :: Int -> Raw.VarIdent
@@ -14,7 +14,7 @@ rawScopedTerm :: Raw.Term -> Raw.ScopedTerm
 rawScopedTerm = Raw.ScopedTerm
 
 rawScopeToTerm :: Raw.ScopedTerm -> Raw.Term
-rawScopeToTerm (Raw.ScopedTerm expr) = expr
+rawScopeToTerm (Raw.ScopedTerm term) = term
 
 spriteConfig :: FreeFoilConfig
 spriteConfig = FreeFoilConfig
