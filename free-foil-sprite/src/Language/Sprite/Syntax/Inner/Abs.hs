@@ -22,16 +22,22 @@ data Term
     | Fun Pattern ScopedTerm
     | App Term Term
     | Ann Term Term
+    | OpExpr Term Op Term
     | TypeRefined BaseType Pattern ScopedTerm
     | TypeFun Pattern Term ScopedTerm
     | ConstTrue
     | ConstFalse
-    | PEq Term Term
-    | PLessOrEqThan Term Term
-    | PLessThan Term Term
-    | Plus Term Term
-    | Minus Term Term
-    | Multiply Term Term
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data Op
+    = EqOp
+    | LessOrEqOp
+    | LessOp
+    | GreaterOrEqOp
+    | GreaterOp
+    | PlusOp
+    | MinusOp
+    | MultiplyOp
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data Pattern = PatternVar VarIdent

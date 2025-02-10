@@ -8,20 +8,22 @@ Let.          Term ::= "let" Pattern "=" Term ";" ScopedTerm ;  -- FIXME: requir
 Fun.          Term ::= "(" Pattern ")" "=>" "{" ScopedTerm "}" ;
 App.          Term ::= Term "(" Term ")" ;
 Ann.          Term ::= "/*@" Term "*/" Term; -- FIXME: Problem with TH generations when "/*@" Pattern : Term "*/" Term;
+OpExpr.       Term ::= "(" Term Op Term ")";
 -- type terms
 TypeRefined.  Term ::= BaseType "[" Pattern "|" ScopedTerm "]" ;
 TypeFun.      Term ::= Pattern ":" Term "=>" ScopedTerm ;   -- FIXME: same problem as with Let
 -- predicate terms
 ConstTrue.      Term ::= "true" ;
 ConstFalse.     Term ::= "false" ;
-PEq.        Term ::= "(" Term "==" Term ")" ;
-PLessOrEqThan.  Term ::= "(" Term "<=" Term ")" ;
-PLessThan.      Term ::= "(" Term "<" Term ")" ;
-PLessOrEqThan.  Term ::= "(" Term "<=" Term ")" ;
-Plus.          Term ::= "(" Term "+" Term ")" ;
-Minus.         Term ::= "(" Term "-" Term ")" ;
-Multiply.      Term ::= "(" Term "*" Term ")" ;
 
+EqOp.            Op ::= "==";
+LessOrEqOp.      Op ::= "<=";
+LessOp.          Op ::= "<";
+GreaterOrEqOp.   Op ::= ">=";
+GreaterOp.       Op ::= ">";
+PlusOp.          Op ::= "+";
+MinusOp.         Op ::= "-";
+MultiplyOp.      Op ::= "*";
 
 PatternVar. Pattern ::= VarIdent ;
 ScopedTerm. ScopedTerm ::= Term ;

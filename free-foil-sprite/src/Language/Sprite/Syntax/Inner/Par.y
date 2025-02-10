@@ -9,6 +9,7 @@ module Language.Sprite.Syntax.Inner.Par
   ( happyError
   , myLexer
   , pTerm
+  , pOp
   , pPattern
   , pScopedTerm
   , pBaseType
@@ -24,6 +25,7 @@ import Language.Sprite.Syntax.Inner.Lex
 }
 
 %name pTerm Term
+%name pOp Op
 %name pPattern Pattern
 %name pScopedTerm ScopedTerm
 %name pBaseType BaseType
@@ -47,15 +49,17 @@ import Language.Sprite.Syntax.Inner.Lex
   '='        { PT _ (TS _ 12)       }
   '=='       { PT _ (TS _ 13)       }
   '=>'       { PT _ (TS _ 14)       }
-  '['        { PT _ (TS _ 15)       }
-  ']'        { PT _ (TS _ 16)       }
-  'false'    { PT _ (TS _ 17)       }
-  'int'      { PT _ (TS _ 18)       }
-  'let'      { PT _ (TS _ 19)       }
-  'true'     { PT _ (TS _ 20)       }
-  '{'        { PT _ (TS _ 21)       }
-  '|'        { PT _ (TS _ 22)       }
-  '}'        { PT _ (TS _ 23)       }
+  '>'        { PT _ (TS _ 15)       }
+  '>='       { PT _ (TS _ 16)       }
+  '['        { PT _ (TS _ 17)       }
+  ']'        { PT _ (TS _ 18)       }
+  'false'    { PT _ (TS _ 19)       }
+  'int'      { PT _ (TS _ 20)       }
+  'let'      { PT _ (TS _ 21)       }
+  'true'     { PT _ (TS _ 22)       }
+  '{'        { PT _ (TS _ 23)       }
+  '|'        { PT _ (TS _ 24)       }
+  '}'        { PT _ (TS _ 25)       }
   L_integ    { PT _ (TI $$)         }
   L_VarIdent { PT _ (T_VarIdent $$) }
 
@@ -75,17 +79,22 @@ Term
   | '(' Pattern ')' '=>' '{' ScopedTerm '}' { Language.Sprite.Syntax.Inner.Abs.Fun $2 $6 }
   | Term '(' Term ')' { Language.Sprite.Syntax.Inner.Abs.App $1 $3 }
   | '/*@' Term '*/' Term { Language.Sprite.Syntax.Inner.Abs.Ann $2 $4 }
+  | '(' Term Op Term ')' { Language.Sprite.Syntax.Inner.Abs.OpExpr $2 $3 $4 }
   | BaseType '[' Pattern '|' ScopedTerm ']' { Language.Sprite.Syntax.Inner.Abs.TypeRefined $1 $3 $5 }
   | Pattern ':' Term '=>' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.TypeFun $1 $3 $5 }
   | 'true' { Language.Sprite.Syntax.Inner.Abs.ConstTrue }
   | 'false' { Language.Sprite.Syntax.Inner.Abs.ConstFalse }
-  | '(' Term '==' Term ')' { Language.Sprite.Syntax.Inner.Abs.PEq $2 $4 }
-  | '(' Term '<=' Term ')' { Language.Sprite.Syntax.Inner.Abs.PLessOrEqThan $2 $4 }
-  | '(' Term '<' Term ')' { Language.Sprite.Syntax.Inner.Abs.PLessThan $2 $4 }
-  | '(' Term '<=' Term ')' { Language.Sprite.Syntax.Inner.Abs.PLessOrEqThan $2 $4 }
-  | '(' Term '+' Term ')' { Language.Sprite.Syntax.Inner.Abs.Plus $2 $4 }
-  | '(' Term '-' Term ')' { Language.Sprite.Syntax.Inner.Abs.Minus $2 $4 }
-  | '(' Term '*' Term ')' { Language.Sprite.Syntax.Inner.Abs.Multiply $2 $4 }
+
+Op :: { Language.Sprite.Syntax.Inner.Abs.Op }
+Op
+  : '==' { Language.Sprite.Syntax.Inner.Abs.EqOp }
+  | '<=' { Language.Sprite.Syntax.Inner.Abs.LessOrEqOp }
+  | '<' { Language.Sprite.Syntax.Inner.Abs.LessOp }
+  | '>=' { Language.Sprite.Syntax.Inner.Abs.GreaterOrEqOp }
+  | '>' { Language.Sprite.Syntax.Inner.Abs.GreaterOp }
+  | '+' { Language.Sprite.Syntax.Inner.Abs.PlusOp }
+  | '-' { Language.Sprite.Syntax.Inner.Abs.MinusOp }
+  | '*' { Language.Sprite.Syntax.Inner.Abs.MultiplyOp }
 
 Pattern :: { Language.Sprite.Syntax.Inner.Abs.Pattern }
 Pattern

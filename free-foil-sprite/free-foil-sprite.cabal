@@ -35,6 +35,10 @@ common extensions
       TypeApplications
       ScopedTypeVariables
       GADTs
+      DataKinds
+      ScopedTypeVariables
+      StandaloneDeriving
+      FlexibleContexts
 
 library
   import: extensions

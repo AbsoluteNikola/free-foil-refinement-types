@@ -27,16 +27,22 @@ transTerm x = case x of
   Language.Sprite.Syntax.Inner.Abs.Fun pattern_ scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.App term1 term2 -> failure x
   Language.Sprite.Syntax.Inner.Abs.Ann term1 term2 -> failure x
+  Language.Sprite.Syntax.Inner.Abs.OpExpr term1 op term2 -> failure x
   Language.Sprite.Syntax.Inner.Abs.TypeRefined basetype pattern_ scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.TypeFun pattern_ term scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.ConstTrue -> failure x
   Language.Sprite.Syntax.Inner.Abs.ConstFalse -> failure x
-  Language.Sprite.Syntax.Inner.Abs.PEq term1 term2 -> failure x
-  Language.Sprite.Syntax.Inner.Abs.PLessOrEqThan term1 term2 -> failure x
-  Language.Sprite.Syntax.Inner.Abs.PLessThan term1 term2 -> failure x
-  Language.Sprite.Syntax.Inner.Abs.Plus term1 term2 -> failure x
-  Language.Sprite.Syntax.Inner.Abs.Minus term1 term2 -> failure x
-  Language.Sprite.Syntax.Inner.Abs.Multiply term1 term2 -> failure x
+
+transOp :: Language.Sprite.Syntax.Inner.Abs.Op -> Result
+transOp x = case x of
+  Language.Sprite.Syntax.Inner.Abs.EqOp -> failure x
+  Language.Sprite.Syntax.Inner.Abs.LessOrEqOp -> failure x
+  Language.Sprite.Syntax.Inner.Abs.LessOp -> failure x
+  Language.Sprite.Syntax.Inner.Abs.GreaterOrEqOp -> failure x
+  Language.Sprite.Syntax.Inner.Abs.GreaterOp -> failure x
+  Language.Sprite.Syntax.Inner.Abs.PlusOp -> failure x
+  Language.Sprite.Syntax.Inner.Abs.MinusOp -> failure x
+  Language.Sprite.Syntax.Inner.Abs.MultiplyOp -> failure x
 
 transPattern :: Language.Sprite.Syntax.Inner.Abs.Pattern -> Result
 transPattern x = case x of

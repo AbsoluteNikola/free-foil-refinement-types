@@ -31,7 +31,8 @@ The symbols used in Inner are the following:
   | => | { | } | /*@
   | */ | [ | | | ]
   | : | == | <= | <
-  | + | - | * |
+  | >= | > | + | -
+  | * |  |  |
 
 ===Comments===
 There are no single-line comments in the grammar.There are no multiple-line comments in the grammar.
@@ -48,17 +49,19 @@ All other symbols are terminals.
   |  |  **|**  | ``(`` //Pattern// ``)`` ``=>`` ``{`` //ScopedTerm// ``}``
   |  |  **|**  | //Term// ``(`` //Term// ``)``
   |  |  **|**  | ``/*@`` //Term// ``*/`` //Term//
+  |  |  **|**  | ``(`` //Term// //Op// //Term// ``)``
   |  |  **|**  | //BaseType// ``[`` //Pattern// ``|`` //ScopedTerm// ``]``
   |  |  **|**  | //Pattern// ``:`` //Term// ``=>`` //ScopedTerm//
   |  |  **|**  | ``true``
   |  |  **|**  | ``false``
-  |  |  **|**  | ``(`` //Term// ``==`` //Term// ``)``
-  |  |  **|**  | ``(`` //Term// ``<=`` //Term// ``)``
-  |  |  **|**  | ``(`` //Term// ``<`` //Term// ``)``
-  |  |  **|**  | ``(`` //Term// ``<=`` //Term// ``)``
-  |  |  **|**  | ``(`` //Term// ``+`` //Term// ``)``
-  |  |  **|**  | ``(`` //Term// ``-`` //Term// ``)``
-  |  |  **|**  | ``(`` //Term// ``*`` //Term// ``)``
+  | //Op// | -> | ``==``
+  |  |  **|**  | ``<=``
+  |  |  **|**  | ``<``
+  |  |  **|**  | ``>=``
+  |  |  **|**  | ``>``
+  |  |  **|**  | ``+``
+  |  |  **|**  | ``-``
+  |  |  **|**  | ``*``
   | //Pattern// | -> | //VarIdent//
   | //ScopedTerm// | -> | //Term//
   | //BaseType// | -> | ``int``

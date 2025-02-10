@@ -29,10 +29,10 @@ convert ft = case ft of
   F.Op lArg op rArg -> pure $
     op_ (convertFuncAppArg lArg) (convertFuncAppArg rArg)
     where
-      op_ = case op of
-        F.IntPlus -> I.Plus
-        F.IntMinus -> I.Minus
-        F.IntMultiply -> I.Multiply
+      op_ l r = case op of
+        F.IntPlus -> I.OpExpr l I.PlusOp r
+        F.IntMinus -> I.OpExpr l I.MinusOp r
+        F.IntMultiply -> I.OpExpr l I.MultiplyOp r
 
 convertVarId :: F.VarIdent -> I.VarIdent
 convertVarId (F.VarIdent varId) = I.VarIdent varId
@@ -52,8 +52,8 @@ convertDecl decl = case decl of
       DifferentNameForBindingAndAnnotationError annId varId decl
     | otherwise -> do
       convertedVarValue <- convert varValue
-      pure $ \letBody -> I.Ann (convertRType typ)
-        $ I.Let (convertVarIdToPattern varId) convertedVarValue letBody
+      pure $ \letBody ->
+        I.Let (convertVarIdToPattern varId) (I.Ann (convertRType typ) convertedVarValue) letBody
   F.UnAnnotatedDecl (F.PlainDecl varId varValue) ->  do
       convertedVarValue <- convert varValue
       pure $ \letBody ->
@@ -83,9 +83,9 @@ convertPredicate predicate = case predicate of
   F.PTrue -> I.ConstTrue
   F.PFalse -> I.ConstFalse
   F.PInt n -> I.ConstInt n
-  F.PEq l r -> I.PEq (convertPredicate l) (convertPredicate r)
-  F.PLessThan l r ->  I.PLessThan (convertPredicate l) (convertPredicate r)
-  F.PLessOrEqThan l r ->  I.PLessOrEqThan (convertPredicate l) (convertPredicate r)
-  F.PPlus l r ->  I.Plus (convertPredicate l) (convertPredicate r)
-  F.PMinus l r ->  I.Minus (convertPredicate l) (convertPredicate r)
-  F.PMultiply l r ->  I.Multiply (convertPredicate l) (convertPredicate r)
+  F.PEq l r -> I.OpExpr (convertPredicate l) I.EqOp (convertPredicate r)
+  F.PLessThan l r ->  I.OpExpr (convertPredicate l) I.LessOp (convertPredicate r)
+  F.PLessOrEqThan l r ->  I.OpExpr (convertPredicate l) I.LessOrEqOp (convertPredicate r)
+  F.PPlus l r ->  I.OpExpr (convertPredicate l) I.PlusOp (convertPredicate r)
+  F.PMinus l r ->  I.OpExpr (convertPredicate l) I.MinusOp (convertPredicate r)
+  F.PMultiply l r ->  I.OpExpr (convertPredicate l) I.MultiplyOp (convertPredicate r)

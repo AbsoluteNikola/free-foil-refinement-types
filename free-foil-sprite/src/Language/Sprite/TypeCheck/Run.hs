@@ -18,4 +18,4 @@ run _filePath rawFrontTerm = do
   let scopedTerm =  S.toTerm Foil.emptyScope Map.empty rawInnerTerm
   pPrint rawFrontTerm
   print scopedTerm
-  undefined
+  

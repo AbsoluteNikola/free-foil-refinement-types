@@ -95,7 +95,7 @@ alex_table = Data.Array.listArray (0 :: Int, 682)
   , 1
   , 7
   , 8
-  , 0
+  , 7
   , 0
   , 0
   , 11
@@ -782,7 +782,7 @@ alex_check = Data.Array.listArray (0 :: Int, 682)
   , 59
   , 60
   , 61
-  , -1
+  , 62
   , -1
   , -1
   , 65
@@ -1793,15 +1793,17 @@ eitherResIdent tv s = treeFind resWords
 -- | The keywords and symbols of the language organized as binary search tree.
 resWords :: BTree
 resWords =
-  b "=" 12
-    (b "-" 6
-       (b "*" 3 (b ")" 2 (b "(" 1 N N) N) (b "+" 5 (b "*/" 4 N N) N))
-       (b ";" 9 (b ":" 8 (b "/*@" 7 N N) N) (b "<=" 11 (b "<" 10 N N) N)))
-    (b "int" 18
-       (b "[" 15
-          (b "=>" 14 (b "==" 13 N N) N) (b "false" 17 (b "]" 16 N N) N))
-       (b "{" 21
-          (b "true" 20 (b "let" 19 N N) N) (b "}" 23 (b "|" 22 N N) N)))
+  b "==" 13
+    (b "/*@" 7
+       (b "*/" 4
+          (b ")" 2 (b "(" 1 N N) (b "*" 3 N N)) (b "-" 6 (b "+" 5 N N) N))
+       (b "<" 10 (b ";" 9 (b ":" 8 N N) N) (b "=" 12 (b "<=" 11 N N) N)))
+    (b "int" 20
+       (b "[" 17
+          (b ">" 15 (b "=>" 14 N N) (b ">=" 16 N N))
+          (b "false" 19 (b "]" 18 N N) N))
+       (b "{" 23
+          (b "true" 22 (b "let" 21 N N) N) (b "}" 25 (b "|" 24 N N) N)))
   where
   b s n = B bs (TS bs n)
     where

@@ -17,3 +17,4 @@ data Constraint
 
 cTrue :: Constraint
 cTrue = CAnd []
+
