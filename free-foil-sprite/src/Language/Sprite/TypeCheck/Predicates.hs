@@ -8,14 +8,6 @@ constIntT :: Integer -> Term F.VoidS
 constIntT x = F.withFreshBinder F.emptyScope $
   \binder -> TypeRefined Inner.BaseTypeInt (PatternVar binder) (OpExpr (F.Var (F.nameOf binder)) Inner.EqOp (ConstInt x))
 
--- data BinOpType n l = BinOpType
---   { xBinder :: F.NameBinder F.VoidS n
---   , xType :: Term F.VoidS
---   , yBinder :: F.NameBinder n l
---   , yType :: Term l
---   , resType :: Term l
---   } deriving (Show)
-
 data BinOpType startScope where
   BinOpType :: (F.DExt startScope n, F.DExt n l) =>
     -- | xBinder
@@ -55,6 +47,8 @@ binOpTypes startScope op = F.withFreshBinder startScope $ \xBinder ->
                           TypeRefined
                             Inner.BaseTypeInt
                             (PatternVar opResBinder)
-                            (OpExpr (F.Var (F.sink . F.nameOf $ xBinder)) op (F.Var (F.sink . F.nameOf $ yBinder)))
+                            (OpExpr
+                              (F.Var . F.nameOf $ opResBinder) Inner.EqOp
+                              (OpExpr (F.Var (F.sink . F.nameOf $ xBinder)) op (F.Var (F.sink . F.nameOf $ yBinder))))
                       in
                         BinOpType xBinder xType yBinder yType resType

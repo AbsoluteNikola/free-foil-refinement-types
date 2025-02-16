@@ -1,4 +1,4 @@
-module Language.Sprite.Syntax.Convert where
+module Language.Sprite.Syntax.Convert.FrontToInner where
 
 import Language.Sprite.Syntax.Front.Abs qualified as F
 import Language.Sprite.Syntax.Inner.Abs qualified as I

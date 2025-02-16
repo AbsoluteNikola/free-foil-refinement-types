@@ -45,7 +45,8 @@ library
   exposed-modules:
       Language.Sprite.FreeFoilConfig
       Language.Sprite.Syntax
-      Language.Sprite.Syntax.Convert
+      Language.Sprite.Syntax.Convert.FrontToInner
+      Language.Sprite.Syntax.Convert.InnerToFTR
       Language.Sprite.Syntax.Front.Abs
       Language.Sprite.Syntax.Front.Lex
       Language.Sprite.Syntax.Front.Par
@@ -89,6 +90,8 @@ library
     , mtl
     , text
     , liquid-fixpoint
+    , kind-generics
+    , kind-generics-th
 
   default-language: Haskell2010
 

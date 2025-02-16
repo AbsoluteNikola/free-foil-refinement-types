@@ -25,6 +25,7 @@ import Language.Sprite.Syntax.Front.Par   ( myLexer, pTerm)
 import Language.Sprite.Syntax.Front.Print ( Print, printTree )
 import Text.Pretty.Simple (pPrint)
 import qualified Language.Sprite.TypeCheck.Run as S
+import qualified Language.Sprite.Naive.Run as N
 
 type Verbosity  = Int
 
@@ -48,6 +49,7 @@ run f v s =
       showTree v tree
       putStrV v $ "\n[Type check result]\n\n"
       S.run f tree
+      -- N.run f tree
 
   where
   ts = myLexer s
