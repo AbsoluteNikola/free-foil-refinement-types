@@ -55,7 +55,6 @@ library
       Language.Sprite.Syntax.Inner.Lex
       Language.Sprite.Syntax.Inner.Par
       Language.Sprite.Syntax.Inner.Print
-      Language.Sprite.TypeCheck
       Language.Sprite.TypeCheck.Check
       Language.Sprite.TypeCheck.Constraints
       Language.Sprite.TypeCheck.Predicates
