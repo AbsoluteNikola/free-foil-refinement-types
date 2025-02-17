@@ -11,8 +11,9 @@ data ConvertError = UnsupportedTerm I.Term
 convert :: I.Term -> Either ConvertError T.Pred
 convert = \case
   I.Var (I.VarIdent varId) -> pure $ T.eVar varId
-  I.ConstTrue -> pure T.PTrue
-  I.ConstFalse -> pure T.PFalse
+  I.Boolean b -> pure $ case b of
+    I.ConstTrue -> T.PTrue
+    I.ConstFalse -> T.PFalse
   I.ConstInt n -> pure $ T.ECon $ T.I n
   I.OpExpr l op r -> do
     l' <- convert l

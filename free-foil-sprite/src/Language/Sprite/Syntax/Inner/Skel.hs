@@ -22,6 +22,7 @@ transVarIdent x = case x of
 transTerm :: Language.Sprite.Syntax.Inner.Abs.Term -> Result
 transTerm x = case x of
   Language.Sprite.Syntax.Inner.Abs.ConstInt integer -> failure x
+  Language.Sprite.Syntax.Inner.Abs.Boolean constbool -> failure x
   Language.Sprite.Syntax.Inner.Abs.Var varident -> failure x
   Language.Sprite.Syntax.Inner.Abs.Let pattern_ term scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.Fun pattern_ scopedterm -> failure x
@@ -30,6 +31,9 @@ transTerm x = case x of
   Language.Sprite.Syntax.Inner.Abs.OpExpr term1 op term2 -> failure x
   Language.Sprite.Syntax.Inner.Abs.TypeRefined basetype pattern_ scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.TypeFun pattern_ term scopedterm -> failure x
+
+transConstBool :: Language.Sprite.Syntax.Inner.Abs.ConstBool -> Result
+transConstBool x = case x of
   Language.Sprite.Syntax.Inner.Abs.ConstTrue -> failure x
   Language.Sprite.Syntax.Inner.Abs.ConstFalse -> failure x
 
@@ -55,6 +59,7 @@ transScopedTerm x = case x of
 transBaseType :: Language.Sprite.Syntax.Inner.Abs.BaseType -> Result
 transBaseType x = case x of
   Language.Sprite.Syntax.Inner.Abs.BaseTypeInt -> failure x
+  Language.Sprite.Syntax.Inner.Abs.BaseTypeBool -> failure x
 
 transVarBinding :: Language.Sprite.Syntax.Inner.Abs.VarBinding -> Result
 transVarBinding x = case x of

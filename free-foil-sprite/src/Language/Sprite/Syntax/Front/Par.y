@@ -37,16 +37,19 @@ import Language.Sprite.Syntax.Front.Lex
   '='        { PT _ (TS _ 12)       }
   '=='       { PT _ (TS _ 13)       }
   '=>'       { PT _ (TS _ 14)       }
-  '['        { PT _ (TS _ 15)       }
-  ']'        { PT _ (TS _ 16)       }
-  'false'    { PT _ (TS _ 17)       }
-  'int'      { PT _ (TS _ 18)       }
-  'let'      { PT _ (TS _ 19)       }
-  'true'     { PT _ (TS _ 20)       }
-  'val'      { PT _ (TS _ 21)       }
-  '{'        { PT _ (TS _ 22)       }
-  '|'        { PT _ (TS _ 23)       }
-  '}'        { PT _ (TS _ 24)       }
+  '>'        { PT _ (TS _ 15)       }
+  '>='       { PT _ (TS _ 16)       }
+  '['        { PT _ (TS _ 17)       }
+  ']'        { PT _ (TS _ 18)       }
+  'bool'     { PT _ (TS _ 19)       }
+  'false'    { PT _ (TS _ 20)       }
+  'int'      { PT _ (TS _ 21)       }
+  'let'      { PT _ (TS _ 22)       }
+  'true'     { PT _ (TS _ 23)       }
+  'val'      { PT _ (TS _ 24)       }
+  '{'        { PT _ (TS _ 25)       }
+  '|'        { PT _ (TS _ 26)       }
+  '}'        { PT _ (TS _ 27)       }
   L_integ    { PT _ (TI $$)         }
   L_VarIdent { PT _ (T_VarIdent $$) }
 
@@ -61,12 +64,18 @@ VarIdent  : L_VarIdent { Language.Sprite.Syntax.Front.Abs.VarIdent $1 }
 Term :: { Language.Sprite.Syntax.Front.Abs.Term }
 Term
   : Integer { Language.Sprite.Syntax.Front.Abs.ConstInt $1 }
+  | ConstBool { Language.Sprite.Syntax.Front.Abs.Bool $1 }
   | VarIdent { Language.Sprite.Syntax.Front.Abs.Var $1 }
   | Decl ScopedTerm { Language.Sprite.Syntax.Front.Abs.Let $1 $2 }
   | '(' VarIdent ')' '=>' '{' ScopedTerm '}' { Language.Sprite.Syntax.Front.Abs.Fun $2 $6 }
   | Term '(' FuncAppArg ')' { Language.Sprite.Syntax.Front.Abs.App $1 $3 }
   | FuncAppArg IntOp FuncAppArg { Language.Sprite.Syntax.Front.Abs.Op $1 $2 $3 }
   | '(' Term ')' { $2 }
+
+ConstBool :: { Language.Sprite.Syntax.Front.Abs.ConstBool }
+ConstBool
+  : 'true' { Language.Sprite.Syntax.Front.Abs.ConstTrue }
+  | 'false' { Language.Sprite.Syntax.Front.Abs.ConstFalse }
 
 Annotation :: { Language.Sprite.Syntax.Front.Abs.Annotation }
 Annotation
@@ -107,12 +116,13 @@ FuncArg
 Pred :: { Language.Sprite.Syntax.Front.Abs.Pred }
 Pred
   : VarIdent { Language.Sprite.Syntax.Front.Abs.PVar $1 }
-  | 'true' { Language.Sprite.Syntax.Front.Abs.PTrue }
-  | 'false' { Language.Sprite.Syntax.Front.Abs.PFalse }
+  | ConstBool { Language.Sprite.Syntax.Front.Abs.PBool $1 }
   | Integer { Language.Sprite.Syntax.Front.Abs.PInt $1 }
   | Pred '==' Pred { Language.Sprite.Syntax.Front.Abs.PEq $1 $3 }
   | Pred '<' Pred { Language.Sprite.Syntax.Front.Abs.PLessThan $1 $3 }
   | Pred '<=' Pred { Language.Sprite.Syntax.Front.Abs.PLessOrEqThan $1 $3 }
+  | Pred '>' Pred { Language.Sprite.Syntax.Front.Abs.PGreaterThan $1 $3 }
+  | Pred '>=' Pred { Language.Sprite.Syntax.Front.Abs.PGreaterOrEqThan $1 $3 }
   | Pred '+' Pred { Language.Sprite.Syntax.Front.Abs.PPlus $1 $3 }
   | Pred '-' Pred { Language.Sprite.Syntax.Front.Abs.PMinus $1 $3 }
   | Pred '*' Pred { Language.Sprite.Syntax.Front.Abs.PMultiply $1 $3 }
@@ -126,11 +136,14 @@ ScopedTerm
   : Term { Language.Sprite.Syntax.Front.Abs.ScopedTerm $1 }
 
 BaseType :: { Language.Sprite.Syntax.Front.Abs.BaseType }
-BaseType : 'int' { Language.Sprite.Syntax.Front.Abs.BaseTypeInt }
+BaseType
+  : 'int' { Language.Sprite.Syntax.Front.Abs.BaseTypeInt }
+  | 'bool' { Language.Sprite.Syntax.Front.Abs.BaseTypeBool }
 
 FuncAppArg :: { Language.Sprite.Syntax.Front.Abs.FuncAppArg }
 FuncAppArg
-  : Integer { Language.Sprite.Syntax.Front.Abs.FuncAppArgInt $1 }
+  : ConstBool { Language.Sprite.Syntax.Front.Abs.FuncAppArgBool $1 }
+  | Integer { Language.Sprite.Syntax.Front.Abs.FuncAppArgInt $1 }
   | VarIdent { Language.Sprite.Syntax.Front.Abs.FuncAppArgVar $1 }
 
 {

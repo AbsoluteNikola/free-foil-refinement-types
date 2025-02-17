@@ -3,6 +3,7 @@ token VarIdent lower (letter | digit | '_')* ;
 
 -- expr terms
 ConstInt.     Term ::= Integer ;
+Boolean.       Term ::= ConstBool ;
 Var.          Term ::= VarIdent ;
 Let.          Term ::= "let" Pattern "=" Term ";" ScopedTerm ;  -- FIXME: requires fix in Template Haskell (mkFreeFoil)
 Fun.          Term ::= "(" Pattern ")" "=>" "{" ScopedTerm "}" ;
@@ -13,8 +14,8 @@ OpExpr.       Term ::= "(" Term Op Term ")";
 TypeRefined.  Term ::= BaseType "[" Pattern "|" ScopedTerm "]" ;
 TypeFun.      Term ::= Pattern ":" Term "=>" ScopedTerm ;   -- FIXME: same problem as with Let
 -- predicate terms
-ConstTrue.      Term ::= "true" ;
-ConstFalse.     Term ::= "false" ;
+ConstTrue.      ConstBool ::= "true" ;
+ConstFalse.     ConstBool ::= "false" ;
 
 EqOp.            Op ::= "==";
 LessOrEqOp.      Op ::= "<=";
@@ -29,6 +30,7 @@ PatternVar. Pattern ::= VarIdent ;
 ScopedTerm. ScopedTerm ::= Term ;
 
 BaseTypeInt.  BaseType ::= "int" ;
+BaseTypeBool.  BaseType ::= "bool" ;
 
 VarBinding. VarBinding ::= VarIdent ":" Term ;
 separator nonempty VarBinding ";" ;

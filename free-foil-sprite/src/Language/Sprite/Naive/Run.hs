@@ -4,7 +4,7 @@
 module Language.Sprite.Naive.Run where
 
 import Language.Sprite.Naive.Check
-import Language.Sprite.Syntax.Front.Abs (Term, RType (TypeRefined), BaseType(..), Pred (PTrue))
+import Language.Sprite.Syntax.Front.Abs (Term, RType (TypeRefined), BaseType(..), Pred (PBool), ConstBool(..))
 import Language.Sprite.Naive.Constraints (constraintsToFHT)
 import Control.Monad.Except (runExceptT)
 import Control.Monad.Reader (ReaderT(runReaderT))
@@ -25,7 +25,7 @@ instance F.Loc T.Text where
 
 vcgen :: Term -> IO (Either Text (H.Query Text))
 vcgen term = do
-  let programType = TypeRefined BaseTypeInt "program" PTrue
+  let programType = TypeRefined BaseTypeInt "program" (PBool ConstTrue)
   eConstraints <- runExceptT . flip runReaderT emptyEnv . runCheckerM $ check term programType
   let
     mkQuery c =

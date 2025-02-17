@@ -21,10 +21,11 @@ substPred varId whatP toP = case toP of
   PVar innerVarId
     | varId == innerVarId -> whatP
     | otherwise -> toP
-  PTrue -> toP
-  PFalse -> toP
+  PBool{} -> toP
   PInt _ -> toP
   PEq lp rp -> PEq (substPred varId whatP lp) (substPred varId whatP rp)
+  PGreaterThan lp rp -> PGreaterThan (substPred varId whatP lp) (substPred varId whatP rp)
+  PGreaterOrEqThan lp rp -> PGreaterOrEqThan (substPred varId whatP lp) (substPred varId whatP rp)
   PLessThan lp rp -> PLessThan (substPred varId whatP lp) (substPred varId whatP rp)
   PLessOrEqThan lp rp -> PLessOrEqThan (substPred varId whatP lp) (substPred varId whatP rp)
   PPlus lp rp -> PPlus (substPred varId whatP lp) (substPred varId whatP rp)

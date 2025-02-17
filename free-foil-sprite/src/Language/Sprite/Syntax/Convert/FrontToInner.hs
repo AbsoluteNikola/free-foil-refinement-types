@@ -14,6 +14,7 @@ convert :: F.Term -> Either ConvertError I.Term
 convert ft = case ft of
   F.ConstInt i ->
     pure $ I.ConstInt i
+  F.Bool b -> pure $ I.Boolean (convertConstBool b)
   F.Var varId -> pure $ I.Var (convertVarId varId)
   F.Let decl (F.ScopedTerm body) -> do
     (I.ScopedTerm -> convertedBody) <- convert body
@@ -44,6 +45,7 @@ convertFuncAppArg :: F.FuncAppArg -> I.Term
 convertFuncAppArg = \case
   F.FuncAppArgInt n -> I.ConstInt n
   F.FuncAppArgVar varId -> I.Var (convertVarId varId)
+  F.FuncAppArgBool b -> I.Boolean (convertConstBool b)
 
 convertDecl :: F.Decl -> Either ConvertError (I.ScopedTerm -> I.Term)
 convertDecl decl = case decl of
@@ -76,16 +78,23 @@ convertRType rType = case rType of
 convertBaseType :: F.BaseType -> I.BaseType
 convertBaseType = \case
   F.BaseTypeInt -> I.BaseTypeInt
+  F.BaseTypeBool -> I.BaseTypeBool
+
+convertConstBool :: F.ConstBool -> I.ConstBool
+convertConstBool = \case
+  F.ConstTrue -> I.ConstTrue
+  F.ConstFalse -> I.ConstFalse
 
 convertPredicate :: F.Pred -> I.Term
 convertPredicate predicate = case predicate of
   F.PVar varId -> I.Var (convertVarId varId)
-  F.PTrue -> I.ConstTrue
-  F.PFalse -> I.ConstFalse
+  F.PBool b -> I.Boolean $ convertConstBool b
   F.PInt n -> I.ConstInt n
   F.PEq l r -> I.OpExpr (convertPredicate l) I.EqOp (convertPredicate r)
   F.PLessThan l r ->  I.OpExpr (convertPredicate l) I.LessOp (convertPredicate r)
   F.PLessOrEqThan l r ->  I.OpExpr (convertPredicate l) I.LessOrEqOp (convertPredicate r)
+  F.PGreaterThan l r ->  I.OpExpr (convertPredicate l) I.GreaterOp (convertPredicate r)
+  F.PGreaterOrEqThan l r ->  I.OpExpr (convertPredicate l) I.GreaterOrEqOp (convertPredicate r)
   F.PPlus l r ->  I.OpExpr (convertPredicate l) I.PlusOp (convertPredicate r)
   F.PMinus l r ->  I.OpExpr (convertPredicate l) I.MinusOp (convertPredicate r)
   F.PMultiply l r ->  I.OpExpr (convertPredicate l) I.MultiplyOp (convertPredicate r)

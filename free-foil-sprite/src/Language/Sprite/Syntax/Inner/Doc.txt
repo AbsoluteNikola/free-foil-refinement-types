@@ -24,7 +24,8 @@ VarIdent literals are recognized by the regular expression
 The set of reserved words is the set of terminals appearing in the grammar. Those reserved words that consist of non-letter characters are called symbols, and they are treated in a different way from those that are similar to identifiers. The lexer follows rules familiar from languages like Haskell, C, and Java, including longest match and spacing conventions.
 
 The reserved words used in Inner are the following:
-  | ``false`` | ``int`` | ``let`` | ``true``
+  | ``bool`` | ``false`` | ``int`` | ``let``
+  | ``true`` |  |  |
 
 The symbols used in Inner are the following:
   | = | ; | ( | )
@@ -44,6 +45,7 @@ and **eps** (empty rule) belong to the BNF notation.
 All other symbols are terminals.
 
   | //Term// | -> | //Integer//
+  |  |  **|**  | //ConstBool//
   |  |  **|**  | //VarIdent//
   |  |  **|**  | ``let`` //Pattern// ``=`` //Term// ``;`` //ScopedTerm//
   |  |  **|**  | ``(`` //Pattern// ``)`` ``=>`` ``{`` //ScopedTerm// ``}``
@@ -52,7 +54,7 @@ All other symbols are terminals.
   |  |  **|**  | ``(`` //Term// //Op// //Term// ``)``
   |  |  **|**  | //BaseType// ``[`` //Pattern// ``|`` //ScopedTerm// ``]``
   |  |  **|**  | //Pattern// ``:`` //Term// ``=>`` //ScopedTerm//
-  |  |  **|**  | ``true``
+  | //ConstBool// | -> | ``true``
   |  |  **|**  | ``false``
   | //Op// | -> | ``==``
   |  |  **|**  | ``<=``
@@ -65,6 +67,7 @@ All other symbols are terminals.
   | //Pattern// | -> | //VarIdent//
   | //ScopedTerm// | -> | //Term//
   | //BaseType// | -> | ``int``
+  |  |  **|**  | ``bool``
   | //VarBinding// | -> | //VarIdent// ``:`` //Term//
   | //[VarBinding]// | -> | //VarBinding//
   |  |  **|**  | //VarBinding// ``;`` //[VarBinding]//

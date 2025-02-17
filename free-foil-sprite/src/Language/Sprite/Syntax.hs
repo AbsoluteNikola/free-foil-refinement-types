@@ -48,8 +48,7 @@ data TermSig scope term
                       scope ->
                       TermSig scope term
     TypeFunSig :: term -> scope -> TermSig scope term
-    ConstTrueSig :: TermSig scope term
-    ConstFalseSig :: TermSig scope term
+    BooleanSig :: Language.Sprite.Syntax.Inner.Abs.ConstBool -> TermSig scope term
   deriving (GHC.Generics.Generic, Functor, Foldable, Traversable)
 
 type Term = Control.Monad.Free.Foil.AST Pattern TermSig
@@ -83,11 +82,10 @@ pattern TypeFun :: Pattern o i -> Term o -> Term i -> Term o -- FIXED HERE
 pattern TypeFun binder_a961 x_a960 body_a962 = Control.Monad.Free.Foil.Node (TypeFunSig x_a960
                                                                                         (Control.Monad.Free.Foil.ScopedAST binder_a961
                                                                                                                             body_a962))
-pattern ConstTrue :: Term o
-pattern ConstTrue = Control.Monad.Free.Foil.Node ConstTrueSig
-pattern ConstFalse :: Term o
-pattern ConstFalse = Control.Monad.Free.Foil.Node ConstFalseSig
-{-# COMPLETE Control.Monad.Free.Foil.Var, ConstInt, Let, Fun, App, Ann, OpExpr, TypeRefined, TypeFun, ConstTrue, ConstFalse #-}
+pattern Boolean :: Language.Sprite.Syntax.Inner.Abs.ConstBool -> Term o
+pattern Boolean b = Control.Monad.Free.Foil.Node (BooleanSig b)
+
+{-# COMPLETE Control.Monad.Free.Foil.Var, ConstInt, Let, Fun, App, Ann, OpExpr, TypeRefined, TypeFun, Boolean #-}
 
 deriveBifunctor ''TermSig
 deriveBifoldable ''TermSig
@@ -126,10 +124,8 @@ fromTermSig (TypeRefinedSig x_abJf (binder_abJg, body_abJh))
 fromTermSig (TypeFunSig x_abJi (binder_abJj, body_abJk))
   = Language.Sprite.Syntax.Inner.Abs.TypeFun
       binder_abJj x_abJi  body_abJk -- FIXED HERE
-fromTermSig ConstTrueSig
-  = Language.Sprite.Syntax.Inner.Abs.ConstTrue
-fromTermSig ConstFalseSig
-  = Language.Sprite.Syntax.Inner.Abs.ConstFalse
+fromTermSig (BooleanSig b)
+  = Language.Sprite.Syntax.Inner.Abs.Boolean b
 fromPattern ::
   Pattern o i -> Language.Sprite.Syntax.Inner.Abs.Pattern
 fromPattern (PatternVar x_abJl)
@@ -169,10 +165,8 @@ toTermSig
   (Language.Sprite.Syntax.Inner.Abs.TypeFun binder_abJM _x_abJL -- FIXED HERE
                                             body_abJN)
   = Right (TypeFunSig _x_abJL (binder_abJM, body_abJN))
-toTermSig Language.Sprite.Syntax.Inner.Abs.ConstTrue
-  = Right ConstTrueSig
-toTermSig Language.Sprite.Syntax.Inner.Abs.ConstFalse
-  = Right ConstFalseSig
+toTermSig (Language.Sprite.Syntax.Inner.Abs.Boolean b)
+  = Right (BooleanSig b)
 toPattern ::
   forall o r_abJX. (Foil.Distinct o,
                     Ord Language.Sprite.Syntax.Inner.Abs.VarIdent) =>

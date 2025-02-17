@@ -22,11 +22,17 @@ transVarIdent x = case x of
 transTerm :: Language.Sprite.Syntax.Front.Abs.Term -> Result
 transTerm x = case x of
   Language.Sprite.Syntax.Front.Abs.ConstInt integer -> failure x
+  Language.Sprite.Syntax.Front.Abs.Bool constbool -> failure x
   Language.Sprite.Syntax.Front.Abs.Var varident -> failure x
   Language.Sprite.Syntax.Front.Abs.Let decl scopedterm -> failure x
   Language.Sprite.Syntax.Front.Abs.Fun varident scopedterm -> failure x
   Language.Sprite.Syntax.Front.Abs.App term funcapparg -> failure x
   Language.Sprite.Syntax.Front.Abs.Op funcapparg1 intop funcapparg2 -> failure x
+
+transConstBool :: Language.Sprite.Syntax.Front.Abs.ConstBool -> Result
+transConstBool x = case x of
+  Language.Sprite.Syntax.Front.Abs.ConstTrue -> failure x
+  Language.Sprite.Syntax.Front.Abs.ConstFalse -> failure x
 
 transAnnotation :: Language.Sprite.Syntax.Front.Abs.Annotation -> Result
 transAnnotation x = case x of
@@ -63,12 +69,13 @@ transFuncArg x = case x of
 transPred :: Language.Sprite.Syntax.Front.Abs.Pred -> Result
 transPred x = case x of
   Language.Sprite.Syntax.Front.Abs.PVar varident -> failure x
-  Language.Sprite.Syntax.Front.Abs.PTrue -> failure x
-  Language.Sprite.Syntax.Front.Abs.PFalse -> failure x
+  Language.Sprite.Syntax.Front.Abs.PBool constbool -> failure x
   Language.Sprite.Syntax.Front.Abs.PInt integer -> failure x
   Language.Sprite.Syntax.Front.Abs.PEq pred1 pred2 -> failure x
   Language.Sprite.Syntax.Front.Abs.PLessThan pred1 pred2 -> failure x
   Language.Sprite.Syntax.Front.Abs.PLessOrEqThan pred1 pred2 -> failure x
+  Language.Sprite.Syntax.Front.Abs.PGreaterThan pred1 pred2 -> failure x
+  Language.Sprite.Syntax.Front.Abs.PGreaterOrEqThan pred1 pred2 -> failure x
   Language.Sprite.Syntax.Front.Abs.PPlus pred1 pred2 -> failure x
   Language.Sprite.Syntax.Front.Abs.PMinus pred1 pred2 -> failure x
   Language.Sprite.Syntax.Front.Abs.PMultiply pred1 pred2 -> failure x
@@ -84,8 +91,10 @@ transScopedTerm x = case x of
 transBaseType :: Language.Sprite.Syntax.Front.Abs.BaseType -> Result
 transBaseType x = case x of
   Language.Sprite.Syntax.Front.Abs.BaseTypeInt -> failure x
+  Language.Sprite.Syntax.Front.Abs.BaseTypeBool -> failure x
 
 transFuncAppArg :: Language.Sprite.Syntax.Front.Abs.FuncAppArg -> Result
 transFuncAppArg x = case x of
+  Language.Sprite.Syntax.Front.Abs.FuncAppArgBool constbool -> failure x
   Language.Sprite.Syntax.Front.Abs.FuncAppArgInt integer -> failure x
   Language.Sprite.Syntax.Front.Abs.FuncAppArgVar varident -> failure x

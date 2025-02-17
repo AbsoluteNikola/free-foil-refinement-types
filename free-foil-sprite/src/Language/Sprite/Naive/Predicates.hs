@@ -1,6 +1,6 @@
 module Language.Sprite.Naive.Predicates where
 
-import Language.Sprite.Syntax.Front.Abs (Pred(..), VarIdent (..), RType(..), BaseType(..), FuncAppArg(..), IntOp(..))
+import Language.Sprite.Syntax.Front.Abs (Pred(..), VarIdent (..), RType(..), BaseType(..), FuncAppArg(..), IntOp(..), ConstBool(..))
 import Language.Fixpoint.Types.Refinements qualified as T
 
 constIntP :: VarIdent -> Integer -> Pred
@@ -14,6 +14,7 @@ funcArgTermToPred :: FuncAppArg -> Pred
 funcArgTermToPred = \case
   FuncAppArgInt x -> PInt x
   FuncAppArgVar v -> PVar v
+  FuncAppArgBool b -> PBool b
 
 data IntBinOpType = IntBinOpType
   { leftArgId :: VarIdent
@@ -33,9 +34,9 @@ intBinOpTypes op = IntBinOpType
   }
   where
     leftArgId = "x"
-    leftArgT = TypeRefined BaseTypeInt leftArgId PTrue
+    leftArgT = TypeRefined BaseTypeInt leftArgId (PBool ConstTrue)
     rightArgId = "y"
-    rightArgT = TypeRefined BaseTypeInt rightArgId PTrue
+    rightArgT = TypeRefined BaseTypeInt rightArgId (PBool ConstTrue)
     opPred = case op of
       IntPlus -> PPlus
       IntMinus -> PMinus
@@ -50,10 +51,12 @@ intBinOpTypes op = IntBinOpType
 predToFTR :: Pred -> T.Pred
 predToFTR = \case
   PVar (VarIdent varId) -> T.eVar varId
-  PTrue -> T.PTrue
-  PFalse -> T.PFalse
+  PBool ConstTrue -> T.PTrue
+  PBool ConstFalse -> T.PFalse
   PInt n -> T.ECon $ T.I n
   PEq lp rp -> toBoolOp T.Eq lp rp
+  PGreaterThan lp rp -> toBoolOp T.Gt lp rp
+  PGreaterOrEqThan lp rp -> toBoolOp T.Ge lp rp
   PLessThan lp rp -> toBoolOp T.Lt lp rp
   PLessOrEqThan lp rp -> toBoolOp T.Le lp rp
   PPlus lp rp -> toIntOp T.Plus lp rp
