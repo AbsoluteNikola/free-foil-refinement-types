@@ -95,33 +95,27 @@ withRule rule action = do
 subtype :: F.Distinct i => F.Scope i -> Term  i -> Term i -> CheckerM Constraint
 
 {- | [Sub-Base]
-     (v::t) => q[w := v]
-     -------------------
-     b{v:p} <: b{w:q}
+  Γ ⊢ ∀ (v : t). p => q[w := v]
+  ————————————————————————————— Sub-Base
+  Γ ⊢ b{v:p} <: b{w:q}
  -}
-subtype scope (TypeRefined lb leftVarPat leftPredicate) (TypeRefined rb rightVarPat rightPredicate)
+subtype scope (TypeRefined lb leftVarPat@(PatternVar v) leftPredicate) (TypeRefined rb rightVarPat@(PatternVar w) rightPredicate)
   | lb /= rb = throwError
     $ "Invalid subtyping. Different refined base: " <> pShowT lb <> " and " <> pShowT rb
   | otherwise = withRule "[Sub-Base]" $ do
-      let
-        implMsg = "Refinement subtype error: (v::t) => q[w := v]. Where v="
-          <> showT leftVarPat
-          <> ", w=" <> showT rightVarPat
-        predMsg = "Refinement subtype error: q[w := v]. Where w="
-          <> showT rightVarPat <> " and v=" <> showT leftVarPat
-      case unifyScopes scope (F.ScopedAST leftVarPat leftPredicate) (F.ScopedAST rightVarPat rightPredicate) of
-        Nothing -> throwError "can't unify"
-        Just (PairOfScopedAST binders' (leftPat, rightPat) leftPred rightPred) -> do
-          let scope' = F.extendScopePattern binders' scope
-          case  (F.assertExt binders', F.assertDistinct binders') of
-            (F.Ext, F.Distinct) -> do
-              let
-                subst = F.addRename (F.sink F.identitySubst) (getNameBinderFromPattern rightPat) (F.nameOf $ getNameBinderFromPattern leftPat)
-                predSubstituted = F.substitute scope' subst rightPred
-                predConstraint = CPred (fromTerm predSubstituted) predMsg
-              debugPrintT "pred: " >>  debugPrint predSubstituted
-              let t = TypeRefined lb leftPat leftPred
-              buildImplicationFromType implMsg scope' leftPat (F.sink t) predConstraint
+      case (F.assertDistinct leftVarPat, F.assertExt leftVarPat) of
+        (F.Distinct, F.Ext) -> do
+          let
+            implMsg = "Refinement subtype error: (v::t) => q[w := v]. Where v="
+              <> showT leftVarPat
+              <> ", w=" <> showT rightVarPat
+            predMsg = "Refinement subtype error: q[w := v]. Where w="
+              <> showT rightVarPat <> " and v=" <> showT leftVarPat
+            scope' = F.extendScopePattern leftVarPat scope
+            subst = F.addRename (F.sink F.identitySubst) w (F.nameOf v)
+            rightPredicate' = F.substitute scope' subst rightPredicate
+            conclusionPred = CPred (fromTerm rightPredicate') predMsg
+          buildImplicationFromType implMsg scope' leftVarPat leftPredicate conclusionPred
 
 {- | [Sub-Fun]
 
