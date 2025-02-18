@@ -36,7 +36,6 @@ common extensions
       ScopedTypeVariables
       GADTs
       DataKinds
-      ScopedTypeVariables
       StandaloneDeriving
       FlexibleContexts
 
@@ -59,7 +58,7 @@ library
       Language.Sprite.TypeCheck.Constraints
       Language.Sprite.TypeCheck.Predicates
       Language.Sprite.TypeCheck.Run
-
+      Language.Sprite.TypeCheck.Types
       Language.Sprite.Naive.Constraints
       Language.Sprite.Naive.Check
       Language.Sprite.Naive.Substitution

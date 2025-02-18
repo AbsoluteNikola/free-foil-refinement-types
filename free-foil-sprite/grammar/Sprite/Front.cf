@@ -5,6 +5,7 @@ token VarIdent lower (letter | digit | '_')* ;
 ConstInt.     Term ::= Integer ;
 Bool.         Term ::= ConstBool ;
 Var.          Term ::= VarIdent ;
+If.           Term ::= "if" "(" FuncAppArg ")" "{" Term "}" "else" "{" Term "}";
 Let.          Term ::= Decl ScopedTerm ;
 Fun.          Term ::= "(" VarIdent ")" "=>" "{" ScopedTerm "}" ;
 App.          Term ::= Term "(" FuncAppArg ")"; -- Program should be in ANF. See page 14
@@ -25,6 +26,11 @@ separator Decl "";
 IntPlus. IntOp ::= "+";
 IntMinus. IntOp ::= "-";
 IntMultiply. IntOp ::= "*";
+IntEq. IntOp ::= "==";
+IntLessThan. IntOp ::= "<";
+IntLessOrEqThan. IntOp ::= "<=";
+IntGreaterThan. IntOp ::= ">";
+IntGreaterOrEqThan. IntOp ::= ">=";
 
 -- type terms
 TypeRefined.      RType ::= BaseType "[" VarIdent "|" Pred "]" ;

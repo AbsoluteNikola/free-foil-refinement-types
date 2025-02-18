@@ -41,6 +41,11 @@ intBinOpTypes op = IntBinOpType
       IntPlus -> PPlus
       IntMinus -> PMinus
       IntMultiply -> PMultiply
+      IntEq -> PEq
+      IntLessThan -> PLessThan
+      IntLessOrEqThan -> PLessOrEqThan
+      IntGreaterThan -> PGreaterThan
+      IntGreaterOrEqThan -> PGreaterOrEqThan
     resultType =
       TypeRefined BaseTypeInt "opRes" $
         PEq (PVar "opRes")

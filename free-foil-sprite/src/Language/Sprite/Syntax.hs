@@ -36,6 +36,7 @@ data Pattern o i
 data TermSig scope term
   where
     ConstIntSig :: Integer -> TermSig scope term
+    IfSig :: term -> term -> term -> TermSig scope term
     LetSig :: term -> scope -> TermSig scope term
     FunSig :: scope -> TermSig scope term
     AppSig :: term -> term -> TermSig scope term
@@ -61,7 +62,10 @@ pattern Let binder_a95M x_a95L body_a95N = Control.Monad.Free.Foil.Node (LetSig 
                                                                                                                     body_a95N))
 pattern Fun :: Pattern o i -> Term i -> Term o
 pattern Fun binder_a95O body_a95P = Control.Monad.Free.Foil.Node (FunSig (Control.Monad.Free.Foil.ScopedAST binder_a95O
-                                                                                                            body_a95P))
+                                                                                                          body_a95P))
+pattern If :: Term o -> Term o -> Term o -> Term o
+pattern If cond thenB elseB = Control.Monad.Free.Foil.Node (IfSig cond thenB elseB)
+
 pattern App :: Term o -> Term o -> Term o
 pattern App x_a95Q x_a95R = Control.Monad.Free.Foil.Node (AppSig x_a95Q
                                                                   x_a95R)
@@ -108,6 +112,8 @@ fromTermSig ::
   -> Language.Sprite.Syntax.Inner.Abs.Term
 fromTermSig (ConstIntSig x_abJ2)
   = Language.Sprite.Syntax.Inner.Abs.ConstInt x_abJ2
+fromTermSig (IfSig cond thenB elseB)
+  = Language.Sprite.Syntax.Inner.Abs.If cond thenB elseB
 fromTermSig (LetSig x_abJ3 (binder_abJ4, body_abJ5))
   = Language.Sprite.Syntax.Inner.Abs.Let binder_abJ4 x_abJ3 body_abJ5 -- FIXED HERE
 fromTermSig (FunSig (binder_abJ6, body_abJ7))
@@ -143,6 +149,8 @@ toTermSig (Language.Sprite.Syntax.Inner.Abs.ConstInt _x_abJn)
   = Right (ConstIntSig _x_abJn)
 toTermSig (Language.Sprite.Syntax.Inner.Abs.Var _theRawIdent_abJo)
   = Left _theRawIdent_abJo
+toTermSig (Language.Sprite.Syntax.Inner.Abs.If cond thenB elseB)
+  = Right (IfSig cond thenB elseB)
 toTermSig
   (Language.Sprite.Syntax.Inner.Abs.Let binder_abJr _x_abJq -- FIXED HERE
                                         body_abJs)

@@ -16,6 +16,7 @@ import qualified Data.Text.IO as TIO
 import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import Language.Sprite.TypeCheck.Predicates
 import Control.Monad.Reader (ask, MonadReader (local), ReaderT)
+import Language.Sprite.TypeCheck.Types
 
 data Env n where
     EmptyEnv :: Env F.VoidS
@@ -98,7 +99,7 @@ subtype :: F.Distinct i => F.Scope i -> Term  i -> Term i -> CheckerM Constraint
  -}
 subtype scope lt@(TypeRefined lb leftVarPat@(PatternVar v) _) (TypeRefined rb rightVarPat@(PatternVar w) rightPredicate)
   | lb /= rb = throwError
-    $ "Invalid subtyping. Different refined base: " <> pShowT lb <> " and " <> pShowT rb
+    $ "Invalid subtyping. Different refinement base: " <> pShowT lb <> " and " <> pShowT rb
   | otherwise = withRule "[Sub-Base]" $ do
       case (F.assertDistinct leftVarPat, F.assertExt leftVarPat) of
         (F.Distinct, F.Ext) -> do
@@ -209,6 +210,40 @@ check scope env currentTerm currentType = case currentTerm of
 
           pure $ CAnd [newVarConstraints, implLetBodyConstraint]
 
+  {- [Chk-If]
+  y is fresh, need to pass condition value to constraints,
+
+  Γ ⊢  <== bool    G, y:int[y|x] |- e1 <== t     G, y:int[y|not x]  |- e2 <== t
+  -----------------------------------------------------------------------------
+      G |- if x then e1 else e2 <== t
+  -}
+  If cond thenTerm elseTerm -> withRule "[Chk-If]" $ do
+    condCheckConstraints <- check scope env cond (F.sink anyBoolT)
+    debugPrintT "Left branch"
+    thenConstraints <- mkIfBranchCheck Inner.ConstTrue thenTerm
+      "type check If error in then branch"
+    debugPrintT "Right branch"
+    elseConstraints <- mkIfBranchCheck Inner.ConstFalse elseTerm
+      "type check If error in else branch"
+
+    pure $ CAnd [condCheckConstraints, thenConstraints, elseConstraints]
+    where
+      mkIfBranchCheck condShouldBe brachTerm message = do
+        F.withFreshBinder scope $ \freshY ->
+          case (F.assertDistinct freshY, F.assertExt freshY) of
+            (F.Distinct, F.Ext) ->
+              withExtendedEnv env freshY (F.sink anyBoolT) $ \env' -> do
+                let
+                  scope' = F.extendScope freshY scope
+                  t = TypeRefined
+                    Inner.BaseTypeBool
+                    (PatternVar freshY)
+                    (OpExpr (F.sink cond)
+                      Inner.EqOp
+                      (Boolean condShouldBe))
+                branchCheckConstraints <- check scope' env' (F.sink brachTerm) (F.sink currentType)
+                buildImplicationFromType message scope' (PatternVar freshY) (F.sink t) branchCheckConstraints
+
   {- [Chk-Syn]
   G |- e ==> s        G |- s <: t
   ----------------------------------[Chk-Syn]
@@ -248,14 +283,17 @@ synths ::
   CheckerM (Constraint, Term i)
 synths scope env currentTerm = case currentTerm of
   {- [Syn-Var]
-   -----------------
-    G |- x ==> G(x)
+    G(x) = t
+   ----------------------
+    G |- x ==> self(x, t)
   -}
   F.Var varId -> withRule "[Syn-Var]" $ do
-    let typ = lookupEnv env varId
+    let
+      typ = lookupEnv env varId
+      typWithSelf = singletonT varId typ
     debugPrintT $ "lookup: " <> showT currentTerm
-    debugPrintT $ "typ: " <> showT typ
-    pure (cTrue, typ)
+    debugPrintT $ "typ: " <> showT typWithSelf
+    pure (cTrue, typWithSelf)
 
   {- [Syn-Con]
    -----------------

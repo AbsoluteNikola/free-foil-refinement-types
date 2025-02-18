@@ -15,6 +15,10 @@ convert ft = case ft of
   F.ConstInt i ->
     pure $ I.ConstInt i
   F.Bool b -> pure $ I.Boolean (convertConstBool b)
+  F.If cond ifB elseB -> do
+    ifB' <- convert ifB
+    elseB' <- convert elseB
+    pure $ I.If (convertFuncAppArg cond) ifB' elseB'
   F.Var varId -> pure $ I.Var (convertVarId varId)
   F.Let decl (F.ScopedTerm body) -> do
     (I.ScopedTerm -> convertedBody) <- convert body
@@ -34,6 +38,11 @@ convert ft = case ft of
         F.IntPlus -> I.OpExpr l I.PlusOp r
         F.IntMinus -> I.OpExpr l I.MinusOp r
         F.IntMultiply -> I.OpExpr l I.MultiplyOp r
+        F.IntEq -> I.OpExpr l I.EqOp r
+        F.IntLessThan -> I.OpExpr l I.LessOp r
+        F.IntLessOrEqThan -> I.OpExpr l I.LessOrEqOp r
+        F.IntGreaterThan -> I.OpExpr l I.GreaterOp r
+        F.IntGreaterOrEqThan -> I.OpExpr l I.GreaterOrEqOp r
 
 convertVarId :: F.VarIdent -> I.VarIdent
 convertVarId (F.VarIdent varId) = I.VarIdent varId

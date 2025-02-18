@@ -27,6 +27,8 @@ convert = \case
       I.LessOp -> T.PAtom T.Lt
       I.GreaterOrEqOp -> T.PAtom T.Ge
       I.GreaterOp -> T.PAtom T.Gt
+      I.AndOp -> \e1 e2 -> T.PAnd [e1, e2]
+      I.OrOp -> \e1 e2 -> T.POr [e1, e2]
       I.PlusOp -> T.EBin T.Plus
       I.MinusOp -> T.EBin T.Minus
       I.MultiplyOp -> T.EBin T.Times

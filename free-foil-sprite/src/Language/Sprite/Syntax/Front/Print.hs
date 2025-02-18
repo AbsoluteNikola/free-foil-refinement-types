@@ -144,6 +144,7 @@ instance Print Language.Sprite.Syntax.Front.Abs.Term where
     Language.Sprite.Syntax.Front.Abs.ConstInt n -> prPrec i 0 (concatD [prt 0 n])
     Language.Sprite.Syntax.Front.Abs.Bool constbool -> prPrec i 0 (concatD [prt 0 constbool])
     Language.Sprite.Syntax.Front.Abs.Var varident -> prPrec i 0 (concatD [prt 0 varident])
+    Language.Sprite.Syntax.Front.Abs.If funcapparg term1 term2 -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 0 funcapparg, doc (showString ")"), doc (showString "{"), prt 0 term1, doc (showString "}"), doc (showString "else"), doc (showString "{"), prt 0 term2, doc (showString "}")])
     Language.Sprite.Syntax.Front.Abs.Let decl scopedterm -> prPrec i 0 (concatD [prt 0 decl, prt 0 scopedterm])
     Language.Sprite.Syntax.Front.Abs.Fun varident scopedterm -> prPrec i 0 (concatD [doc (showString "("), prt 0 varident, doc (showString ")"), doc (showString "=>"), doc (showString "{"), prt 0 scopedterm, doc (showString "}")])
     Language.Sprite.Syntax.Front.Abs.App term funcapparg -> prPrec i 0 (concatD [prt 0 term, doc (showString "("), prt 0 funcapparg, doc (showString ")")])
@@ -176,6 +177,11 @@ instance Print Language.Sprite.Syntax.Front.Abs.IntOp where
     Language.Sprite.Syntax.Front.Abs.IntPlus -> prPrec i 0 (concatD [doc (showString "+")])
     Language.Sprite.Syntax.Front.Abs.IntMinus -> prPrec i 0 (concatD [doc (showString "-")])
     Language.Sprite.Syntax.Front.Abs.IntMultiply -> prPrec i 0 (concatD [doc (showString "*")])
+    Language.Sprite.Syntax.Front.Abs.IntEq -> prPrec i 0 (concatD [doc (showString "==")])
+    Language.Sprite.Syntax.Front.Abs.IntLessThan -> prPrec i 0 (concatD [doc (showString "<")])
+    Language.Sprite.Syntax.Front.Abs.IntLessOrEqThan -> prPrec i 0 (concatD [doc (showString "<=")])
+    Language.Sprite.Syntax.Front.Abs.IntGreaterThan -> prPrec i 0 (concatD [doc (showString ">")])
+    Language.Sprite.Syntax.Front.Abs.IntGreaterOrEqThan -> prPrec i 0 (concatD [doc (showString ">=")])
 
 instance Print Language.Sprite.Syntax.Front.Abs.RType where
   prt i = \case

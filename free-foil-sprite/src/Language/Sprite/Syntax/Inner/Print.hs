@@ -144,6 +144,7 @@ instance Print Language.Sprite.Syntax.Inner.Abs.Term where
     Language.Sprite.Syntax.Inner.Abs.ConstInt n -> prPrec i 0 (concatD [prt 0 n])
     Language.Sprite.Syntax.Inner.Abs.Boolean constbool -> prPrec i 0 (concatD [prt 0 constbool])
     Language.Sprite.Syntax.Inner.Abs.Var varident -> prPrec i 0 (concatD [prt 0 varident])
+    Language.Sprite.Syntax.Inner.Abs.If term1 term2 term3 -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 0 term1, doc (showString ")"), doc (showString "{"), prt 0 term2, doc (showString "}"), doc (showString "else"), doc (showString "{"), prt 0 term3, doc (showString "}")])
     Language.Sprite.Syntax.Inner.Abs.Let pattern_ term scopedterm -> prPrec i 0 (concatD [doc (showString "let"), prt 0 pattern_, doc (showString "="), prt 0 term, doc (showString ";"), prt 0 scopedterm])
     Language.Sprite.Syntax.Inner.Abs.Fun pattern_ scopedterm -> prPrec i 0 (concatD [doc (showString "("), prt 0 pattern_, doc (showString ")"), doc (showString "=>"), doc (showString "{"), prt 0 scopedterm, doc (showString "}")])
     Language.Sprite.Syntax.Inner.Abs.App term1 term2 -> prPrec i 0 (concatD [prt 0 term1, doc (showString "("), prt 0 term2, doc (showString ")")])
@@ -167,6 +168,8 @@ instance Print Language.Sprite.Syntax.Inner.Abs.Op where
     Language.Sprite.Syntax.Inner.Abs.PlusOp -> prPrec i 0 (concatD [doc (showString "+")])
     Language.Sprite.Syntax.Inner.Abs.MinusOp -> prPrec i 0 (concatD [doc (showString "-")])
     Language.Sprite.Syntax.Inner.Abs.MultiplyOp -> prPrec i 0 (concatD [doc (showString "*")])
+    Language.Sprite.Syntax.Inner.Abs.AndOp -> prPrec i 0 (concatD [doc (showString "&&")])
+    Language.Sprite.Syntax.Inner.Abs.OrOp -> prPrec i 0 (concatD [doc (showString "||")])
 
 instance Print Language.Sprite.Syntax.Inner.Abs.Pattern where
   prt i = \case

@@ -24,16 +24,16 @@ VarIdent literals are recognized by the regular expression
 The set of reserved words is the set of terminals appearing in the grammar. Those reserved words that consist of non-letter characters are called symbols, and they are treated in a different way from those that are similar to identifiers. The lexer follows rules familiar from languages like Haskell, C, and Java, including longest match and spacing conventions.
 
 The reserved words used in Front are the following:
-  | ``bool`` | ``false`` | ``int`` | ``let``
-  | ``true`` | ``val`` |  |
+  | ``bool`` | ``else`` | ``false`` | ``if``
+  | ``int`` | ``let`` | ``true`` | ``val``
 
 The symbols used in Front are the following:
-  | ( | ) | => | {
-  | } | /*@ | : | */
+  | ( | ) | { | }
+  | => | /*@ | : | */
   | = | ; | + | -
-  | * | [ | | | ]
-  | == | < | <= | >
-  | >= |  |  |
+  | * | == | < | <=
+  | > | >= | [ | |
+  | ] |  |  |
 
 ===Comments===
 There are no single-line comments in the grammar.There are no multiple-line comments in the grammar.
@@ -47,6 +47,7 @@ All other symbols are terminals.
   | //Term// | -> | //Integer//
   |  |  **|**  | //ConstBool//
   |  |  **|**  | //VarIdent//
+  |  |  **|**  | ``if`` ``(`` //FuncAppArg// ``)`` ``{`` //Term// ``}`` ``else`` ``{`` //Term// ``}``
   |  |  **|**  | //Decl// //ScopedTerm//
   |  |  **|**  | ``(`` //VarIdent// ``)`` ``=>`` ``{`` //ScopedTerm// ``}``
   |  |  **|**  | //Term// ``(`` //FuncAppArg// ``)``
@@ -63,6 +64,11 @@ All other symbols are terminals.
   | //IntOp// | -> | ``+``
   |  |  **|**  | ``-``
   |  |  **|**  | ``*``
+  |  |  **|**  | ``==``
+  |  |  **|**  | ``<``
+  |  |  **|**  | ``<=``
+  |  |  **|**  | ``>``
+  |  |  **|**  | ``>=``
   | //RType// | -> | //BaseType// ``[`` //VarIdent// ``|`` //Pred// ``]``
   |  |  **|**  | //FuncArg// ``=>`` //ScopedRType//
   |  |  **|**  | ``(`` //RType// ``)``

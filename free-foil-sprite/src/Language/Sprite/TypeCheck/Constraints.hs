@@ -20,7 +20,8 @@ cTrue = CAnd []
 
 baseTypeToSort :: I.BaseType -> T.Sort
 baseTypeToSort = \case
-  I.BaseTypeInt -> T.FInt
+  I.BaseTypeInt -> T.intSort
+  I.BaseTypeBool -> T.boolSort
 
 constraintsToFHT :: Constraint -> Either InnerToFTR.ConvertError (H.Cstr Text)
 constraintsToFHT = \case

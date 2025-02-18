@@ -19,6 +19,7 @@ data Term
     = ConstInt Integer
     | Bool ConstBool
     | Var VarIdent
+    | If FuncAppArg Term Term
     | Let Decl ScopedTerm
     | Fun VarIdent ScopedTerm
     | App Term FuncAppArg
@@ -38,7 +39,15 @@ data Decl
     = AnnotatedDecl Annotation PlainDecl | UnAnnotatedDecl PlainDecl
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data IntOp = IntPlus | IntMinus | IntMultiply
+data IntOp
+    = IntPlus
+    | IntMinus
+    | IntMultiply
+    | IntEq
+    | IntLessThan
+    | IntLessOrEqThan
+    | IntGreaterThan
+    | IntGreaterOrEqThan
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data RType

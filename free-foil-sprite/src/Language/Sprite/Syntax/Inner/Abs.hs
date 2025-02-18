@@ -19,6 +19,7 @@ data Term
     = ConstInt Integer
     | Boolean ConstBool
     | Var VarIdent
+    | If Term Term Term
     | Let Pattern Term ScopedTerm
     | Fun Pattern ScopedTerm
     | App Term Term
@@ -40,6 +41,8 @@ data Op
     | PlusOp
     | MinusOp
     | MultiplyOp
+    | AndOp
+    | OrOp
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data Pattern = PatternVar VarIdent

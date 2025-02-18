@@ -24,6 +24,7 @@ transTerm x = case x of
   Language.Sprite.Syntax.Inner.Abs.ConstInt integer -> failure x
   Language.Sprite.Syntax.Inner.Abs.Boolean constbool -> failure x
   Language.Sprite.Syntax.Inner.Abs.Var varident -> failure x
+  Language.Sprite.Syntax.Inner.Abs.If term1 term2 term3 -> failure x
   Language.Sprite.Syntax.Inner.Abs.Let pattern_ term scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.Fun pattern_ scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.App term1 term2 -> failure x
@@ -47,6 +48,8 @@ transOp x = case x of
   Language.Sprite.Syntax.Inner.Abs.PlusOp -> failure x
   Language.Sprite.Syntax.Inner.Abs.MinusOp -> failure x
   Language.Sprite.Syntax.Inner.Abs.MultiplyOp -> failure x
+  Language.Sprite.Syntax.Inner.Abs.AndOp -> failure x
+  Language.Sprite.Syntax.Inner.Abs.OrOp -> failure x
 
 transPattern :: Language.Sprite.Syntax.Inner.Abs.Pattern -> Result
 transPattern x = case x of

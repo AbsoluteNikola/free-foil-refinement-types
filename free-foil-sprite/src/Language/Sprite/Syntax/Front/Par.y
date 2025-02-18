@@ -42,14 +42,16 @@ import Language.Sprite.Syntax.Front.Lex
   '['        { PT _ (TS _ 17)       }
   ']'        { PT _ (TS _ 18)       }
   'bool'     { PT _ (TS _ 19)       }
-  'false'    { PT _ (TS _ 20)       }
-  'int'      { PT _ (TS _ 21)       }
-  'let'      { PT _ (TS _ 22)       }
-  'true'     { PT _ (TS _ 23)       }
-  'val'      { PT _ (TS _ 24)       }
-  '{'        { PT _ (TS _ 25)       }
-  '|'        { PT _ (TS _ 26)       }
-  '}'        { PT _ (TS _ 27)       }
+  'else'     { PT _ (TS _ 20)       }
+  'false'    { PT _ (TS _ 21)       }
+  'if'       { PT _ (TS _ 22)       }
+  'int'      { PT _ (TS _ 23)       }
+  'let'      { PT _ (TS _ 24)       }
+  'true'     { PT _ (TS _ 25)       }
+  'val'      { PT _ (TS _ 26)       }
+  '{'        { PT _ (TS _ 27)       }
+  '|'        { PT _ (TS _ 28)       }
+  '}'        { PT _ (TS _ 29)       }
   L_integ    { PT _ (TI $$)         }
   L_VarIdent { PT _ (T_VarIdent $$) }
 
@@ -66,6 +68,7 @@ Term
   : Integer { Language.Sprite.Syntax.Front.Abs.ConstInt $1 }
   | ConstBool { Language.Sprite.Syntax.Front.Abs.Bool $1 }
   | VarIdent { Language.Sprite.Syntax.Front.Abs.Var $1 }
+  | 'if' '(' FuncAppArg ')' '{' Term '}' 'else' '{' Term '}' { Language.Sprite.Syntax.Front.Abs.If $3 $6 $10 }
   | Decl ScopedTerm { Language.Sprite.Syntax.Front.Abs.Let $1 $2 }
   | '(' VarIdent ')' '=>' '{' ScopedTerm '}' { Language.Sprite.Syntax.Front.Abs.Fun $2 $6 }
   | Term '(' FuncAppArg ')' { Language.Sprite.Syntax.Front.Abs.App $1 $3 }
@@ -98,6 +101,11 @@ IntOp
   : '+' { Language.Sprite.Syntax.Front.Abs.IntPlus }
   | '-' { Language.Sprite.Syntax.Front.Abs.IntMinus }
   | '*' { Language.Sprite.Syntax.Front.Abs.IntMultiply }
+  | '==' { Language.Sprite.Syntax.Front.Abs.IntEq }
+  | '<' { Language.Sprite.Syntax.Front.Abs.IntLessThan }
+  | '<=' { Language.Sprite.Syntax.Front.Abs.IntLessOrEqThan }
+  | '>' { Language.Sprite.Syntax.Front.Abs.IntGreaterThan }
+  | '>=' { Language.Sprite.Syntax.Front.Abs.IntGreaterOrEqThan }
 
 RType :: { Language.Sprite.Syntax.Front.Abs.RType }
 RType

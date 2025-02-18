@@ -3,8 +3,9 @@ token VarIdent lower (letter | digit | '_')* ;
 
 -- expr terms
 ConstInt.     Term ::= Integer ;
-Boolean.       Term ::= ConstBool ;
+Boolean.      Term ::= ConstBool ;
 Var.          Term ::= VarIdent ;
+If.           Term ::= "if" "(" Term ")" "{" Term "}" "else" "{" Term "}";
 Let.          Term ::= "let" Pattern "=" Term ";" ScopedTerm ;  -- FIXME: requires fix in Template Haskell (mkFreeFoil)
 Fun.          Term ::= "(" Pattern ")" "=>" "{" ScopedTerm "}" ;
 App.          Term ::= Term "(" Term ")" ;
@@ -25,6 +26,8 @@ GreaterOp.       Op ::= ">";
 PlusOp.          Op ::= "+";
 MinusOp.         Op ::= "-";
 MultiplyOp.      Op ::= "*";
+AndOp.           Op ::= "&&";
+OrOp.            Op ::= "||";
 
 PatternVar. Pattern ::= VarIdent ;
 ScopedTerm. ScopedTerm ::= Term ;
