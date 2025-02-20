@@ -17,6 +17,7 @@ import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import Language.Sprite.TypeCheck.Predicates
 import Control.Monad.Reader (ask, MonadReader (local), ReaderT)
 import Language.Sprite.TypeCheck.Types
+import qualified Data.Unique as Unique
 
 data Env n where
     EmptyEnv :: Env F.VoidS
@@ -90,6 +91,12 @@ withRule rule action = do
   liftIO . TIO.putStrLn $ denv.offset <> "  " <> rule <> " done"
   pure res
 
+mkSolverErrorMessage :: Text -> CheckerM Text
+mkSolverErrorMessage baseMsg = do
+  (Unique.hashUnique -> errId) <- liftIO Unique.newUnique
+  debugPrintT $ "Set error with id " <> showT errId
+  pure $ baseMsg <> "\nError id: " <> showT errId
+
 subtype :: F.Distinct i => F.Scope i -> Term  i -> Term i -> CheckerM Constraint
 
 {- | [Sub-Base]
@@ -103,12 +110,12 @@ subtype scope lt@(TypeRefined lb leftVarPat@(PatternVar v) _) (TypeRefined rb ri
   | otherwise = withRule "[Sub-Base]" $ do
       case (F.assertDistinct leftVarPat, F.assertExt leftVarPat) of
         (F.Distinct, F.Ext) -> do
+          implMsg <- mkSolverErrorMessage $ "Refinement subtype error: (v::t) => q[w := v]. Where v="
+            <> showT leftVarPat
+            <> ", w=" <> showT rightVarPat
+          predMsg <- mkSolverErrorMessage $ "Refinement subtype error: q[w := v]. Where w="
+            <> showT rightVarPat <> " and v=" <> showT leftVarPat
           let
-            implMsg = "Refinement subtype error: (v::t) => q[w := v]. Where v="
-              <> showT leftVarPat
-              <> ", w=" <> showT rightVarPat
-            predMsg = "Refinement subtype error: q[w := v]. Where w="
-              <> showT rightVarPat <> " and v=" <> showT leftVarPat
             scope' = F.extendScopePattern leftVarPat scope
             subst = F.addRename (F.sink F.identitySubst) w (F.nameOf v)
             rightPredicate' = F.substitute scope' subst rightPredicate
@@ -145,8 +152,7 @@ subtype scope
       debugPrintT "left type (left ret type): " >> debugPrint leftFunRetTypeSubstituted
       debugPrintT "right type (right ret type): " >> debugPrint rightFunRetT
       returnTypesSubtypingConstraints <- subtype scope' leftFunRetTypeSubstituted rightFunRetT
-      let
-        implMsg = "Function subtype error: x2:s2 |- t1[x1:=x2] <: t2. Where x2="  <> showT rightFunArgPat
+      implMsg <- mkSolverErrorMessage $ "Function subtype error: x2:s2 |- t1[x1:=x2] <: t2. Where x2="  <> showT rightFunArgPat
       debugPrintT $ "rightArgPat = " <> showT rightFunArgPat <> ", leftFunRetT' = " <> showT leftFunRetT
       returnTypesConstraints <- buildImplicationFromType implMsg scope' rightFunArgPat (F.sink rightFunArgT) returnTypesSubtypingConstraints
       pure $ CAnd [argSubtypingConstrains, returnTypesConstraints]
@@ -187,7 +193,8 @@ check scope env currentTerm currentType = case currentTerm of
             bodyCheckConstraints :: Constraint <- withExtendedEnv env typeFunArgIdBinder argType $ \env' ->
               check scope' env' bodySubstituted returnType
             debugPrintT $ "Arg type: " <> showT argType
-            buildImplicationFromType "Chk-Lam" scope' typeFunArgIdPat (F.sink argType) bodyCheckConstraints
+            implMsg <- mkSolverErrorMessage "Checking func error"
+            buildImplicationFromType implMsg scope' typeFunArgIdPat (F.sink argType) bodyCheckConstraints
     _ -> throwError $ "Function type should be Function, not: " <> pShowT currentType
 
   {- [Chk-Let]
@@ -205,8 +212,9 @@ check scope env currentTerm currentType = case currentTerm of
         withExtendedEnv env (getNameBinderFromPattern newVarPat) newVarType $ \env' -> do
           let scope' = F.extendScopePattern newVarPat scope
           bodyConstraints <- check scope' env' body (F.sink currentType)
+          implMsg <- mkSolverErrorMessage "Checking let error"
           implLetBodyConstraint <-
-            buildImplicationFromType "Chk-Let" scope' newVarPat (F.sink newVarType) bodyConstraints
+            buildImplicationFromType implMsg scope' newVarPat (F.sink newVarType) bodyConstraints
 
           pure $ CAnd [newVarConstraints, implLetBodyConstraint]
 
