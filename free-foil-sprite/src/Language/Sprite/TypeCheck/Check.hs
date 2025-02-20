@@ -2,7 +2,6 @@
 
 module Language.Sprite.TypeCheck.Check where
 import Control.Monad.Foil qualified as F
-import Control.Monad.Foil.Internal qualified as F
 import Control.Monad.Free.Foil qualified as F
 import Language.Sprite.Syntax
 import Control.Monad.Trans.Except (ExceptT)
@@ -15,8 +14,6 @@ import Text.Pretty.Simple (pShow, pShowNoColor)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import qualified Language.Sprite.Syntax.Inner.Abs as Inner
-import Data.Biapplicative (Bifunctor)
-import qualified Control.Monad.Foil.Relative as F
 import Language.Sprite.TypeCheck.Predicates
 import Control.Monad.Reader (ask, MonadReader (local), ReaderT)
 
@@ -99,7 +96,7 @@ subtype :: F.Distinct i => F.Scope i -> Term  i -> Term i -> CheckerM Constraint
   ————————————————————————————— Sub-Base
   Γ ⊢ b{v:p} <: b{w:q}
  -}
-subtype scope (TypeRefined lb leftVarPat@(PatternVar v) leftPredicate) (TypeRefined rb rightVarPat@(PatternVar w) rightPredicate)
+subtype scope lt@(TypeRefined lb leftVarPat@(PatternVar v) _) (TypeRefined rb rightVarPat@(PatternVar w) rightPredicate)
   | lb /= rb = throwError
     $ "Invalid subtyping. Different refined base: " <> pShowT lb <> " and " <> pShowT rb
   | otherwise = withRule "[Sub-Base]" $ do
@@ -115,7 +112,7 @@ subtype scope (TypeRefined lb leftVarPat@(PatternVar v) leftPredicate) (TypeRefi
             subst = F.addRename (F.sink F.identitySubst) w (F.nameOf v)
             rightPredicate' = F.substitute scope' subst rightPredicate
             conclusionPred = CPred (fromTerm rightPredicate') predMsg
-          buildImplicationFromType implMsg scope' leftVarPat leftPredicate conclusionPred
+          buildImplicationFromType implMsg scope' leftVarPat (F.sink lt) conclusionPred
 
 {- | [Sub-Fun]
 
@@ -131,31 +128,27 @@ subtype scope
   debugPrintT "left type (right arg): " >> debugPrint rightFunArgT
   debugPrintT "right type (left arg): " >> debugPrint leftFunArgT
   argSubtypingConstrains <- subtype scope rightFunArgT leftFunArgT
-  case unifyScopes scope (F.ScopedAST leftFunArgPat leftFunRetT) (F.ScopedAST rightFunArgPat rightFunRetT) of
-    Nothing -> throwError "can't unify"
-    Just (PairOfScopedAST binders' (leftArgPat, rightArgPat) leftFunRetT' rightFunRetT') -> do
-      let scope' = F.extendScopePattern binders' scope
-      case  (F.assertExt binders', F.assertDistinct binders') of
-        (F.Ext, F.Distinct) -> do
-          let
-            leftFunRetTSubst =
-              F.addRename
-                (F.sink F.identitySubst)
-                (getNameBinderFromPattern leftArgPat)
-                (F.nameOf (getNameBinderFromPattern rightArgPat))
-            -- t1[x1:=x2]
-            leftFunRetTypeSubstituted = F.substitute scope' leftFunRetTSubst leftFunRetT'
-          -- x2:s2 |- t1[x1:=x2] <: t2
-          debugPrintT "calling subtype"
-          debugPrintT "left type (left ret type): " >> debugPrint leftFunRetTypeSubstituted
-          debugPrintT "right type (right ret type): " >> debugPrint rightFunRetT'
-          returnTypesSubtypingConstraints <- subtype scope' leftFunRetTypeSubstituted rightFunRetT'
-          let
-            implMsg = "Function subtype error: x2:s2 |- t1[x1:=x2] <: t2. Where x2="  <> showT rightArgPat
-
-          debugPrintT $ "rightArgPat = " <> showT rightArgPat <> ", leftFunRetT' = " <> showT leftFunRetT'
-          returnTypesConstraints <- buildImplicationFromType implMsg scope' rightArgPat rightFunRetT' returnTypesSubtypingConstraints
-          pure $ CAnd [argSubtypingConstrains, returnTypesConstraints]
+  case (F.assertDistinct rightFunArgPat, F.assertExt rightFunArgPat) of
+    (F.Distinct, F.Ext) -> do
+      let
+        scope' = F.extendScopePattern rightFunArgPat scope
+        leftFunRetTSubst =
+          F.addRename
+            (F.sink F.identitySubst)
+            (getNameBinderFromPattern leftFunArgPat)
+            (F.nameOf (getNameBinderFromPattern rightFunArgPat))
+        -- t1[x1:=x2]
+        leftFunRetTypeSubstituted = F.substitute scope' leftFunRetTSubst leftFunRetT
+      -- x2:s2 |- t1[x1:=x2] <: t2
+      debugPrintT "calling subtype"
+      debugPrintT "left type (left ret type): " >> debugPrint leftFunRetTypeSubstituted
+      debugPrintT "right type (right ret type): " >> debugPrint rightFunRetT
+      returnTypesSubtypingConstraints <- subtype scope' leftFunRetTypeSubstituted rightFunRetT
+      let
+        implMsg = "Function subtype error: x2:s2 |- t1[x1:=x2] <: t2. Where x2="  <> showT rightFunArgPat
+      debugPrintT $ "rightArgPat = " <> showT rightFunArgPat <> ", leftFunRetT' = " <> showT leftFunRetT
+      returnTypesConstraints <- buildImplicationFromType implMsg scope' rightFunArgPat (F.sink rightFunArgT) returnTypesSubtypingConstraints
+      pure $ CAnd [argSubtypingConstrains, returnTypesConstraints]
 
 subtype _ lt rt = throwError $
   "can't subtype:\n"
@@ -173,24 +166,27 @@ check :: (F.DExt F.VoidS i) =>
 -- check scope env currentTerm currentType = debugPrintT "check:\ntype:" >> debugPrint currentType >> debugPrintT "\nterm:" >> debugPrint currentTerm >> debugPrintT "\n== check end ==" >> case currentTerm of
 check scope env currentTerm currentType = case currentTerm of
   {- [Chk-Lam]
-  G, x:s |- e <== t
+  G, x:s |- e[y := x] <== t
   --------------------------
-  G |- \x.e <== x:s -> t
+  G |- \y.e <== x:s -> t
   -}
   Fun varPattern body -> withRule "[Chk-Lam]" $ case currentType of
-    TypeFun typeFunArgIdPat argType returnType -> do
-      case unifyScopes scope (F.ScopedAST varPattern body) (F.ScopedAST typeFunArgIdPat returnType) of
-        Nothing -> throwError "can't unify"
-        Just (PairOfScopedAST binders' (leftPat, _) body' returnType') -> do
-          let
-            scope' = F.extendScopePattern binders' scope
-          case  (F.assertExt binders', F.assertDistinct binders') of
-            (F.Ext, F.Distinct) -> do
-              let bindersList = F.nameBindersList binders'
-              bodyCheckConstraints :: Constraint <- withExtendedEnv' env bindersList argType $ \env' ->
-                check scope' env' body' returnType'
-              debugPrintT $ "Arg type: " <> showT argType
-              buildImplicationFromType "Chk-Lam" scope' leftPat (F.sink argType) bodyCheckConstraints
+    TypeFun typeFunArgIdPat@(PatternVar typeFunArgIdBinder) argType returnType -> do
+        case  (F.assertExt typeFunArgIdPat, F.assertDistinct typeFunArgIdPat) of
+          (F.Ext, F.Distinct) -> do
+            let
+              scope' = F.extendScopePattern typeFunArgIdPat scope
+              bodySubst =
+                F.addRename
+                  (F.sink F.identitySubst)
+                  (getNameBinderFromPattern varPattern)
+                  (F.nameOf typeFunArgIdBinder)
+              bodySubstituted = F.substitute scope' bodySubst body
+
+            bodyCheckConstraints :: Constraint <- withExtendedEnv env typeFunArgIdBinder argType $ \env' ->
+              check scope' env' bodySubstituted returnType
+            debugPrintT $ "Arg type: " <> showT argType
+            buildImplicationFromType "Chk-Lam" scope' typeFunArgIdPat (F.sink argType) bodyCheckConstraints
     _ -> throwError $ "Function type should be Function, not: " <> pShowT currentType
 
   {- [Chk-Let]
@@ -324,43 +320,3 @@ getNameBinderFromPattern (PatternVar binder) = binder
 getRawVarIdFromPattern :: Pattern i o -> Inner.VarIdent
 getRawVarIdFromPattern varPat = case fromPattern varPat of
   Inner.PatternVar v -> v
-
--- assume than for now we have only PatternVar with one variable
--- (F.NameBinder l n, F.NameBinder l n) is lift and right binders after renaming
-data PairOfScopedAST binder sig n where
-  PairOfScopedAST :: F.NameBinders n l -> (Pattern n l, Pattern n l) -> F.AST Pattern sig l -> F.AST Pattern sig l -> PairOfScopedAST Pattern sig n
-
-unifyScopes
-  :: (F.Distinct n, F.UnifiablePattern Pattern, Bifunctor sig)
-  => F.Scope n
-  -> F.ScopedAST Pattern sig n
-  -> F.ScopedAST Pattern sig n
-  -> Maybe (PairOfScopedAST Pattern sig n)
-unifyScopes scope (F.ScopedAST patternL@(PatternVar binderL) bodyL) (F.ScopedAST patternR@(PatternVar binderR) bodyR) =
-  case F.unifyPatterns patternL patternR of
-    F.SameNameBinders binders -> do
-      Just (PairOfScopedAST binders (patternL, patternR) bodyL bodyR)
-
-    F.RenameLeftNameBinder binders renameL -> do
-      case (F.assertDistinct binders, F.assertExt binders) of
-        (F.Distinct, F.Ext) -> do
-          let newScope = F.extendScopePattern binders scope
-              bodyL' = F.liftRM newScope (F.fromNameBinderRenaming renameL) bodyL
-          Just (PairOfScopedAST binders (PatternVar $ renameL binderL, patternR) bodyL' bodyR)
-
-    F.RenameRightNameBinder binders renameR -> do
-      case (F.assertDistinct binders, F.assertExt binders) of
-        (F.Distinct, F.Ext) -> do
-          let newScope = F.extendScopePattern binders scope
-              bodyR' = F.liftRM newScope (F.fromNameBinderRenaming renameR) bodyR
-          Just (PairOfScopedAST binders (patternL, PatternVar $ renameR binderR) bodyL bodyR')
-
-    F.RenameBothBinders binders renameL renameR -> do
-      case (F.assertDistinct binders, F.assertExt binders) of
-        (F.Distinct, F.Ext) -> do
-          let newScope = F.extendScopePattern binders scope
-              bodyL' = F.liftRM newScope (F.fromNameBinderRenaming renameL) bodyL
-              bodyR' = F.liftRM newScope (F.fromNameBinderRenaming renameR) bodyR
-          Just (PairOfScopedAST binders (PatternVar $ renameL binderL, PatternVar $ renameR binderR) bodyL' bodyR')
-
-    F.NotUnifiable -> Nothing
