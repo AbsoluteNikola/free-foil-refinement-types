@@ -25,7 +25,6 @@ import Language.Sprite.Syntax.Front.Par   ( myLexer, pTerm)
 import Language.Sprite.Syntax.Front.Print ( Print, printTree )
 import Text.Pretty.Simple (pPrint)
 import qualified Language.Sprite.TypeCheck.Run as S
-import qualified Language.Sprite.Naive.Run as N
 
 type Verbosity  = Int
 
