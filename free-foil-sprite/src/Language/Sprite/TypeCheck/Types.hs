@@ -23,19 +23,16 @@ G(x) = b[v|p] -> b[v|p && v = x]
 -}
 singletonT ::
   (F.Distinct i) =>
-  F.Scope i ->
   -- | var name
   F.Name i ->
   -- | var type
   Term i ->
   --  | type with singleton Type Strengthening
   Term i
-singletonT scope varName typ = case typ of
+singletonT varName typ = case typ of
   TypeRefined base (PatternVar typVar) predicate ->
     case (F.assertDistinct typVar, F.assertExt typVar) of
       (F.Distinct, F.Ext) -> TypeRefined base (PatternVar typVar)
         (OpExpr predicate Inner.AndOp
           (OpExpr (F.Var (F.sink varName)) Inner.EqOp (F.Var (F.nameOf typVar))))
-    where
-      -- TODO: rename var
   _ -> typ

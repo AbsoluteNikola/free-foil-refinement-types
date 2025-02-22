@@ -170,15 +170,16 @@ check :: (F.DExt F.VoidS i) =>
   -- | type to check with
   Term i ->
   CheckerM Constraint
--- check scope env currentTerm currentType = debugPrintT "check:\ntype:" >> debugPrint currentType >> debugPrintT "\nterm:" >> debugPrint currentTerm >> debugPrintT "\n== check end ==" >> case currentTerm of
 check scope env currentTerm currentType = case currentTerm of
   {- [Chk-Lam]
   G, x:s |- e[y := x] <== t
   --------------------------
   G |- \y.e <== x:s -> t
   -}
-  Fun varPattern body -> withRule "[Chk-Lam]" $ case currentType of
-    TypeFun typeFunArgIdPat@(PatternVar typeFunArgIdBinder) argType returnType -> do
+  Fun varPattern body -> withRule "[Chk-Lam]" $ do
+    extendedCurrentType <- extendTypeToCurrentScope scope currentType
+    case extendedCurrentType of
+      TypeFun typeFunArgIdPat@(PatternVar typeFunArgIdBinder) argType returnType -> do
         case  (F.assertExt typeFunArgIdPat, F.assertDistinct typeFunArgIdPat) of
           (F.Ext, F.Distinct) -> do
             let
@@ -195,7 +196,7 @@ check scope env currentTerm currentType = case currentTerm of
             debugPrintT $ "Arg type: " <> showT argType
             implMsg <- mkSolverErrorMessage "Checking func error"
             buildImplicationFromType implMsg scope' typeFunArgIdPat (F.sink argType) bodyCheckConstraints
-    _ -> throwError $ "Function type should be Function, not: " <> pShowT currentType
+      _ -> throwError $ "Function type should be Function, not: " <> pShowT extendedCurrentType
 
   {- [Chk-Let]
     G |- e1 ==> t1        G, x:t1 |- e2 <== t2
@@ -211,7 +212,8 @@ check scope env currentTerm currentType = case currentTerm of
         --  x:t1 |- e2 <== t2
         withExtendedEnv env (getNameBinderFromPattern newVarPat) newVarType $ \env' -> do
           let scope' = F.extendScopePattern newVarPat scope
-          bodyConstraints <- check scope' env' body (F.sink currentType)
+          extendedCurrentType <- extendTypeToCurrentScope scope' (F.sink currentType)
+          bodyConstraints <- check scope' env' body extendedCurrentType
           implMsg <- mkSolverErrorMessage "Checking let error"
           implLetBodyConstraint <-
             buildImplicationFromType implMsg scope' newVarPat (F.sink newVarType) bodyConstraints
@@ -238,7 +240,8 @@ check scope env currentTerm currentType = case currentTerm of
         -- G, x:t1 |- e2 <== t2
         bodyC <- withExtendedEnv env (getNameBinderFromPattern newVarPat2) newVarType $ \env' -> do
           let scope' = F.extendScopePattern newVarPat2 scope
-          bodyConstraints <- check scope' env' body (F.sink newVarType)
+          extendedCurrentType <- extendTypeToCurrentScope scope' (F.sink currentType)
+          bodyConstraints <- check scope' env' body extendedCurrentType
           implBodyMsg <- mkSolverErrorMessage "Chk-Rec: body"
           buildImplicationFromType implBodyMsg scope' newVarPat2 (F.sink newVarType) bodyConstraints
         pure $ CAnd [newVarC, bodyC]
@@ -274,7 +277,8 @@ check scope env currentTerm currentType = case currentTerm of
                     (OpExpr (F.sink cond)
                       Inner.EqOp
                       (Boolean condShouldBe))
-                branchCheckConstraints <- check scope' env' (F.sink brachTerm) (F.sink currentType)
+                extendedCurrentType <- extendTypeToCurrentScope scope' (F.sink currentType)
+                branchCheckConstraints <- check scope' env' (F.sink brachTerm) extendedCurrentType
                 buildImplicationFromType message scope' (PatternVar freshY) (F.sink t) branchCheckConstraints
 
   {- [Chk-Syn]
@@ -284,11 +288,12 @@ check scope env currentTerm currentType = case currentTerm of
   -}
   term -> withRule "[Chk-Syn]" $ do
     (synthsConstraints, termType) <- synths scope env term
+    extendedCurrentType <- extendTypeToCurrentScope scope currentType
     debugPrintT "on term" >> debugPrint term
     debugPrintT "calling subtype"
     debugPrintT "left type: " >> debugPrint termType
-    debugPrintT "right type: " >> debugPrint currentType
-    subtypingConstraints <- subtype scope termType currentType
+    debugPrintT "right type: " >> debugPrint extendedCurrentType
+    subtypingConstraints <- subtype scope termType extendedCurrentType
     pure $ CAnd [synthsConstraints, subtypingConstraints]
 
 buildImplicationFromType :: (F.DExt i o) => Text -> F.Scope o -> Pattern i o -> Term o -> Constraint -> CheckerM Constraint
@@ -323,7 +328,9 @@ synths scope env currentTerm = case currentTerm of
   F.Var varId -> withRule "[Syn-Var]" $ do
     let
       typ = lookupEnv env varId
-      typWithSelf = singletonT scope varId typ
+    typExtended <- extendTypeToCurrentScope scope typ
+    let
+      typWithSelf = singletonT varId typExtended
     debugPrintT $ "lookup: " <> showT currentTerm
     debugPrintT $ "typ: " <> showT typWithSelf
     pure (cTrue, typWithSelf)
@@ -334,7 +341,8 @@ synths scope env currentTerm = case currentTerm of
   -}
   ConstInt x -> withRule "[Syn-Con]" $ do
     debugPrintT "type: " >> debugPrint (constIntT x)
-    pure (cTrue, F.sink $ constIntT x)
+    extendedConstInt <- extendTypeToCurrentScope scope (F.sink (constIntT x))
+    pure (cTrue, extendedConstInt)
 
   {- [Syn-App]
    G |- e ==> x:s -> t       G |- y <== s
@@ -363,8 +371,9 @@ synths scope env currentTerm = case currentTerm of
    G |- e:t => t
   -}
   Ann annType term -> withRule "[Syn-Ann]" $ do
-    checkConstraints <- check scope env term annType
-    pure (checkConstraints, annType)
+    extendedAnnType <- extendTypeToCurrentScope scope annType
+    checkConstraints <- check scope env term extendedAnnType
+    pure (checkConstraints, extendedAnnType)
 
   {-
   [Syn-Con] (op type is predefined) + [Syn-App] (type operator like function application)
@@ -391,3 +400,25 @@ getNameBinderFromPattern (PatternVar binder) = binder
 getRawVarIdFromPattern :: Pattern i o -> Inner.VarIdent
 getRawVarIdFromPattern varPat = case fromPattern varPat of
   Inner.PatternVar v -> v
+
+extendTypeToCurrentScope :: F.Distinct i => F.Scope i -> Term i -> CheckerM (Term i)
+extendTypeToCurrentScope scope typ = case typ of
+  TypeRefined b oldVar p -> F.withFreshBinder scope $ \newBinder ->
+    case (F.assertDistinct newBinder, F.assertExt newBinder) of
+      (F.Distinct, F.Ext) -> do
+        let
+          scope' = F.extendScope newBinder scope
+          newPred = F.substitutePattern scope' (F.sink F.identitySubst) oldVar [F.Var (F.nameOf newBinder)] p
+        pure $ TypeRefined b (PatternVar newBinder) newPred
+  TypeFun argName argTyp retTyp ->  F.withFreshBinder scope $ \newBinder ->
+    case (F.assertDistinct newBinder, F.assertExt newBinder) of
+      (F.Distinct, F.Ext) -> do
+        argTypExtended <- extendTypeToCurrentScope scope argTyp
+        let
+          scope' = F.extendScope newBinder scope
+          newRetType = F.substitutePattern scope' (F.sink F.identitySubst) argName [F.Var (F.nameOf newBinder)] retTyp
+        newRetTypeExtended <- extendTypeToCurrentScope scope' newRetType
+        pure $ TypeFun (PatternVar newBinder) argTypExtended newRetTypeExtended
+  _ -> throwError $
+    "extendTypeToCurrentScope should be called only on type, not term\n"
+    <> showT typ

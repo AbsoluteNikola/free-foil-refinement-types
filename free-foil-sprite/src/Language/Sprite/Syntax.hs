@@ -122,7 +122,7 @@ fromTermSig (IfSig cond thenB elseB)
   = Language.Sprite.Syntax.Inner.Abs.If cond thenB elseB
 fromTermSig (LetSig x_abJ3 (binder_abJ4, body_abJ5))
   = Language.Sprite.Syntax.Inner.Abs.Let binder_abJ4 x_abJ3 body_abJ5 -- FIXED HERE
-fromTermSig (LetRecSig typ (binder_1, x_abJ3) (binder_2, body_abJ5))
+fromTermSig (LetRecSig typ (binder_1, x_abJ3) (_, body_abJ5))
   = Language.Sprite.Syntax.Inner.Abs.LetRec typ binder_1 x_abJ3 body_abJ5 -- FIXED HERE
 fromTermSig (FunSig (binder_abJ6, body_abJ7))
   = Language.Sprite.Syntax.Inner.Abs.Fun binder_abJ6 body_abJ7
