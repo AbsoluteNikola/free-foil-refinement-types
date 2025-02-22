@@ -25,7 +25,8 @@ The set of reserved words is the set of terminals appearing in the grammar. Thos
 
 The reserved words used in Front are the following:
   | ``bool`` | ``else`` | ``false`` | ``if``
-  | ``int`` | ``let`` | ``true`` | ``val``
+  | ``int`` | ``let`` | ``rec`` | ``true``
+  | ``val`` |  |  |
 
 The symbols used in Front are the following:
   | ( | ) | { | }
@@ -56,9 +57,9 @@ All other symbols are terminals.
   | //ConstBool// | -> | ``true``
   |  |  **|**  | ``false``
   | //Annotation// | -> | ``/*@`` ``val`` //VarIdent// ``:`` //RType// ``*/``
-  | //PlainDecl// | -> | ``let`` //VarIdent// ``=`` //Term// ``;``
-  | //Decl// | -> | //Annotation// //PlainDecl//
-  |  |  **|**  | //PlainDecl//
+  | //Decl// | -> | //Annotation// ``let`` ``rec`` //VarIdent// ``=`` //Term// ``;``
+  |  |  **|**  | //Annotation// ``let`` //VarIdent// ``=`` //Term// ``;``
+  |  |  **|**  | ``let`` //VarIdent// ``=`` //Term// ``;``
   | //[Decl]// | -> | **eps**
   |  |  **|**  | //Decl// //[Decl]//
   | //IntOp// | -> | ``+``

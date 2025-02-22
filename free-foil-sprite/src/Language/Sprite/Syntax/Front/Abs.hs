@@ -32,11 +32,10 @@ data ConstBool = ConstTrue | ConstFalse
 data Annotation = Annotation VarIdent RType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data PlainDecl = PlainDecl VarIdent Term
-  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
-
 data Decl
-    = AnnotatedDecl Annotation PlainDecl | UnAnnotatedDecl PlainDecl
+    = RecDecl Annotation VarIdent Term
+    | AnnotatedDecl Annotation VarIdent Term
+    | UnAnnotatedDecl VarIdent Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data IntOp

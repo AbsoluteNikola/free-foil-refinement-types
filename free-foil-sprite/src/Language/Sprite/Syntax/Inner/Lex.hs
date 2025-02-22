@@ -1572,9 +1572,9 @@ resWords =
        (b "bool" 20
           (b "[" 18 (b ">=" 17 N N) (b "]" 19 N N))
           (b "false" 22 (b "else" 21 N N) (b "if" 23 N N)))
-       (b "|" 28
-          (b "true" 26 (b "let" 25 N N) (b "{" 27 N N))
-          (b "}" 30 (b "||" 29 N N) N)))
+       (b "{" 28
+          (b "rec" 26 (b "let" 25 N N) (b "true" 27 N N))
+          (b "||" 30 (b "|" 29 N N) (b "}" 31 N N))))
   where
   b s n = B bs (TS bs n)
     where

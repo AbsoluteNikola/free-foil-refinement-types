@@ -159,14 +159,11 @@ instance Print Language.Sprite.Syntax.Front.Abs.Annotation where
   prt i = \case
     Language.Sprite.Syntax.Front.Abs.Annotation varident rtype -> prPrec i 0 (concatD [doc (showString "/*@"), doc (showString "val"), prt 0 varident, doc (showString ":"), prt 0 rtype, doc (showString "*/")])
 
-instance Print Language.Sprite.Syntax.Front.Abs.PlainDecl where
-  prt i = \case
-    Language.Sprite.Syntax.Front.Abs.PlainDecl varident term -> prPrec i 0 (concatD [doc (showString "let"), prt 0 varident, doc (showString "="), prt 0 term, doc (showString ";")])
-
 instance Print Language.Sprite.Syntax.Front.Abs.Decl where
   prt i = \case
-    Language.Sprite.Syntax.Front.Abs.AnnotatedDecl annotation plaindecl -> prPrec i 0 (concatD [prt 0 annotation, prt 0 plaindecl])
-    Language.Sprite.Syntax.Front.Abs.UnAnnotatedDecl plaindecl -> prPrec i 0 (concatD [prt 0 plaindecl])
+    Language.Sprite.Syntax.Front.Abs.RecDecl annotation varident term -> prPrec i 0 (concatD [prt 0 annotation, doc (showString "let"), doc (showString "rec"), prt 0 varident, doc (showString "="), prt 0 term, doc (showString ";")])
+    Language.Sprite.Syntax.Front.Abs.AnnotatedDecl annotation varident term -> prPrec i 0 (concatD [prt 0 annotation, doc (showString "let"), prt 0 varident, doc (showString "="), prt 0 term, doc (showString ";")])
+    Language.Sprite.Syntax.Front.Abs.UnAnnotatedDecl varident term -> prPrec i 0 (concatD [doc (showString "let"), prt 0 varident, doc (showString "="), prt 0 term, doc (showString ";")])
 
 instance Print [Language.Sprite.Syntax.Front.Abs.Decl] where
   prt _ [] = concatD []

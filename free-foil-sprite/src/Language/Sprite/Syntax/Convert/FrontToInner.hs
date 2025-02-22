@@ -58,17 +58,24 @@ convertFuncAppArg = \case
 
 convertDecl :: F.Decl -> Either ConvertError (I.ScopedTerm -> I.Term)
 convertDecl decl = case decl of
-  F.AnnotatedDecl (F.Annotation annId typ) (F.PlainDecl varId varValue)
+  F.AnnotatedDecl (F.Annotation annId typ) varId varValue
     | annId /= varId -> Left $
       DifferentNameForBindingAndAnnotationError annId varId decl
     | otherwise -> do
       convertedVarValue <- convert varValue
       pure $ \letBody ->
         I.Let (convertVarIdToPattern varId) (I.Ann (convertRType typ) convertedVarValue) letBody
-  F.UnAnnotatedDecl (F.PlainDecl varId varValue) ->  do
+  F.UnAnnotatedDecl varId varValue ->  do
       convertedVarValue <- convert varValue
       pure $ \letBody ->
         I.Let (convertVarIdToPattern varId) convertedVarValue  letBody
+  F.RecDecl (F.Annotation annId typ) varId varValue
+    | annId /= varId -> Left $
+        DifferentNameForBindingAndAnnotationError annId varId decl
+    | otherwise -> do
+      convertedVarValue <- convert varValue
+      pure $ \letBody ->
+        I.LetRec (convertRType typ) (convertVarIdToPattern varId) (I.ScopedTerm convertedVarValue) letBody
 
 convertRType :: F.RType -> I.Term
 convertRType rType = case rType of

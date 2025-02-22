@@ -39,14 +39,11 @@ transAnnotation :: Language.Sprite.Syntax.Front.Abs.Annotation -> Result
 transAnnotation x = case x of
   Language.Sprite.Syntax.Front.Abs.Annotation varident rtype -> failure x
 
-transPlainDecl :: Language.Sprite.Syntax.Front.Abs.PlainDecl -> Result
-transPlainDecl x = case x of
-  Language.Sprite.Syntax.Front.Abs.PlainDecl varident term -> failure x
-
 transDecl :: Language.Sprite.Syntax.Front.Abs.Decl -> Result
 transDecl x = case x of
-  Language.Sprite.Syntax.Front.Abs.AnnotatedDecl annotation plaindecl -> failure x
-  Language.Sprite.Syntax.Front.Abs.UnAnnotatedDecl plaindecl -> failure x
+  Language.Sprite.Syntax.Front.Abs.RecDecl annotation varident term -> failure x
+  Language.Sprite.Syntax.Front.Abs.AnnotatedDecl annotation varident term -> failure x
+  Language.Sprite.Syntax.Front.Abs.UnAnnotatedDecl varident term -> failure x
 
 transIntOp :: Language.Sprite.Syntax.Front.Abs.IntOp -> Result
 transIntOp x = case x of

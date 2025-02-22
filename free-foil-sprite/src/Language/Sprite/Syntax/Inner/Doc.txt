@@ -25,12 +25,12 @@ The set of reserved words is the set of terminals appearing in the grammar. Thos
 
 The reserved words used in Inner are the following:
   | ``bool`` | ``else`` | ``false`` | ``if``
-  | ``int`` | ``let`` | ``true`` |
+  | ``int`` | ``let`` | ``rec`` | ``true``
 
 The symbols used in Inner are the following:
   | ( | ) | { | }
-  | = | ; | => | /*@
-  | */ | [ | | | ]
+  | = | ; | /*@ | */
+  | => | [ | | | ]
   | : | == | <= | <
   | >= | > | + | -
   | * | && | || |
@@ -49,6 +49,7 @@ All other symbols are terminals.
   |  |  **|**  | //VarIdent//
   |  |  **|**  | ``if`` ``(`` //Term// ``)`` ``{`` //Term// ``}`` ``else`` ``{`` //Term// ``}``
   |  |  **|**  | ``let`` //Pattern// ``=`` //Term// ``;`` //ScopedTerm//
+  |  |  **|**  | ``/*@`` //Term// ``*/`` ``let`` ``rec`` //Pattern// ``=`` //ScopedTerm// ``;`` //ScopedTerm//
   |  |  **|**  | ``(`` //Pattern// ``)`` ``=>`` ``{`` //ScopedTerm// ``}``
   |  |  **|**  | //Term// ``(`` //Term// ``)``
   |  |  **|**  | ``/*@`` //Term// ``*/`` //Term//

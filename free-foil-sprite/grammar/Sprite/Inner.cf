@@ -7,10 +7,12 @@ Boolean.      Term ::= ConstBool ;
 Var.          Term ::= VarIdent ;
 If.           Term ::= "if" "(" Term ")" "{" Term "}" "else" "{" Term "}";
 Let.          Term ::= "let" Pattern "=" Term ";" ScopedTerm ;  -- FIXME: requires fix in Template Haskell (mkFreeFoil)
+LetRec.       Term ::= "/*@" Term "*/" "let" "rec" Pattern "=" ScopedTerm ";" ScopedTerm ;  -- FIXME: requires fix in Template Haskell (mkFreeFoil)
 Fun.          Term ::= "(" Pattern ")" "=>" "{" ScopedTerm "}" ;
 App.          Term ::= Term "(" Term ")" ;
 Ann.          Term ::= "/*@" Term "*/" Term; -- FIXME: Problem with TH generations when "/*@" Pattern : Term "*/" Term;
 OpExpr.       Term ::= "(" Term Op Term ")";
+
 -- type terms
 TypeRefined.  Term ::= BaseType "[" Pattern "|" ScopedTerm "]" ;
 TypeFun.      Term ::= Pattern ":" Term "=>" ScopedTerm ;   -- FIXME: same problem as with Let

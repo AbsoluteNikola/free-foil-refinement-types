@@ -218,6 +218,31 @@ check scope env currentTerm currentType = case currentTerm of
 
           pure $ CAnd [newVarConstraints, implLetBodyConstraint]
 
+  {- [Chk-Rec]
+    G |- t1 : k      G, x:t1 |- e1 <== t1      G, x:t1 |- e2 <== t2
+    ---------------------------------------------------------------
+        G |- let rec x = e1 in e2 <== t2
+  -}
+  LetRec newVarType newVarPat1 newVarPat2 newVarValue body -> withRule "[Chk-Rec]" $ do
+    -- G |- t1 : k, t1 - newVarType
+    case (F.assertDistinct newVarPat1, F.assertDistinct newVarPat2, F.assertExt newVarPat1,  F.assertExt newVarPat2) of
+      (F.Distinct, F.Distinct, F.Ext, F.Ext) ->  do
+        --  G, x:t1 |- e1 <== t1
+        debugPrintT $  "check new var: " <> showT newVarPat1
+        debugPrintT $  "new var type: " <> showT newVarType
+        newVarC <- withExtendedEnv env (getNameBinderFromPattern newVarPat1) newVarType $ \env' -> do
+          let scope' = F.extendScopePattern newVarPat1 scope
+          newVarConstraints <- check scope' env' newVarValue (F.sink newVarType)
+          implBodyMsg <- mkSolverErrorMessage "Chk-Rec: new var"
+          buildImplicationFromType implBodyMsg scope' newVarPat1 (F.sink newVarType) newVarConstraints
+        -- G, x:t1 |- e2 <== t2
+        bodyC <- withExtendedEnv env (getNameBinderFromPattern newVarPat2) newVarType $ \env' -> do
+          let scope' = F.extendScopePattern newVarPat2 scope
+          bodyConstraints <- check scope' env' body (F.sink newVarType)
+          implBodyMsg <- mkSolverErrorMessage "Chk-Rec: body"
+          buildImplicationFromType implBodyMsg scope' newVarPat2 (F.sink newVarType) bodyConstraints
+        pure $ CAnd [newVarC, bodyC]
+
   {- [Chk-If]
   y is fresh, need to pass condition value to constraints,
 

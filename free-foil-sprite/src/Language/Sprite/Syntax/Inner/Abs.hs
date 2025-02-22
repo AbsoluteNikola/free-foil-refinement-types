@@ -21,6 +21,7 @@ data Term
     | Var VarIdent
     | If Term Term Term
     | Let Pattern Term ScopedTerm
+    | LetRec Term Pattern ScopedTerm ScopedTerm
     | Fun Pattern ScopedTerm
     | App Term Term
     | Ann Term Term

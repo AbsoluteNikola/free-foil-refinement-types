@@ -26,6 +26,7 @@ transTerm x = case x of
   Language.Sprite.Syntax.Inner.Abs.Var varident -> failure x
   Language.Sprite.Syntax.Inner.Abs.If term1 term2 term3 -> failure x
   Language.Sprite.Syntax.Inner.Abs.Let pattern_ term scopedterm -> failure x
+  Language.Sprite.Syntax.Inner.Abs.LetRec term pattern_ scopedterm1 scopedterm2 -> failure x
   Language.Sprite.Syntax.Inner.Abs.Fun pattern_ scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.App term1 term2 -> failure x
   Language.Sprite.Syntax.Inner.Abs.Ann term1 term2 -> failure x

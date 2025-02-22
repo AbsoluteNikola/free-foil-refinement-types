@@ -47,11 +47,12 @@ import Language.Sprite.Syntax.Front.Lex
   'if'       { PT _ (TS _ 22)       }
   'int'      { PT _ (TS _ 23)       }
   'let'      { PT _ (TS _ 24)       }
-  'true'     { PT _ (TS _ 25)       }
-  'val'      { PT _ (TS _ 26)       }
-  '{'        { PT _ (TS _ 27)       }
-  '|'        { PT _ (TS _ 28)       }
-  '}'        { PT _ (TS _ 29)       }
+  'rec'      { PT _ (TS _ 25)       }
+  'true'     { PT _ (TS _ 26)       }
+  'val'      { PT _ (TS _ 27)       }
+  '{'        { PT _ (TS _ 28)       }
+  '|'        { PT _ (TS _ 29)       }
+  '}'        { PT _ (TS _ 30)       }
   L_integ    { PT _ (TI $$)         }
   L_VarIdent { PT _ (T_VarIdent $$) }
 
@@ -84,14 +85,11 @@ Annotation :: { Language.Sprite.Syntax.Front.Abs.Annotation }
 Annotation
   : '/*@' 'val' VarIdent ':' RType '*/' { Language.Sprite.Syntax.Front.Abs.Annotation $3 $5 }
 
-PlainDecl :: { Language.Sprite.Syntax.Front.Abs.PlainDecl }
-PlainDecl
-  : 'let' VarIdent '=' Term ';' { Language.Sprite.Syntax.Front.Abs.PlainDecl $2 $4 }
-
 Decl :: { Language.Sprite.Syntax.Front.Abs.Decl }
 Decl
-  : Annotation PlainDecl { Language.Sprite.Syntax.Front.Abs.AnnotatedDecl $1 $2 }
-  | PlainDecl { Language.Sprite.Syntax.Front.Abs.UnAnnotatedDecl $1 }
+  : Annotation 'let' 'rec' VarIdent '=' Term ';' { Language.Sprite.Syntax.Front.Abs.RecDecl $1 $4 $6 }
+  | Annotation 'let' VarIdent '=' Term ';' { Language.Sprite.Syntax.Front.Abs.AnnotatedDecl $1 $3 $5 }
+  | 'let' VarIdent '=' Term ';' { Language.Sprite.Syntax.Front.Abs.UnAnnotatedDecl $2 $4 }
 
 ListDecl :: { [Language.Sprite.Syntax.Front.Abs.Decl] }
 ListDecl : {- empty -} { [] } | Decl ListDecl { (:) $1 $2 }

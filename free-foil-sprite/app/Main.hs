@@ -48,7 +48,6 @@ run f v s =
       showTree v tree
       putStrV v $ "\n[Type check result]\n\n"
       S.run f tree
-      -- N.run f tree
 
   where
   ts = myLexer s

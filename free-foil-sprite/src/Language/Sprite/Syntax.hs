@@ -38,6 +38,7 @@ data TermSig scope term
     ConstIntSig :: Integer -> TermSig scope term
     IfSig :: term -> term -> term -> TermSig scope term
     LetSig :: term -> scope -> TermSig scope term
+    LetRecSig :: term -> scope -> scope -> TermSig scope term
     FunSig :: scope -> TermSig scope term
     AppSig :: term -> term -> TermSig scope term
     AnnSig :: term -> term -> TermSig scope term
@@ -60,6 +61,11 @@ pattern Let :: Pattern o i -> Term o -> Term i -> Term o -- FIXED HERE
 pattern Let binder_a95M x_a95L body_a95N = Control.Monad.Free.Foil.Node (LetSig x_a95L
                                                                                 (Control.Monad.Free.Foil.ScopedAST binder_a95M
                                                                                                                     body_a95N))
+pattern LetRec :: Term o -> Pattern o i1 -> Pattern o i2 -> Term i1 -> Term i2 -> Term o -- FIXED HERE
+pattern LetRec typ binder_1 binder_2 x_a95L body_a95N = Control.Monad.Free.Foil.Node (LetRecSig
+    typ
+    (Control.Monad.Free.Foil.ScopedAST binder_1 x_a95L)
+    (Control.Monad.Free.Foil.ScopedAST binder_2 body_a95N))
 pattern Fun :: Pattern o i -> Term i -> Term o
 pattern Fun binder_a95O body_a95P = Control.Monad.Free.Foil.Node (FunSig (Control.Monad.Free.Foil.ScopedAST binder_a95O
                                                                                                           body_a95P))
@@ -89,7 +95,7 @@ pattern TypeFun binder_a961 x_a960 body_a962 = Control.Monad.Free.Foil.Node (Typ
 pattern Boolean :: Language.Sprite.Syntax.Inner.Abs.ConstBool -> Term o
 pattern Boolean b = Control.Monad.Free.Foil.Node (BooleanSig b)
 
-{-# COMPLETE Control.Monad.Free.Foil.Var, ConstInt, Let, Fun, App, Ann, OpExpr, TypeRefined, TypeFun, Boolean #-}
+{-# COMPLETE Control.Monad.Free.Foil.Var, ConstInt, Let, LetRec, Fun, App, Ann, OpExpr, TypeRefined, TypeFun, Boolean #-}
 
 deriveBifunctor ''TermSig
 deriveBifoldable ''TermSig
@@ -116,6 +122,8 @@ fromTermSig (IfSig cond thenB elseB)
   = Language.Sprite.Syntax.Inner.Abs.If cond thenB elseB
 fromTermSig (LetSig x_abJ3 (binder_abJ4, body_abJ5))
   = Language.Sprite.Syntax.Inner.Abs.Let binder_abJ4 x_abJ3 body_abJ5 -- FIXED HERE
+fromTermSig (LetRecSig typ (binder_1, x_abJ3) (binder_2, body_abJ5))
+  = Language.Sprite.Syntax.Inner.Abs.LetRec typ binder_1 x_abJ3 body_abJ5 -- FIXED HERE
 fromTermSig (FunSig (binder_abJ6, body_abJ7))
   = Language.Sprite.Syntax.Inner.Abs.Fun binder_abJ6 body_abJ7
 fromTermSig (AppSig x_abJ8 x_abJ9)
@@ -155,6 +163,10 @@ toTermSig
   (Language.Sprite.Syntax.Inner.Abs.Let binder_abJr _x_abJq -- FIXED HERE
                                         body_abJs)
   = Right (LetSig _x_abJq (binder_abJr, body_abJs))
+toTermSig
+  (Language.Sprite.Syntax.Inner.Abs.LetRec typ binder_abJr _x_abJq -- FIXED HERE
+                                        body_abJs)
+  = Right (LetRecSig typ (binder_abJr, _x_abJq) (binder_abJr, body_abJs))
 toTermSig
   (Language.Sprite.Syntax.Inner.Abs.Fun binder_abJu body_abJv)
   = Right (FunSig (binder_abJu, body_abJv))

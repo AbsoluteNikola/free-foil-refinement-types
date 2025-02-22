@@ -17,10 +17,9 @@ ConstFalse.   ConstBool ::= "false";
 
 Annotation.          Annotation ::= "/*@" "val" VarIdent ":" RType "*/";
 
-PlainDecl.  PlainDecl ::= "let" VarIdent "=" Term ";";
-
-AnnotatedDecl.         Decl ::= Annotation PlainDecl;
-UnAnnotatedDecl.       Decl ::= PlainDecl;
+RecDecl.               Decl ::= Annotation "let" "rec" VarIdent "=" Term ";";
+AnnotatedDecl.         Decl ::= Annotation "let" VarIdent "=" Term ";";;
+UnAnnotatedDecl.       Decl ::= "let" VarIdent "=" Term ";";;
 separator Decl "";
 
 IntPlus. IntOp ::= "+";

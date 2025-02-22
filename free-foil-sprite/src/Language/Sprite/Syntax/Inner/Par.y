@@ -62,11 +62,12 @@ import Language.Sprite.Syntax.Inner.Lex
   'if'       { PT _ (TS _ 23)       }
   'int'      { PT _ (TS _ 24)       }
   'let'      { PT _ (TS _ 25)       }
-  'true'     { PT _ (TS _ 26)       }
-  '{'        { PT _ (TS _ 27)       }
-  '|'        { PT _ (TS _ 28)       }
-  '||'       { PT _ (TS _ 29)       }
-  '}'        { PT _ (TS _ 30)       }
+  'rec'      { PT _ (TS _ 26)       }
+  'true'     { PT _ (TS _ 27)       }
+  '{'        { PT _ (TS _ 28)       }
+  '|'        { PT _ (TS _ 29)       }
+  '||'       { PT _ (TS _ 30)       }
+  '}'        { PT _ (TS _ 31)       }
   L_integ    { PT _ (TI $$)         }
   L_VarIdent { PT _ (T_VarIdent $$) }
 
@@ -85,6 +86,7 @@ Term
   | VarIdent { Language.Sprite.Syntax.Inner.Abs.Var $1 }
   | 'if' '(' Term ')' '{' Term '}' 'else' '{' Term '}' { Language.Sprite.Syntax.Inner.Abs.If $3 $6 $10 }
   | 'let' Pattern '=' Term ';' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.Let $2 $4 $6 }
+  | '/*@' Term '*/' 'let' 'rec' Pattern '=' ScopedTerm ';' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.LetRec $2 $6 $8 $10 }
   | '(' Pattern ')' '=>' '{' ScopedTerm '}' { Language.Sprite.Syntax.Inner.Abs.Fun $2 $6 }
   | Term '(' Term ')' { Language.Sprite.Syntax.Inner.Abs.App $1 $3 }
   | '/*@' Term '*/' Term { Language.Sprite.Syntax.Inner.Abs.Ann $2 $4 }
