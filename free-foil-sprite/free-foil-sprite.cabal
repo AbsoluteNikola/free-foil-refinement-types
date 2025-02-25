@@ -36,7 +36,6 @@ common extensions
       ScopedTypeVariables
       GADTs
       DataKinds
-      ScopedTypeVariables
       StandaloneDeriving
       FlexibleContexts
 
@@ -59,12 +58,7 @@ library
       Language.Sprite.TypeCheck.Constraints
       Language.Sprite.TypeCheck.Predicates
       Language.Sprite.TypeCheck.Run
-
-      Language.Sprite.Naive.Constraints
-      Language.Sprite.Naive.Check
-      Language.Sprite.Naive.Substitution
-      Language.Sprite.Naive.Predicates
-      Language.Sprite.Naive.Run
+      Language.Sprite.TypeCheck.Types
       Lib
   other-modules:
       Paths_free_foil_sprite

@@ -17,16 +17,20 @@ import qualified GHC.Generics as C (Generic)
 
 data Term
     = ConstInt Integer
+    | Boolean ConstBool
     | Var VarIdent
+    | If Term Term Term
     | Let Pattern Term ScopedTerm
+    | LetRec Term Pattern ScopedTerm ScopedTerm
     | Fun Pattern ScopedTerm
     | App Term Term
     | Ann Term Term
     | OpExpr Term Op Term
     | TypeRefined BaseType Pattern ScopedTerm
     | TypeFun Pattern Term ScopedTerm
-    | ConstTrue
-    | ConstFalse
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data ConstBool = ConstTrue | ConstFalse
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data Op
@@ -38,6 +42,8 @@ data Op
     | PlusOp
     | MinusOp
     | MultiplyOp
+    | AndOp
+    | OrOp
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data Pattern = PatternVar VarIdent
@@ -46,7 +52,7 @@ data Pattern = PatternVar VarIdent
 data ScopedTerm = ScopedTerm Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data BaseType = BaseTypeInt
+data BaseType = BaseTypeInt | BaseTypeBool
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data VarBinding = VarBinding VarIdent Term
