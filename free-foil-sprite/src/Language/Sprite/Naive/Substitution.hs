@@ -1,5 +1,5 @@
 module Language.Sprite.Naive.Substitution where
-import Language.Sprite.Syntax.Abs (VarIdent, Pred(..), RType(..), FuncArg (..), ScopedRType (..))
+import Language.Sprite.Syntax.Front.Abs (VarIdent, Pred(..), RType(..), FuncArg (..), ScopedRType (..))
 
 -- 3.3.1, page 11
 substType :: VarIdent -> Pred -> RType -> RType

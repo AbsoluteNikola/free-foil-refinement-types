@@ -1,6 +1,4 @@
-
-
-/*@ val inc: x:int => int[v|v == x + 1] */
+/*@ val inc: x:int[x|true] => int[v|v == x + 1] */
 let inc = (x) => {
     x - 1
 };

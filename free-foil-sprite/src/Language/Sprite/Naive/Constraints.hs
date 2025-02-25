@@ -1,6 +1,6 @@
 module Language.Sprite.Naive.Constraints where
 
-import Language.Sprite.Syntax.Abs (Pred (PVar), VarIdent (..), BaseType(..), RType(..))
+import Language.Sprite.Syntax.Front.Abs (Pred (PVar), VarIdent (..), BaseType(..), RType(..))
 import Language.Fixpoint.Horn.Types qualified as H
 import Language.Fixpoint.Types.Sorts qualified as T
 import Language.Sprite.Naive.Predicates (predToFTR)

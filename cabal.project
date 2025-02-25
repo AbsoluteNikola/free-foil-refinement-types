@@ -1,2 +1,11 @@
 packages:*/*.cabal
 with-compiler: ghc-9.8.2
+
+source-repository-package
+    type: git
+    location: https://github.com/AbsoluteNikola/free-foil.git
+    tag: 7e2bf54fee003bef25f5588dc80569c8fcaa6cc4
+    subdir: haskell/free-foil
+
+allow-newer:
+    kind-generics-th:template-haskell

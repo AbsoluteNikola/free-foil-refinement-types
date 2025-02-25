@@ -1,12 +1,11 @@
-{-# LANGUAGE TypeApplications #-}
 module Language.Sprite.Naive.Check where
 
 import Data.Map.Strict qualified as M
 
-import Language.Sprite.Syntax.Abs
+import Language.Sprite.Syntax.Front.Abs
 import Control.Monad.Except (ExceptT)
 import Control.Monad.Error.Class (MonadError(..))
-import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Control.Monad.Trans.Reader (ReaderT)
 import Control.Monad.Reader (MonadReader(..), asks)
 import Language.Sprite.Naive.Constraints
@@ -18,7 +17,6 @@ import Data.Text (Text)
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
-import Control.Monad.IO.Class (liftIO)
 
 newtype Env = Env {unEnv :: M.Map VarIdent RType }
 
@@ -53,7 +51,7 @@ subtype :: RType -> RType -> CheckerM Constraint
      -------------------
      b{v:p} <= b{w:q}
  -}
-subtype lt@(TypeRefined lb leftVarId leftPredicate) rt@(TypeRefined rb rightVarId rightPredicate)
+subtype lt@(TypeRefined lb leftVarId _leftPredicate) (TypeRefined rb rightVarId rightPredicate)
   | lb /= rb = throwError
     $ "Invalid subtyping. Different refined base: " <> pShowT lb <> " and " <> pShowT rb
   | otherwise = do

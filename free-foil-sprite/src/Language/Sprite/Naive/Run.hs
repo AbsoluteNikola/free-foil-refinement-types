@@ -4,12 +4,12 @@
 module Language.Sprite.Naive.Run where
 
 import Language.Sprite.Naive.Check
-import Language.Sprite.Syntax.Abs (Term, RType (TypeRefined), BaseType(..), Pred (PTrue))
-import qualified Language.Fixpoint.Horn.Types   as H
-import qualified Language.Fixpoint.Horn.Solve   as H
+import Language.Sprite.Syntax.Front.Abs (Term, RType (TypeRefined), BaseType(..), Pred (PTrue))
+import Language.Sprite.Naive.Constraints (constraintsToFHT)
 import Control.Monad.Except (runExceptT)
 import Control.Monad.Reader (ReaderT(runReaderT))
-import Language.Sprite.Naive.Constraints (constraintsToFHT)
+import qualified Language.Fixpoint.Horn.Types   as H
+import qualified Language.Fixpoint.Horn.Solve   as H
 import qualified Language.Fixpoint.Types as F
 import qualified Language.Fixpoint.Types.Config as FC
 import qualified Language.Fixpoint.Utils.Files as F

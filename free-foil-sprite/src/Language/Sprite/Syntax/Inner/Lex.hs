@@ -9,7 +9,7 @@
 
 {-# LANGUAGE PatternSynonyms #-}
 
-module Language.Sprite.Syntax.Lex where
+module Language.Sprite.Syntax.Inner.Lex where
 
 import Prelude
 
@@ -95,7 +95,7 @@ alex_table = Data.Array.listArray (0 :: Int, 682)
   , 1
   , 7
   , 8
-  , 0
+  , 7
   , 0
   , 0
   , 11
@@ -782,7 +782,7 @@ alex_check = Data.Array.listArray (0 :: Int, 682)
   , 59
   , 60
   , 61
-  , -1
+  , 62
   , -1
   , -1
   , 65
@@ -1510,18 +1510,15 @@ data AlexAddr = AlexA# Addr#
 {-# INLINE alexIndexInt16OffAddr #-}
 alexIndexInt16OffAddr :: AlexAddr -> Int# -> Int#
 alexIndexInt16OffAddr (AlexA# arr) off =
-#ifdef WORDS_BIGENDIAN
-  narrow16Int# i
-  where
-        i    = word2Int# ((high `uncheckedShiftL#` 8#) `or#` low)
-        high = int2Word# (ord# (indexCharOffAddr# arr (off' +# 1#)))
-        low  = int2Word# (ord# (indexCharOffAddr# arr off'))
-        off' = off *# 2#
-#else
 #if __GLASGOW_HASKELL__ >= 901
-  GHC.Exts.int16ToInt#
+  GHC.Exts.int16ToInt# -- qualified import because it doesn't exist on older GHC's
 #endif
-    (indexInt16OffAddr# arr off)
+#ifdef WORDS_BIGENDIAN
+  (GHC.Exts.word16ToInt16# (GHC.Exts.wordToWord16# (GHC.Exts.byteSwap16# (GHC.Exts.word16ToWord# (GHC.Exts.int16ToWord16#
+#endif
+  (indexInt16OffAddr# arr off)
+#ifdef WORDS_BIGENDIAN
+  )))))
 #endif
 #else
 alexIndexInt16OffAddr = (Data.Array.!)
@@ -1531,22 +1528,15 @@ alexIndexInt16OffAddr = (Data.Array.!)
 {-# INLINE alexIndexInt32OffAddr #-}
 alexIndexInt32OffAddr :: AlexAddr -> Int# -> Int#
 alexIndexInt32OffAddr (AlexA# arr) off =
-#ifdef WORDS_BIGENDIAN
-  narrow32Int# i
-  where
-   i    = word2Int# ((b3 `uncheckedShiftL#` 24#) `or#`
-                     (b2 `uncheckedShiftL#` 16#) `or#`
-                     (b1 `uncheckedShiftL#` 8#) `or#` b0)
-   b3   = int2Word# (ord# (indexCharOffAddr# arr (off' +# 3#)))
-   b2   = int2Word# (ord# (indexCharOffAddr# arr (off' +# 2#)))
-   b1   = int2Word# (ord# (indexCharOffAddr# arr (off' +# 1#)))
-   b0   = int2Word# (ord# (indexCharOffAddr# arr off'))
-   off' = off *# 4#
-#else
 #if __GLASGOW_HASKELL__ >= 901
-  GHC.Exts.int32ToInt#
+  GHC.Exts.int32ToInt# -- qualified import because it doesn't exist on older GHC's
 #endif
-    (indexInt32OffAddr# arr off)
+#ifdef WORDS_BIGENDIAN
+  (GHC.Exts.word32ToInt32# (GHC.Exts.wordToWord32# (GHC.Exts.byteSwap32# (GHC.Exts.word32ToWord# (GHC.Exts.int32ToWord32#
+#endif
+  (indexInt32OffAddr# arr off)
+#ifdef WORDS_BIGENDIAN
+  )))))
 #endif
 #else
 alexIndexInt32OffAddr = (Data.Array.!)
@@ -1570,7 +1560,12 @@ data AlexReturn a
 
 -- alexScan :: AlexInput -> StartCode -> AlexReturn a
 alexScan input__ IBOX(sc)
-  = alexScanUser undefined input__ IBOX(sc)
+  = alexScanUser (error "alex rule requiring context was invoked by alexScan; use alexScanUser instead?") input__ IBOX(sc)
+
+-- If the generated alexScan/alexScanUser functions are called multiple times
+-- in the same file, alexScanUser gets broken out into a separate function and
+-- increases memory usage. Make sure GHC inlines this function and optimizes it.
+{-# INLINE alexScanUser #-}
 
 alexScanUser user__ input__ IBOX(sc)
   = case alex_scan_tkn user__ input__ ILIT(0) input__ sc AlexNone of
@@ -1803,11 +1798,12 @@ resWords =
        (b "*/" 4
           (b ")" 2 (b "(" 1 N N) (b "*" 3 N N)) (b "-" 6 (b "+" 5 N N) N))
        (b "<" 10 (b ";" 9 (b ":" 8 N N) N) (b "=" 12 (b "<=" 11 N N) N)))
-    (b "let" 19
-       (b "]" 16
-          (b "[" 15 (b "=>" 14 N N) N) (b "int" 18 (b "false" 17 N N) N))
-       (b "{" 22
-          (b "val" 21 (b "true" 20 N N) N) (b "}" 24 (b "|" 23 N N) N)))
+    (b "int" 20
+       (b "[" 17
+          (b ">" 15 (b "=>" 14 N N) (b ">=" 16 N N))
+          (b "false" 19 (b "]" 18 N N) N))
+       (b "{" 23
+          (b "true" 22 (b "let" 21 N N) N) (b "}" 25 (b "|" 24 N N) N)))
   where
   b s n = B bs (TS bs n)
     where
