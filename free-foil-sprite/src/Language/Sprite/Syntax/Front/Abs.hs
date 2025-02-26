@@ -17,36 +17,24 @@ import qualified GHC.Generics as C (Generic)
 
 data Term
     = ConstInt Integer
-    | Bool ConstBool
     | Var VarIdent
-    | If FuncAppArg Term Term
     | Let Decl ScopedTerm
     | Fun VarIdent ScopedTerm
     | App Term FuncAppArg
     | Op FuncAppArg IntOp FuncAppArg
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data ConstBool = ConstTrue | ConstFalse
-  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
-
 data Annotation = Annotation VarIdent RType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data Decl
-    = RecDecl Annotation VarIdent Term
-    | AnnotatedDecl Annotation VarIdent Term
-    | UnAnnotatedDecl VarIdent Term
+data PlainDecl = PlainDecl VarIdent Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data IntOp
-    = IntPlus
-    | IntMinus
-    | IntMultiply
-    | IntEq
-    | IntLessThan
-    | IntLessOrEqThan
-    | IntGreaterThan
-    | IntGreaterOrEqThan
+data Decl
+    = AnnotatedDecl Annotation PlainDecl | UnAnnotatedDecl PlainDecl
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data IntOp = IntPlus | IntMinus | IntMultiply
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data RType
@@ -61,13 +49,12 @@ data FuncArg = NamedFuncArg VarIdent RType
 
 data Pred
     = PVar VarIdent
-    | PBool ConstBool
+    | PTrue
+    | PFalse
     | PInt Integer
     | PEq Pred Pred
     | PLessThan Pred Pred
     | PLessOrEqThan Pred Pred
-    | PGreaterThan Pred Pred
-    | PGreaterOrEqThan Pred Pred
     | PPlus Pred Pred
     | PMinus Pred Pred
     | PMultiply Pred Pred
@@ -79,13 +66,10 @@ data Pattern = PatternVar VarIdent
 data ScopedTerm = ScopedTerm Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data BaseType = BaseTypeInt | BaseTypeBool
+data BaseType = BaseTypeInt
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data FuncAppArg
-    = FuncAppArgBool ConstBool
-    | FuncAppArgInt Integer
-    | FuncAppArgVar VarIdent
+data FuncAppArg = FuncAppArgInt Integer | FuncAppArgVar VarIdent
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 newtype VarIdent = VarIdent String

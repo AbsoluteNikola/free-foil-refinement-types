@@ -3,33 +3,24 @@ token VarIdent lower (letter | digit | '_')* ;
 
 -- expr terms
 ConstInt.     Term ::= Integer ;
-Bool.         Term ::= ConstBool ;
 Var.          Term ::= VarIdent ;
-If.           Term ::= "if" "(" FuncAppArg ")" "{" Term "}" "else" "{" Term "}";
-Let.          Term ::= Decl ScopedTerm ;
+Let.          Term ::= Decl ScopedTerm ;  -- FIXME: requires fix in Template Haskell (mkFreeFoil)
 Fun.          Term ::= "(" VarIdent ")" "=>" "{" ScopedTerm "}" ;
 App.          Term ::= Term "(" FuncAppArg ")"; -- Program should be in ANF. See page 14
 Op.           Term ::= FuncAppArg IntOp FuncAppArg; -- Program should be in ANF. See page 14
 _.            Term ::= "(" Term ")";
 
-ConstTrue.    ConstBool ::= "true";
-ConstFalse.   ConstBool ::= "false";
-
 Annotation.          Annotation ::= "/*@" "val" VarIdent ":" RType "*/";
 
-RecDecl.               Decl ::= Annotation "let" "rec" VarIdent "=" Term ";";
-AnnotatedDecl.         Decl ::= Annotation "let" VarIdent "=" Term ";";;
-UnAnnotatedDecl.       Decl ::= "let" VarIdent "=" Term ";";;
+PlainDecl.  PlainDecl ::= "let" VarIdent "=" Term ";";
+
+AnnotatedDecl.         Decl ::= Annotation PlainDecl;
+UnAnnotatedDecl.       Decl ::= PlainDecl;
 separator Decl "";
 
 IntPlus. IntOp ::= "+";
 IntMinus. IntOp ::= "-";
 IntMultiply. IntOp ::= "*";
-IntEq. IntOp ::= "==";
-IntLessThan. IntOp ::= "<";
-IntLessOrEqThan. IntOp ::= "<=";
-IntGreaterThan. IntOp ::= ">";
-IntGreaterOrEqThan. IntOp ::= ">=";
 
 -- type terms
 TypeRefined.      RType ::= BaseType "[" VarIdent "|" Pred "]" ;
@@ -41,13 +32,12 @@ NamedFuncArg.   FuncArg ::= VarIdent ":" RType;
 
 -- predicates
 PVar.           Pred ::= VarIdent;
-PBool.          Pred ::= ConstBool ;
+PTrue.          Pred ::= "true" ;
+PFalse.         Pred ::= "false" ;
 PInt.           Pred ::= Integer ;
 PEq.            Pred ::= Pred "==" Pred ;
 PLessThan.      Pred ::= Pred "<" Pred ;
 PLessOrEqThan.  Pred ::= Pred "<=" Pred ;
-PGreaterThan.  Pred ::= Pred ">" Pred ;
-PGreaterOrEqThan.  Pred ::= Pred ">=" Pred ;
 PPlus.          Pred ::= Pred "+" Pred ;
 PMinus.         Pred ::= Pred "-" Pred ;
 PMultiply.      Pred ::= Pred "*" Pred ;
@@ -57,14 +47,12 @@ ScopedTerm. ScopedTerm ::= Term ;
 
 
 BaseTypeInt.  BaseType ::= "int" ;
-BaseTypeBool.  BaseType ::= "bool" ;
 
 -- FunArgName. FunArgName ::= VarIdent;
 -- separator nonempty FunArgsName "," ;
 -- ArgList. ArgList ::= Term ;
 -- separator nonempty ArgList "," ;
 
-FuncAppArgBool. FuncAppArg ::= ConstBool;
 FuncAppArgInt. FuncAppArg ::= Integer;
 FuncAppArgVar. FuncAppArg ::= VarIdent;
 

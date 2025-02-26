@@ -2,6 +2,7 @@
 module Language.Sprite.TypeCheck.Run where
 
 import Language.Sprite.Syntax.Front.Abs qualified as Front
+import Language.Sprite.Syntax.Inner.Abs qualified as Inner
 import Language.Sprite.Syntax.Convert.FrontToInner qualified as FrontToInner
 import Language.Sprite.TypeCheck.Check qualified as Check
 import Language.Sprite.TypeCheck.Constraints qualified as Check
@@ -22,7 +23,6 @@ import Data.Foldable (for_)
 import Control.Monad.Trans.Except (runExceptT)
 import Data.Bifunctor (first)
 import Control.Monad.Reader (ReaderT(runReaderT))
-import qualified Language.Sprite.TypeCheck.Types as S
 
 -- TODO: add better errors
 instance F.Loc T.Text where
@@ -32,7 +32,9 @@ instance F.Loc T.Text where
 vcgen :: S.Term Foil.VoidS -> IO (Either Text (H.Query Text))
 vcgen term = do
   let
-    programType = S.anyIntT
+    programType =
+      Foil.withFreshBinder Foil.emptyScope $ \progVarBinder ->
+        S.TypeRefined Inner.BaseTypeInt (S.PatternVar progVarBinder) S.ConstTrue
   eConstraints <- flip runReaderT Check.defaultCheckerDebugEnv . runExceptT . Check.runCheckerM  $ Check.check Foil.emptyScope Check.EmptyEnv term programType
   let
     mkQuery c = do
@@ -43,8 +45,6 @@ vcgen term = do
 config :: FC.Config
 config = FC.defConfig
   { FC.metadata = True
-  , FC.solver = FC.Z3
-  , FC.json = True
   }
 
 checkValid :: FilePath -> H.Query Text -> IO (F.FixResult Text)

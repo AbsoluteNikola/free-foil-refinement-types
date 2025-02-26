@@ -9,7 +9,6 @@ module Language.Sprite.Syntax.Inner.Par
   ( happyError
   , myLexer
   , pTerm
-  , pConstBool
   , pOp
   , pPattern
   , pScopedTerm
@@ -26,7 +25,6 @@ import Language.Sprite.Syntax.Inner.Lex
 }
 
 %name pTerm Term
-%name pConstBool ConstBool
 %name pOp Op
 %name pPattern Pattern
 %name pScopedTerm ScopedTerm
@@ -37,37 +35,31 @@ import Language.Sprite.Syntax.Inner.Lex
 %monad { Err } { (>>=) } { return }
 %tokentype {Token}
 %token
-  '&&'       { PT _ (TS _ 1)        }
-  '('        { PT _ (TS _ 2)        }
-  ')'        { PT _ (TS _ 3)        }
-  '*'        { PT _ (TS _ 4)        }
-  '*/'       { PT _ (TS _ 5)        }
-  '+'        { PT _ (TS _ 6)        }
-  '-'        { PT _ (TS _ 7)        }
-  '/*@'      { PT _ (TS _ 8)        }
-  ':'        { PT _ (TS _ 9)        }
-  ';'        { PT _ (TS _ 10)       }
-  '<'        { PT _ (TS _ 11)       }
-  '<='       { PT _ (TS _ 12)       }
-  '='        { PT _ (TS _ 13)       }
-  '=='       { PT _ (TS _ 14)       }
-  '=>'       { PT _ (TS _ 15)       }
-  '>'        { PT _ (TS _ 16)       }
-  '>='       { PT _ (TS _ 17)       }
-  '['        { PT _ (TS _ 18)       }
-  ']'        { PT _ (TS _ 19)       }
-  'bool'     { PT _ (TS _ 20)       }
-  'else'     { PT _ (TS _ 21)       }
-  'false'    { PT _ (TS _ 22)       }
-  'if'       { PT _ (TS _ 23)       }
-  'int'      { PT _ (TS _ 24)       }
-  'let'      { PT _ (TS _ 25)       }
-  'rec'      { PT _ (TS _ 26)       }
-  'true'     { PT _ (TS _ 27)       }
-  '{'        { PT _ (TS _ 28)       }
-  '|'        { PT _ (TS _ 29)       }
-  '||'       { PT _ (TS _ 30)       }
-  '}'        { PT _ (TS _ 31)       }
+  '('        { PT _ (TS _ 1)        }
+  ')'        { PT _ (TS _ 2)        }
+  '*'        { PT _ (TS _ 3)        }
+  '*/'       { PT _ (TS _ 4)        }
+  '+'        { PT _ (TS _ 5)        }
+  '-'        { PT _ (TS _ 6)        }
+  '/*@'      { PT _ (TS _ 7)        }
+  ':'        { PT _ (TS _ 8)        }
+  ';'        { PT _ (TS _ 9)        }
+  '<'        { PT _ (TS _ 10)       }
+  '<='       { PT _ (TS _ 11)       }
+  '='        { PT _ (TS _ 12)       }
+  '=='       { PT _ (TS _ 13)       }
+  '=>'       { PT _ (TS _ 14)       }
+  '>'        { PT _ (TS _ 15)       }
+  '>='       { PT _ (TS _ 16)       }
+  '['        { PT _ (TS _ 17)       }
+  ']'        { PT _ (TS _ 18)       }
+  'false'    { PT _ (TS _ 19)       }
+  'int'      { PT _ (TS _ 20)       }
+  'let'      { PT _ (TS _ 21)       }
+  'true'     { PT _ (TS _ 22)       }
+  '{'        { PT _ (TS _ 23)       }
+  '|'        { PT _ (TS _ 24)       }
+  '}'        { PT _ (TS _ 25)       }
   L_integ    { PT _ (TI $$)         }
   L_VarIdent { PT _ (T_VarIdent $$) }
 
@@ -82,21 +74,15 @@ VarIdent  : L_VarIdent { Language.Sprite.Syntax.Inner.Abs.VarIdent $1 }
 Term :: { Language.Sprite.Syntax.Inner.Abs.Term }
 Term
   : Integer { Language.Sprite.Syntax.Inner.Abs.ConstInt $1 }
-  | ConstBool { Language.Sprite.Syntax.Inner.Abs.Boolean $1 }
   | VarIdent { Language.Sprite.Syntax.Inner.Abs.Var $1 }
-  | 'if' '(' Term ')' '{' Term '}' 'else' '{' Term '}' { Language.Sprite.Syntax.Inner.Abs.If $3 $6 $10 }
   | 'let' Pattern '=' Term ';' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.Let $2 $4 $6 }
-  | '/*@' Term '*/' 'let' 'rec' Pattern '=' ScopedTerm ';' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.LetRec $2 $6 $8 $10 }
   | '(' Pattern ')' '=>' '{' ScopedTerm '}' { Language.Sprite.Syntax.Inner.Abs.Fun $2 $6 }
   | Term '(' Term ')' { Language.Sprite.Syntax.Inner.Abs.App $1 $3 }
   | '/*@' Term '*/' Term { Language.Sprite.Syntax.Inner.Abs.Ann $2 $4 }
   | '(' Term Op Term ')' { Language.Sprite.Syntax.Inner.Abs.OpExpr $2 $3 $4 }
   | BaseType '[' Pattern '|' ScopedTerm ']' { Language.Sprite.Syntax.Inner.Abs.TypeRefined $1 $3 $5 }
   | Pattern ':' Term '=>' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.TypeFun $1 $3 $5 }
-
-ConstBool :: { Language.Sprite.Syntax.Inner.Abs.ConstBool }
-ConstBool
-  : 'true' { Language.Sprite.Syntax.Inner.Abs.ConstTrue }
+  | 'true' { Language.Sprite.Syntax.Inner.Abs.ConstTrue }
   | 'false' { Language.Sprite.Syntax.Inner.Abs.ConstFalse }
 
 Op :: { Language.Sprite.Syntax.Inner.Abs.Op }
@@ -109,8 +95,6 @@ Op
   | '+' { Language.Sprite.Syntax.Inner.Abs.PlusOp }
   | '-' { Language.Sprite.Syntax.Inner.Abs.MinusOp }
   | '*' { Language.Sprite.Syntax.Inner.Abs.MultiplyOp }
-  | '&&' { Language.Sprite.Syntax.Inner.Abs.AndOp }
-  | '||' { Language.Sprite.Syntax.Inner.Abs.OrOp }
 
 Pattern :: { Language.Sprite.Syntax.Inner.Abs.Pattern }
 Pattern
@@ -121,9 +105,7 @@ ScopedTerm
   : Term { Language.Sprite.Syntax.Inner.Abs.ScopedTerm $1 }
 
 BaseType :: { Language.Sprite.Syntax.Inner.Abs.BaseType }
-BaseType
-  : 'int' { Language.Sprite.Syntax.Inner.Abs.BaseTypeInt }
-  | 'bool' { Language.Sprite.Syntax.Inner.Abs.BaseTypeBool }
+BaseType : 'int' { Language.Sprite.Syntax.Inner.Abs.BaseTypeInt }
 
 VarBinding :: { Language.Sprite.Syntax.Inner.Abs.VarBinding }
 VarBinding
