@@ -34,7 +34,7 @@ The symbols used in Front are the following:
   | = | ; | + | -
   | * | == | < | <=
   | > | >= | [ | |
-  | ] |  |  |
+  | ] | ? |  |
 
 ===Comments===
 There are no single-line comments in the grammar.There are no multiple-line comments in the grammar.
@@ -71,6 +71,7 @@ All other symbols are terminals.
   |  |  **|**  | ``>``
   |  |  **|**  | ``>=``
   | //RType// | -> | //BaseType// ``[`` //VarIdent// ``|`` //Pred// ``]``
+  |  |  **|**  | //BaseType// ``[`` ``?`` ``]``
   |  |  **|**  | //FuncArg// ``=>`` //ScopedRType//
   |  |  **|**  | ``(`` //RType// ``)``
   | //ScopedRType// | -> | //RType//

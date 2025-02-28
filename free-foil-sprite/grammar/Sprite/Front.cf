@@ -32,9 +32,10 @@ IntGreaterThan. IntOp ::= ">";
 IntGreaterOrEqThan. IntOp ::= ">=";
 
 -- type terms
-TypeRefined.      RType ::= BaseType "[" VarIdent "|" Pred "]" ;
-TypeFun.          RType ::= FuncArg "=>" ScopedRType ;   -- FIXME: same problem as with Let
-_.                RType ::= "(" RType ")";
+TypeRefined.         RType ::= BaseType "[" VarIdent "|" Pred "]" ;
+TypeRefinedUnknown.  RType ::= BaseType "[" "?" "]" ;
+TypeFun.             RType ::= FuncArg "=>" ScopedRType ;
+_.                   RType ::= "(" RType ")";
 ScopedRType.      ScopedRType ::= RType;
 
 NamedFuncArg.   FuncArg ::= VarIdent ":" RType;

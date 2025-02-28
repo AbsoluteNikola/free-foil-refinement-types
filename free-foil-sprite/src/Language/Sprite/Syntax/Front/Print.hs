@@ -183,6 +183,7 @@ instance Print Language.Sprite.Syntax.Front.Abs.IntOp where
 instance Print Language.Sprite.Syntax.Front.Abs.RType where
   prt i = \case
     Language.Sprite.Syntax.Front.Abs.TypeRefined basetype varident pred -> prPrec i 0 (concatD [prt 0 basetype, doc (showString "["), prt 0 varident, doc (showString "|"), prt 0 pred, doc (showString "]")])
+    Language.Sprite.Syntax.Front.Abs.TypeRefinedUnknown basetype -> prPrec i 0 (concatD [prt 0 basetype, doc (showString "["), doc (showString "?"), doc (showString "]")])
     Language.Sprite.Syntax.Front.Abs.TypeFun funcarg scopedrtype -> prPrec i 0 (concatD [prt 0 funcarg, doc (showString "=>"), prt 0 scopedrtype])
 
 instance Print Language.Sprite.Syntax.Front.Abs.ScopedRType where

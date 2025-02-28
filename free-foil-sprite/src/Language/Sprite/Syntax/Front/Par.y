@@ -39,20 +39,21 @@ import Language.Sprite.Syntax.Front.Lex
   '=>'       { PT _ (TS _ 14)       }
   '>'        { PT _ (TS _ 15)       }
   '>='       { PT _ (TS _ 16)       }
-  '['        { PT _ (TS _ 17)       }
-  ']'        { PT _ (TS _ 18)       }
-  'bool'     { PT _ (TS _ 19)       }
-  'else'     { PT _ (TS _ 20)       }
-  'false'    { PT _ (TS _ 21)       }
-  'if'       { PT _ (TS _ 22)       }
-  'int'      { PT _ (TS _ 23)       }
-  'let'      { PT _ (TS _ 24)       }
-  'rec'      { PT _ (TS _ 25)       }
-  'true'     { PT _ (TS _ 26)       }
-  'val'      { PT _ (TS _ 27)       }
-  '{'        { PT _ (TS _ 28)       }
-  '|'        { PT _ (TS _ 29)       }
-  '}'        { PT _ (TS _ 30)       }
+  '?'        { PT _ (TS _ 17)       }
+  '['        { PT _ (TS _ 18)       }
+  ']'        { PT _ (TS _ 19)       }
+  'bool'     { PT _ (TS _ 20)       }
+  'else'     { PT _ (TS _ 21)       }
+  'false'    { PT _ (TS _ 22)       }
+  'if'       { PT _ (TS _ 23)       }
+  'int'      { PT _ (TS _ 24)       }
+  'let'      { PT _ (TS _ 25)       }
+  'rec'      { PT _ (TS _ 26)       }
+  'true'     { PT _ (TS _ 27)       }
+  'val'      { PT _ (TS _ 28)       }
+  '{'        { PT _ (TS _ 29)       }
+  '|'        { PT _ (TS _ 30)       }
+  '}'        { PT _ (TS _ 31)       }
   L_integ    { PT _ (TI $$)         }
   L_VarIdent { PT _ (T_VarIdent $$) }
 
@@ -108,6 +109,7 @@ IntOp
 RType :: { Language.Sprite.Syntax.Front.Abs.RType }
 RType
   : BaseType '[' VarIdent '|' Pred ']' { Language.Sprite.Syntax.Front.Abs.TypeRefined $1 $3 $5 }
+  | BaseType '[' '?' ']' { Language.Sprite.Syntax.Front.Abs.TypeRefinedUnknown $1 }
   | FuncArg '=>' ScopedRType { Language.Sprite.Syntax.Front.Abs.TypeFun $1 $3 }
   | '(' RType ')' { $2 }
 

@@ -59,6 +59,7 @@ transIntOp x = case x of
 transRType :: Language.Sprite.Syntax.Front.Abs.RType -> Result
 transRType x = case x of
   Language.Sprite.Syntax.Front.Abs.TypeRefined basetype varident pred -> failure x
+  Language.Sprite.Syntax.Front.Abs.TypeRefinedUnknown basetype -> failure x
   Language.Sprite.Syntax.Front.Abs.TypeFun funcarg scopedrtype -> failure x
 
 transScopedRType :: Language.Sprite.Syntax.Front.Abs.ScopedRType -> Result

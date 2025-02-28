@@ -28,7 +28,7 @@ $u = [. \n]          -- universal: any character
 
 -- Symbols and non-identifier-like reserved words
 
-@rsyms = \( | \) | \{ | \} | \= \> | \/ \* \@ | \: | \* \/ | \= | \; | \+ | \- | \* | \= \= | \< | \< \= | \> | \> \= | \[ | \| | \]
+@rsyms = \( | \) | \{ | \} | \= \> | \/ \* \@ | \: | \* \/ | \= | \; | \+ | \- | \* | \= \= | \< | \< \= | \> | \> \= | \[ | \| | \] | \?
 
 :-
 
@@ -162,13 +162,13 @@ resWords =
        (b "=" 12
           (b "<" 10 (b ";" 9 N N) (b "<=" 11 N N))
           (b "=>" 14 (b "==" 13 N N) (b ">" 15 N N))))
-    (b "let" 24
-       (b "else" 20
-          (b "]" 18 (b "[" 17 N N) (b "bool" 19 N N))
-          (b "if" 22 (b "false" 21 N N) (b "int" 23 N N)))
-       (b "{" 28
-          (b "true" 26 (b "rec" 25 N N) (b "val" 27 N N))
-          (b "}" 30 (b "|" 29 N N) N)))
+    (b "int" 24
+       (b "bool" 20
+          (b "[" 18 (b "?" 17 N N) (b "]" 19 N N))
+          (b "false" 22 (b "else" 21 N N) (b "if" 23 N N)))
+       (b "val" 28
+          (b "rec" 26 (b "let" 25 N N) (b "true" 27 N N))
+          (b "|" 30 (b "{" 29 N N) (b "}" 31 N N))))
   where
   b s n = B bs (TS bs n)
     where

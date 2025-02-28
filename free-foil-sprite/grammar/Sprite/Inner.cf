@@ -14,11 +14,16 @@ Ann.          Term ::= "/*@" Term "*/" Term; -- FIXME: Problem with TH generatio
 OpExpr.       Term ::= "(" Term Op Term ")";
 
 -- type terms
-TypeRefined.  Term ::= BaseType "[" Pattern "|" ScopedTerm "]" ;
-TypeFun.      Term ::= Pattern ":" Term "=>" ScopedTerm ;   -- FIXME: same problem as with Let
+TypeRefined.         Term ::= BaseType "[" Pattern "|" ScopedTerm "]" ;
+TypeRefinedUnknown.  Term ::= BaseType "[" "?" "]" ;
+TypeFun.             Term ::= Pattern ":" Term "=>" ScopedTerm ;   -- FIXME: same problem as with Let
+
 -- predicate terms
 ConstTrue.      ConstBool ::= "true" ;
 ConstFalse.     ConstBool ::= "false" ;
+
+-- Horn Variables managed separately
+HVar.  Term ::= VarIdent "(" [Term] ")" ;
 
 EqOp.            Op ::= "==";
 LessOrEqOp.      Op ::= "<=";
@@ -37,5 +42,4 @@ ScopedTerm. ScopedTerm ::= Term ;
 BaseTypeInt.  BaseType ::= "int" ;
 BaseTypeBool.  BaseType ::= "bool" ;
 
-VarBinding. VarBinding ::= VarIdent ":" Term ;
-separator nonempty VarBinding ";" ;
+separator nonempty Term " " ;

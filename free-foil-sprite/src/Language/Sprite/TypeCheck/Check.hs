@@ -4,92 +4,15 @@ module Language.Sprite.TypeCheck.Check where
 import Control.Monad.Foil qualified as F
 import Control.Monad.Free.Foil qualified as F
 import Language.Sprite.Syntax
-import Control.Monad.Trans.Except (ExceptT)
 import Control.Monad.Except (MonadError (throwError))
 import Data.Text (Text)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Language.Sprite.TypeCheck.Constraints
-import qualified Data.Text.Lazy as TL
-import Text.Pretty.Simple (pShow, pShowNoColor)
-import qualified Data.Text as T
-import qualified Data.Text.IO as TIO
 import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import Language.Sprite.TypeCheck.Predicates
-import Control.Monad.Reader (ask, MonadReader (local), ReaderT)
 import Language.Sprite.TypeCheck.Types
 import qualified Data.Unique as Unique
-
-data Env n where
-    EmptyEnv :: Env F.VoidS
-    NonEmptyEnv :: F.DExt i o => Env i -> F.NameBinder i o -> Term i -> Env o
-
-data CheckerDebugEnv = CheckerDebugEnv
-  { currentRule :: Text
-  , offset :: Text
-  }
-
-defaultCheckerDebugEnv :: CheckerDebugEnv
-defaultCheckerDebugEnv = CheckerDebugEnv "" ""
-
-newtype CheckerM a = CheckerM {runCheckerM :: (ExceptT Text (ReaderT CheckerDebugEnv IO)) a }
-  deriving newtype (Functor, Applicative, Monad, MonadError Text, MonadReader CheckerDebugEnv, MonadIO)
-
-withExtendedEnv :: (F.DExt i o) => Env i -> F.NameBinder i o -> Term i -> (Env o -> CheckerM a) -> CheckerM a
-withExtendedEnv env binder typ action = do
-  debugPrintT $ "add binder x" <> showT binder <> " with type " <> showT typ
-  let env' = NonEmptyEnv env binder typ
-  action env'
-
-withExtendedEnv' :: (F.Distinct i, F.DExt i o) => Env i -> F.NameBinderList i o -> Term i -> (Env o -> CheckerM a) -> CheckerM a
-withExtendedEnv' env binders typ action =
-  case binders of
-    F.NameBinderListEmpty -> action env
-    F.NameBinderListCons binder otherBinders -> do
-      case (F.assertDistinct binder, F.assertExt binder) of
-        (F.Distinct, F.Ext) -> case (F.assertDistinct otherBinders, F.assertExt otherBinders) of
-          (F.Distinct, F.Ext) -> do
-            env' <- withExtendedEnv env binder typ pure
-            withExtendedEnv'
-              env'
-              otherBinders
-              (F.sink typ)
-              action
-
-lookupEnv :: Env o -> F.Name o -> Term o
-lookupEnv env varId = case env of
-  EmptyEnv -> error $ "impossible case, no var in env: " <> show varId
-  NonEmptyEnv env' binder term ->
-    if F.nameOf binder == varId
-      then F.sink term
-      else
-        case F.unsinkName binder varId of
-          Nothing -> error $ "impossible case. If we didn't found var in bigger scoped map. It should be in smaller scope " <> show varId
-          Just varId' -> F.sink $ lookupEnv env' varId'
-
-pShowT :: Show a => a -> Text
-pShowT = TL.toStrict . pShow
-
-showT :: Show a => a -> Text
-showT = T.pack . show
-
-debugPrint :: Show a => a -> CheckerM ()
-debugPrint value = do
-  debugEnv <- ask
-  let finalText = T.unlines . ("":). fmap (debugEnv.offset <>) . T.lines . TL.toStrict . pShowNoColor $ value
-  liftIO . TIO.putStrLn $ debugEnv.offset <> debugEnv.currentRule <> " " <> finalText
-
-debugPrintT :: Text -> CheckerM ()
-debugPrintT value = do
-  debugEnv <- ask
-  liftIO . TIO.putStrLn $ debugEnv.offset <> debugEnv.currentRule <> " " <> value
-
-withRule :: Text -> CheckerM a -> CheckerM a
-withRule rule action = do
-  denv <- ask
-  liftIO . TIO.putStrLn $ denv.offset <> "  " <> rule
-  res <- local (\debugEnv -> CheckerDebugEnv rule (debugEnv.offset <> "  ")) action
-  liftIO . TIO.putStrLn $ denv.offset <> "  " <> rule <> " done"
-  pure res
+import Language.Sprite.TypeCheck.Monad
 
 mkSolverErrorMessage :: Text -> CheckerM Text
 mkSolverErrorMessage baseMsg = do
@@ -221,29 +144,35 @@ check scope env currentTerm currentType = case currentTerm of
           pure $ CAnd [newVarConstraints, implLetBodyConstraint]
 
   {- [Chk-Rec]
-    G |- t1 : k      G, x:t1 |- e1 <== t1      G, x:t1 |- e2 <== t2
-    ---------------------------------------------------------------
-        G |- let rec x = e1 in e2 <== t2
+    s1 |> t1
+    G |- t1 : k
+    G, x:t1 |- e1 <== t1
+    G, x:t1 |- e2 <== t2
+    ----------------------------------------------
+        G |- let rec x = e1 : s1 in e2 <== t2
   -}
   LetRec newVarType newVarPat1 newVarPat2 newVarValue body -> withRule "[Chk-Rec]" $ do
+    debugPrintT $  "new var type: " <> showT newVarType
+    freshedNewVarType <- fresh scope env newVarType
+    debugPrintT $  "freshed new var type: " <> showT freshedNewVarType
     -- G |- t1 : k, t1 - newVarType
     case (F.assertDistinct newVarPat1, F.assertDistinct newVarPat2, F.assertExt newVarPat1,  F.assertExt newVarPat2) of
       (F.Distinct, F.Distinct, F.Ext, F.Ext) ->  do
         --  G, x:t1 |- e1 <== t1
         debugPrintT $  "check new var: " <> showT newVarPat1
-        debugPrintT $  "new var type: " <> showT newVarType
-        newVarC <- withExtendedEnv env (getNameBinderFromPattern newVarPat1) newVarType $ \env' -> do
-          let scope' = F.extendScopePattern newVarPat1 scope
-          newVarConstraints <- check scope' env' newVarValue (F.sink newVarType)
+        newVarC <- withExtendedEnv env (getNameBinderFromPattern newVarPat1) freshedNewVarType $ \env' -> do
+          let
+            scope' = F.extendScopePattern newVarPat1 scope
+          newVarConstraints <- check scope' env' newVarValue (F.sink freshedNewVarType)
           implBodyMsg <- mkSolverErrorMessage "Chk-Rec: new var"
-          buildImplicationFromType implBodyMsg scope' newVarPat1 (F.sink newVarType) newVarConstraints
+          buildImplicationFromType implBodyMsg scope' newVarPat1 (F.sink freshedNewVarType) newVarConstraints
         -- G, x:t1 |- e2 <== t2
-        bodyC <- withExtendedEnv env (getNameBinderFromPattern newVarPat2) newVarType $ \env' -> do
+        bodyC <- withExtendedEnv env (getNameBinderFromPattern newVarPat2) freshedNewVarType $ \env' -> do
           let scope' = F.extendScopePattern newVarPat2 scope
           extendedCurrentType <- extendTypeToCurrentScope scope' (F.sink currentType)
           bodyConstraints <- check scope' env' body extendedCurrentType
           implBodyMsg <- mkSolverErrorMessage "Chk-Rec: body"
-          buildImplicationFromType implBodyMsg scope' newVarPat2 (F.sink newVarType) bodyConstraints
+          buildImplicationFromType implBodyMsg scope' newVarPat2 (F.sink freshedNewVarType) bodyConstraints
         pure $ CAnd [newVarC, bodyC]
 
   {- [Chk-If]
@@ -371,7 +300,8 @@ synths scope env currentTerm = case currentTerm of
    G |- e:t => t
   -}
   Ann annType term -> withRule "[Syn-Ann]" $ do
-    extendedAnnType <- extendTypeToCurrentScope scope annType
+    freshedAnnType <- fresh scope env annType
+    extendedAnnType <- extendTypeToCurrentScope scope freshedAnnType
     checkConstraints <- check scope env term extendedAnnType
     pure (checkConstraints, extendedAnnType)
 

@@ -5,6 +5,7 @@ import Language.Sprite.Syntax.Front.Abs qualified as Front
 import Language.Sprite.Syntax.Convert.FrontToInner qualified as FrontToInner
 import Language.Sprite.TypeCheck.Check qualified as Check
 import Language.Sprite.TypeCheck.Constraints qualified as Check
+import Language.Sprite.TypeCheck.Monad qualified as Check
 import Language.Sprite.Syntax qualified as S
 import System.Exit (exitFailure)
 import qualified Data.Map as Map
@@ -22,7 +23,9 @@ import Data.Foldable (for_)
 import Control.Monad.Trans.Except (runExceptT)
 import Data.Bifunctor (first)
 import Control.Monad.Reader (ReaderT(runReaderT))
+import Control.Monad.State (StateT (runStateT))
 import qualified Language.Sprite.TypeCheck.Types as S
+import Text.Pretty.Simple (pPrint)
 
 -- TODO: add better errors
 instance F.Loc T.Text where
@@ -33,11 +36,17 @@ vcgen :: S.Term Foil.VoidS -> IO (Either Text (H.Query Text))
 vcgen term = do
   let
     programType = S.anyIntT
-  eConstraints <- flip runReaderT Check.defaultCheckerDebugEnv . runExceptT . Check.runCheckerM  $ Check.check Foil.emptyScope Check.EmptyEnv term programType
+  (eConstraints, checkerState) <-
+    flip runStateT Check.defaultCheckerState
+    . flip runReaderT Check.defaultCheckerDebugEnv
+    . runExceptT
+    . Check.runCheckerM
+    $ Check.check Foil.emptyScope Check.EmptyEnv term programType
+  pPrint eConstraints
   let
     mkQuery c = do
       c' <- first Check.showT $ Check.constraintsToFHT c
-      pure $ H.Query [] [] c' mempty mempty mempty mempty mempty mempty mempty
+      pure $ H.Query [] checkerState.hornVars c' mempty mempty mempty mempty mempty mempty mempty
   pure $ eConstraints >>= mkQuery
 
 config :: FC.Config
