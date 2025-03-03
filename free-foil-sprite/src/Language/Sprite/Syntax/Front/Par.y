@@ -8,7 +8,7 @@
 module Language.Sprite.Syntax.Front.Par
   ( happyError
   , myLexer
-  , pTerm
+  , pProgram
   ) where
 
 import Prelude
@@ -18,7 +18,7 @@ import Language.Sprite.Syntax.Front.Lex
 
 }
 
-%name pTerm Term
+%name pProgram Program
 -- no lexer declaration
 %monad { Err } { (>>=) } { return }
 %tokentype {Token}
@@ -28,32 +28,34 @@ import Language.Sprite.Syntax.Front.Lex
   '*'        { PT _ (TS _ 3)        }
   '*/'       { PT _ (TS _ 4)        }
   '+'        { PT _ (TS _ 5)        }
-  '-'        { PT _ (TS _ 6)        }
-  '/*@'      { PT _ (TS _ 7)        }
-  ':'        { PT _ (TS _ 8)        }
-  ';'        { PT _ (TS _ 9)        }
-  '<'        { PT _ (TS _ 10)       }
-  '<='       { PT _ (TS _ 11)       }
-  '='        { PT _ (TS _ 12)       }
-  '=='       { PT _ (TS _ 13)       }
-  '=>'       { PT _ (TS _ 14)       }
-  '>'        { PT _ (TS _ 15)       }
-  '>='       { PT _ (TS _ 16)       }
-  '?'        { PT _ (TS _ 17)       }
-  '['        { PT _ (TS _ 18)       }
-  ']'        { PT _ (TS _ 19)       }
-  'bool'     { PT _ (TS _ 20)       }
-  'else'     { PT _ (TS _ 21)       }
-  'false'    { PT _ (TS _ 22)       }
-  'if'       { PT _ (TS _ 23)       }
-  'int'      { PT _ (TS _ 24)       }
-  'let'      { PT _ (TS _ 25)       }
-  'rec'      { PT _ (TS _ 26)       }
-  'true'     { PT _ (TS _ 27)       }
-  'val'      { PT _ (TS _ 28)       }
-  '{'        { PT _ (TS _ 29)       }
-  '|'        { PT _ (TS _ 30)       }
-  '}'        { PT _ (TS _ 31)       }
+  ','        { PT _ (TS _ 6)        }
+  '-'        { PT _ (TS _ 7)        }
+  '/*@'      { PT _ (TS _ 8)        }
+  ':'        { PT _ (TS _ 9)        }
+  ';'        { PT _ (TS _ 10)       }
+  '<'        { PT _ (TS _ 11)       }
+  '<='       { PT _ (TS _ 12)       }
+  '='        { PT _ (TS _ 13)       }
+  '=='       { PT _ (TS _ 14)       }
+  '=>'       { PT _ (TS _ 15)       }
+  '>'        { PT _ (TS _ 16)       }
+  '>='       { PT _ (TS _ 17)       }
+  '?'        { PT _ (TS _ 18)       }
+  '['        { PT _ (TS _ 19)       }
+  ']'        { PT _ (TS _ 20)       }
+  'bool'     { PT _ (TS _ 21)       }
+  'else'     { PT _ (TS _ 22)       }
+  'false'    { PT _ (TS _ 23)       }
+  'if'       { PT _ (TS _ 24)       }
+  'int'      { PT _ (TS _ 25)       }
+  'let'      { PT _ (TS _ 26)       }
+  'qualif'   { PT _ (TS _ 27)       }
+  'rec'      { PT _ (TS _ 28)       }
+  'true'     { PT _ (TS _ 29)       }
+  'val'      { PT _ (TS _ 30)       }
+  '{'        { PT _ (TS _ 31)       }
+  '|'        { PT _ (TS _ 32)       }
+  '}'        { PT _ (TS _ 33)       }
   L_integ    { PT _ (TI $$)         }
   L_VarIdent { PT _ (T_VarIdent $$) }
 
@@ -64,6 +66,27 @@ Integer  : L_integ  { (read $1) :: Integer }
 
 VarIdent :: { Language.Sprite.Syntax.Front.Abs.VarIdent }
 VarIdent  : L_VarIdent { Language.Sprite.Syntax.Front.Abs.VarIdent $1 }
+
+Program :: { Language.Sprite.Syntax.Front.Abs.Program }
+Program
+  : ListQualifier Term { Language.Sprite.Syntax.Front.Abs.Program $1 $2 }
+
+Qualifier :: { Language.Sprite.Syntax.Front.Abs.Qualifier }
+Qualifier
+  : '/*@' 'qualif' VarIdent '(' ListQualifierArg ')' ':' '(' Pred ')' '*/' { Language.Sprite.Syntax.Front.Abs.Qualifier $3 $5 $9 }
+
+ListQualifier :: { [Language.Sprite.Syntax.Front.Abs.Qualifier] }
+ListQualifier
+  : {- empty -} { [] } | Qualifier ListQualifier { (:) $1 $2 }
+
+QualifierArg :: { Language.Sprite.Syntax.Front.Abs.QualifierArg }
+QualifierArg
+  : VarIdent ':' BaseType { Language.Sprite.Syntax.Front.Abs.QualifierArg $1 $3 }
+
+ListQualifierArg :: { [Language.Sprite.Syntax.Front.Abs.QualifierArg] }
+ListQualifierArg
+  : QualifierArg { (:[]) $1 }
+  | QualifierArg ',' ListQualifierArg { (:) $1 $3 }
 
 Term :: { Language.Sprite.Syntax.Front.Abs.Term }
 Term
@@ -91,9 +114,6 @@ Decl
   : Annotation 'let' 'rec' VarIdent '=' Term ';' { Language.Sprite.Syntax.Front.Abs.RecDecl $1 $4 $6 }
   | Annotation 'let' VarIdent '=' Term ';' { Language.Sprite.Syntax.Front.Abs.AnnotatedDecl $1 $3 $5 }
   | 'let' VarIdent '=' Term ';' { Language.Sprite.Syntax.Front.Abs.UnAnnotatedDecl $2 $4 }
-
-ListDecl :: { [Language.Sprite.Syntax.Front.Abs.Decl] }
-ListDecl : {- empty -} { [] } | Decl ListDecl { (:) $1 $2 }
 
 IntOp :: { Language.Sprite.Syntax.Front.Abs.IntOp }
 IntOp

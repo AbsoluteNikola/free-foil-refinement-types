@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use newtype instead of data" #-}
-module Language.Sprite.Syntax.Convert.InnerToFTR (convert, ConvertError(..)) where
+module Language.Sprite.Syntax.Convert.InnerToFTR (convert, convertTerm, ConvertError(..)) where
 import Language.Fixpoint.Types.Refinements qualified as T
 import qualified Language.Sprite.Syntax.Inner.Abs as I
 import qualified Language.Fixpoint.Types.Names as T

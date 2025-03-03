@@ -26,14 +26,15 @@ import Control.Monad.Reader (ReaderT(runReaderT))
 import Control.Monad.State (StateT (runStateT))
 import qualified Language.Sprite.TypeCheck.Types as S
 import qualified Language.Fixpoint.Horn.Types as F
+import qualified Language.Sprite.Syntax.Convert.QualifierToFTR as QualifiersToFTR
 
 -- TODO: add better errors
 instance F.Loc T.Text where
   srcSpan _ = F.dummySpan
 
 
-vcgen :: S.Term Foil.VoidS -> IO (Either Text (H.Query Text))
-vcgen term = do
+vcgen :: [F.Qualifier] -> S.Term Foil.VoidS -> IO (Either Text (H.Query Text))
+vcgen qualifiers term = do
   let
     programType = S.anyIntT
   (eConstraints, checkerState) <-
@@ -45,7 +46,7 @@ vcgen term = do
   let
     mkQuery c = do
       c' <- first Check.showT $ Check.constraintsToFHT c
-      pure $ H.Query [] checkerState.hornVars c' mempty mempty mempty mempty mempty mempty mempty
+      pure $ H.Query qualifiers checkerState.hornVars c' mempty mempty mempty mempty mempty mempty mempty
   pure $ eConstraints >>= mkQuery
 
 config :: FC.Config
@@ -70,8 +71,13 @@ dumpQuery f q = do
   putStrLn "END: Horn VC"
 
 
-run :: FilePath -> Front.Term -> IO ()
-run filePath rawFrontTerm = do
+run :: FilePath -> Front.Program -> IO ()
+run filePath (Front.Program rawQualifiers rawFrontTerm) = do
+  qualifiers <- case traverse (QualifiersToFTR.convertQualifier filePath) rawQualifiers of
+    Right qualifiers -> pure qualifiers
+    Left err -> do
+      print err
+      exitFailure
   rawInnerTerm <- case FrontToInner.convert rawFrontTerm of
     Right rawInnerTerm -> pure rawInnerTerm
     Left errs -> do
@@ -80,7 +86,7 @@ run filePath rawFrontTerm = do
   let scopedTerm =  S.toTerm Foil.emptyScope Map.empty rawInnerTerm
   -- pPrint rawFrontTerm
   print scopedTerm
-  result <- vcgen scopedTerm >>= \case
+  result <- vcgen qualifiers scopedTerm >>= \case
     Left err -> do
       putStrLn "Type check error: "
       putStrLn (T.unpack err)

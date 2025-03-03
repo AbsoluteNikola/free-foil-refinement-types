@@ -15,6 +15,15 @@ import qualified Data.String
 import qualified Data.Data    as C (Data, Typeable)
 import qualified GHC.Generics as C (Generic)
 
+data Program = Program [Qualifier] Term
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data Qualifier = Qualifier VarIdent [QualifierArg] Pred
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data QualifierArg = QualifierArg VarIdent BaseType
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
 data Term
     = ConstInt Integer
     | Bool ConstBool

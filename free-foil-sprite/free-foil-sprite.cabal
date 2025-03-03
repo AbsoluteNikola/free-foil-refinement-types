@@ -14,7 +14,7 @@ build-type:     Simple
 extra-source-files:
     README.md
     CHANGELOG.md
-    
+
 source-repository head
   type: git
   location: https://github.com/AbsoluteNikola/free-foil-sprite
@@ -45,6 +45,7 @@ library
       Language.Sprite.Syntax
       Language.Sprite.Syntax.Convert.FrontToInner
       Language.Sprite.Syntax.Convert.InnerToFTR
+      Language.Sprite.Syntax.Convert.QualifierToFTR
       Language.Sprite.Syntax.Front.Abs
       Language.Sprite.Syntax.Front.Lex
       Language.Sprite.Syntax.Front.Par

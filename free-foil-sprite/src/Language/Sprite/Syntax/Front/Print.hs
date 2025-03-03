@@ -139,6 +139,27 @@ instance Print Double where
 
 instance Print Language.Sprite.Syntax.Front.Abs.VarIdent where
   prt _ (Language.Sprite.Syntax.Front.Abs.VarIdent i) = doc $ showString i
+instance Print Language.Sprite.Syntax.Front.Abs.Program where
+  prt i = \case
+    Language.Sprite.Syntax.Front.Abs.Program qualifiers term -> prPrec i 0 (concatD [prt 0 qualifiers, prt 0 term])
+
+instance Print Language.Sprite.Syntax.Front.Abs.Qualifier where
+  prt i = \case
+    Language.Sprite.Syntax.Front.Abs.Qualifier varident qualifierargs pred -> prPrec i 0 (concatD [doc (showString "/*@"), doc (showString "qualif"), prt 0 varident, doc (showString "("), prt 0 qualifierargs, doc (showString ")"), doc (showString ":"), doc (showString "("), prt 0 pred, doc (showString ")"), doc (showString "*/")])
+
+instance Print [Language.Sprite.Syntax.Front.Abs.Qualifier] where
+  prt _ [] = concatD []
+  prt _ (x:xs) = concatD [prt 0 x, prt 0 xs]
+
+instance Print Language.Sprite.Syntax.Front.Abs.QualifierArg where
+  prt i = \case
+    Language.Sprite.Syntax.Front.Abs.QualifierArg varident basetype -> prPrec i 0 (concatD [prt 0 varident, doc (showString ":"), prt 0 basetype])
+
+instance Print [Language.Sprite.Syntax.Front.Abs.QualifierArg] where
+  prt _ [] = concatD []
+  prt _ [x] = concatD [prt 0 x]
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
+
 instance Print Language.Sprite.Syntax.Front.Abs.Term where
   prt i = \case
     Language.Sprite.Syntax.Front.Abs.ConstInt n -> prPrec i 0 (concatD [prt 0 n])
@@ -164,10 +185,6 @@ instance Print Language.Sprite.Syntax.Front.Abs.Decl where
     Language.Sprite.Syntax.Front.Abs.RecDecl annotation varident term -> prPrec i 0 (concatD [prt 0 annotation, doc (showString "let"), doc (showString "rec"), prt 0 varident, doc (showString "="), prt 0 term, doc (showString ";")])
     Language.Sprite.Syntax.Front.Abs.AnnotatedDecl annotation varident term -> prPrec i 0 (concatD [prt 0 annotation, doc (showString "let"), prt 0 varident, doc (showString "="), prt 0 term, doc (showString ";")])
     Language.Sprite.Syntax.Front.Abs.UnAnnotatedDecl varident term -> prPrec i 0 (concatD [doc (showString "let"), prt 0 varident, doc (showString "="), prt 0 term, doc (showString ";")])
-
-instance Print [Language.Sprite.Syntax.Front.Abs.Decl] where
-  prt _ [] = concatD []
-  prt _ (x:xs) = concatD [prt 0 x, prt 0 xs]
 
 instance Print Language.Sprite.Syntax.Front.Abs.IntOp where
   prt i = \case
