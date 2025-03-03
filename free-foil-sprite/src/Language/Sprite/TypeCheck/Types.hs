@@ -65,8 +65,8 @@ fresh scope env curType = case curType of
     pure $ TypeFun (PatternVar argBinder) argType' retType'
 
   {-
-  fresh(G, b[?]) = b[v| k(...x) ]
-    k = fresh horn variable
+  fresh(G, b[?]) = b[v| k(v,...x) ]
+    k = fresh horn variable of sorts b : ...x sorts
     v = fresh binder
     ...x = arguments from env
   -}
@@ -74,7 +74,7 @@ fresh scope env curType = case curType of
     let
       (names, sorts) = unzip $ flip mapMaybe (envToList env) $
         \(name, typ) -> (name, ) . baseTypeToSort <$> getBaseType typ
-    newHornVarName <- mkFreshHornVar sorts
+    newHornVarName <- mkFreshHornVar (baseTypeToSort base : sorts)
 
     F.withFreshBinder scope $ \freshBinder ->
       case (F.assertDistinct freshBinder, F.assertExt freshBinder) of
@@ -82,8 +82,8 @@ fresh scope env curType = case curType of
           TypeRefined
             base
             (PatternVar freshBinder) -- v
-            -- k(...x)
-            (HVar newHornVarName $ F.Var . F.sink <$> names )
+            -- k(v,...x)
+            (HVar newHornVarName $ F.Var (F.nameOf freshBinder) : (F.Var . F.sink <$> names ))
 
   otherTerm -> throwError $
     "fresh should be called only on type, not term:\n" <> pShowT otherTerm

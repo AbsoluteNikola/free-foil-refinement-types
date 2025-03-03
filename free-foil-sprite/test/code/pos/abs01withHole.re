@@ -17,4 +17,4 @@ let main = (y) => {
   let ok  = 0 <= ya;
   cassert(ok)
 };
-main(0)
+main(1)

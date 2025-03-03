@@ -25,7 +25,7 @@ import Data.Bifunctor (first)
 import Control.Monad.Reader (ReaderT(runReaderT))
 import Control.Monad.State (StateT (runStateT))
 import qualified Language.Sprite.TypeCheck.Types as S
-import Text.Pretty.Simple (pPrint)
+import qualified Language.Fixpoint.Horn.Types as F
 
 -- TODO: add better errors
 instance F.Loc T.Text where
@@ -42,7 +42,6 @@ vcgen term = do
     . runExceptT
     . Check.runCheckerM
     $ Check.check Foil.emptyScope Check.EmptyEnv term programType
-  pPrint eConstraints
   let
     mkQuery c = do
       c' <- first Check.showT $ Check.constraintsToFHT c
@@ -53,7 +52,7 @@ config :: FC.Config
 config = FC.defConfig
   { FC.metadata = True
   , FC.solver = FC.Z3
-  , FC.json = True
+  , FC.eliminate = FC.Some -- TODO: understand
   }
 
 checkValid :: FilePath -> H.Query Text -> IO (F.FixResult Text)
@@ -66,7 +65,8 @@ dumpQuery f q = do
   putStrLn "BEGIN: Horn VC"
   let smtFile = F.extFileName F.Smt2 f
   F.ensurePath smtFile
-  writeFile smtFile (PJ.render . F.pprint $ q)
+  -- need to allow fixpoint cli calls on dumped constraints
+  writeFile smtFile (PJ.render . F.toHornSMT $ q)
   putStrLn "END: Horn VC"
 
 

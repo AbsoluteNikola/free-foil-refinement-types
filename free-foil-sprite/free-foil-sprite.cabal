@@ -14,10 +14,7 @@ build-type:     Simple
 extra-source-files:
     README.md
     CHANGELOG.md
-    grammar/Sprite/Syntax.cf
-    src/Language/Sprite/Syntax/Lex.x
-    src/Language/Sprite/Syntax/Par.y
-
+    
 source-repository head
   type: git
   location: https://github.com/AbsoluteNikola/free-foil-sprite
