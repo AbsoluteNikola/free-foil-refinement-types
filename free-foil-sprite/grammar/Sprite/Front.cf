@@ -1,6 +1,20 @@
 
 token VarIdent lower (letter | digit | '_')* ;
 
+-- Program
+
+Program. Program ::= [Qualifier] Term;
+
+entrypoints Program;
+
+-- qualifiers
+
+Qualifier. Qualifier ::= "/*@" "qualif" VarIdent "(" [QualifierArg] ")" ":" "(" Pred ")" "*/";
+separator Qualifier "";
+
+QualifierArg. QualifierArg ::= VarIdent ":" BaseType;
+separator nonempty QualifierArg "," ;
+
 -- expr terms
 ConstInt.     Term ::= Integer ;
 Bool.         Term ::= ConstBool ;
@@ -20,7 +34,6 @@ Annotation.          Annotation ::= "/*@" "val" VarIdent ":" RType "*/";
 RecDecl.               Decl ::= Annotation "let" "rec" VarIdent "=" Term ";";
 AnnotatedDecl.         Decl ::= Annotation "let" VarIdent "=" Term ";";;
 UnAnnotatedDecl.       Decl ::= "let" VarIdent "=" Term ";";;
-separator Decl "";
 
 IntPlus. IntOp ::= "+";
 IntMinus. IntOp ::= "-";
@@ -32,9 +45,10 @@ IntGreaterThan. IntOp ::= ">";
 IntGreaterOrEqThan. IntOp ::= ">=";
 
 -- type terms
-TypeRefined.      RType ::= BaseType "[" VarIdent "|" Pred "]" ;
-TypeFun.          RType ::= FuncArg "=>" ScopedRType ;   -- FIXME: same problem as with Let
-_.                RType ::= "(" RType ")";
+TypeRefined.         RType ::= BaseType "[" VarIdent "|" Pred "]" ;
+TypeRefinedUnknown.  RType ::= BaseType "[" "?" "]" ;
+TypeFun.             RType ::= FuncArg "=>" ScopedRType ;
+_.                   RType ::= "(" RType ")";
 ScopedRType.      ScopedRType ::= RType;
 
 NamedFuncArg.   FuncArg ::= VarIdent ":" RType;
@@ -67,5 +81,3 @@ BaseTypeBool.  BaseType ::= "bool" ;
 FuncAppArgBool. FuncAppArg ::= ConstBool;
 FuncAppArgInt. FuncAppArg ::= Integer;
 FuncAppArgVar. FuncAppArg ::= VarIdent;
-
-entrypoints Term;

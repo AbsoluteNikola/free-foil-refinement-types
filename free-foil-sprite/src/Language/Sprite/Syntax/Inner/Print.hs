@@ -152,7 +152,9 @@ instance Print Language.Sprite.Syntax.Inner.Abs.Term where
     Language.Sprite.Syntax.Inner.Abs.Ann term1 term2 -> prPrec i 0 (concatD [doc (showString "/*@"), prt 0 term1, doc (showString "*/"), prt 0 term2])
     Language.Sprite.Syntax.Inner.Abs.OpExpr term1 op term2 -> prPrec i 0 (concatD [doc (showString "("), prt 0 term1, prt 0 op, prt 0 term2, doc (showString ")")])
     Language.Sprite.Syntax.Inner.Abs.TypeRefined basetype pattern_ scopedterm -> prPrec i 0 (concatD [prt 0 basetype, doc (showString "["), prt 0 pattern_, doc (showString "|"), prt 0 scopedterm, doc (showString "]")])
+    Language.Sprite.Syntax.Inner.Abs.TypeRefinedUnknown basetype -> prPrec i 0 (concatD [prt 0 basetype, doc (showString "["), doc (showString "?"), doc (showString "]")])
     Language.Sprite.Syntax.Inner.Abs.TypeFun pattern_ term scopedterm -> prPrec i 0 (concatD [prt 0 pattern_, doc (showString ":"), prt 0 term, doc (showString "=>"), prt 0 scopedterm])
+    Language.Sprite.Syntax.Inner.Abs.HVar varident terms -> prPrec i 0 (concatD [prt 0 varident, doc (showString "("), prt 0 terms, doc (showString ")")])
 
 instance Print Language.Sprite.Syntax.Inner.Abs.ConstBool where
   prt i = \case
@@ -185,11 +187,7 @@ instance Print Language.Sprite.Syntax.Inner.Abs.BaseType where
     Language.Sprite.Syntax.Inner.Abs.BaseTypeInt -> prPrec i 0 (concatD [doc (showString "int")])
     Language.Sprite.Syntax.Inner.Abs.BaseTypeBool -> prPrec i 0 (concatD [doc (showString "bool")])
 
-instance Print Language.Sprite.Syntax.Inner.Abs.VarBinding where
-  prt i = \case
-    Language.Sprite.Syntax.Inner.Abs.VarBinding varident term -> prPrec i 0 (concatD [prt 0 varident, doc (showString ":"), prt 0 term])
-
-instance Print [Language.Sprite.Syntax.Inner.Abs.VarBinding] where
+instance Print [Language.Sprite.Syntax.Inner.Abs.Term] where
   prt _ [] = concatD []
-  prt _ [x] = concatD [prt 0 x]
-  prt _ (x:xs) = concatD [prt 0 x, doc (showString ";"), prt 0 xs]
+  prt _ [x] = concatD [prt 0 x, doc (showString " ")]
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString " "), prt 0 xs]

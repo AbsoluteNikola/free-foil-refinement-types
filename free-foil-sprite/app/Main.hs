@@ -21,7 +21,7 @@ import Control.Monad      ( when )
 
 import Language.Sprite.Syntax.Front.Abs   ()
 import Language.Sprite.Syntax.Front.Lex   ( Token )
-import Language.Sprite.Syntax.Front.Par   ( myLexer, pTerm)
+import Language.Sprite.Syntax.Front.Par   ( myLexer, pProgram)
 import Language.Sprite.Syntax.Front.Print ( Print, printTree )
 import Text.Pretty.Simple (pPrint)
 import qualified Language.Sprite.TypeCheck.Run as S
@@ -36,7 +36,7 @@ runFile v f = putStrLn f >> readFile f >>= run f v
 
 run :: FilePath -> Verbosity -> String -> IO ()
 run f v s =
-  case pTerm ts of
+  case pProgram ts of
     Left err -> do
       putStrLn "\nParse              Failed...\n"
       putStrV v "Tokens:"

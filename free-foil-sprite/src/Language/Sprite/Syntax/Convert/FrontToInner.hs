@@ -91,6 +91,8 @@ convertRType rType = case rType of
       (convertRType argType)
       (I.ScopedTerm $ convertRType retType)
 
+  F.TypeRefinedUnknown base -> I.TypeRefinedUnknown (convertBaseType base)
+
 convertBaseType :: F.BaseType -> I.BaseType
 convertBaseType = \case
   F.BaseTypeInt -> I.BaseTypeInt

@@ -49,8 +49,11 @@ data TermSig scope term
     TypeRefinedSig :: Language.Sprite.Syntax.Inner.Abs.BaseType ->
                       scope ->
                       TermSig scope term
+    TypeRefinedUnknownSig :: Language.Sprite.Syntax.Inner.Abs.BaseType -> TermSig scope term
     TypeFunSig :: term -> scope -> TermSig scope term
     BooleanSig :: Language.Sprite.Syntax.Inner.Abs.ConstBool -> TermSig scope term
+    -- horn variables managed separately
+    HVarSig :: Language.Sprite.Syntax.Inner.Abs.VarIdent -> [term] -> TermSig scope term
   deriving (GHC.Generics.Generic, Functor, Foldable, Traversable)
 
 type Term = Control.Monad.Free.Foil.AST Pattern TermSig
@@ -88,6 +91,10 @@ pattern TypeRefined ::
 pattern TypeRefined x_a95X binder_a95Y body_a95Z = Control.Monad.Free.Foil.Node (TypeRefinedSig x_a95X
                                                                                                 (Control.Monad.Free.Foil.ScopedAST binder_a95Y
                                                                                                                                     body_a95Z))
+pattern TypeRefinedUnknown ::
+              Language.Sprite.Syntax.Inner.Abs.BaseType -> Term o
+pattern TypeRefinedUnknown x_a6Z5 = Control.Monad.Free.Foil.Node (TypeRefinedUnknownSig x_a6Z5)
+
 pattern TypeFun :: Pattern o i -> Term o -> Term i -> Term o -- FIXED HERE
 pattern TypeFun binder_a961 x_a960 body_a962 = Control.Monad.Free.Foil.Node (TypeFunSig x_a960
                                                                                         (Control.Monad.Free.Foil.ScopedAST binder_a961
@@ -95,7 +102,11 @@ pattern TypeFun binder_a961 x_a960 body_a962 = Control.Monad.Free.Foil.Node (Typ
 pattern Boolean :: Language.Sprite.Syntax.Inner.Abs.ConstBool -> Term o
 pattern Boolean b = Control.Monad.Free.Foil.Node (BooleanSig b)
 
-{-# COMPLETE Control.Monad.Free.Foil.Var, ConstInt, Let, LetRec, Fun, App, Ann, OpExpr, TypeRefined, TypeFun, Boolean #-}
+pattern HVar :: Language.Sprite.Syntax.Inner.Abs.VarIdent -> [Term o] -> Term o
+pattern HVar x_aKJy x_aKJz = Control.Monad.Free.Foil.Node (HVarSig x_aKJy
+                                                                       x_aKJz)
+
+{-# COMPLETE Control.Monad.Free.Foil.Var, ConstInt, Let, LetRec, Fun, App, Ann, OpExpr, TypeRefined, TypeRefinedUnknown, TypeFun, Boolean, HVar #-}
 
 deriveBifunctor ''TermSig
 deriveBifoldable ''TermSig
@@ -135,11 +146,15 @@ fromTermSig (OpExprSig x_abJc x_abJd x_abJe)
 fromTermSig (TypeRefinedSig x_abJf (binder_abJg, body_abJh))
   = Language.Sprite.Syntax.Inner.Abs.TypeRefined
       x_abJf binder_abJg body_abJh
+fromTermSig (TypeRefinedUnknownSig x_aa9X)
+      = Language.Sprite.Syntax.Inner.Abs.TypeRefinedUnknown x_aa9X
 fromTermSig (TypeFunSig x_abJi (binder_abJj, body_abJk))
   = Language.Sprite.Syntax.Inner.Abs.TypeFun
       binder_abJj x_abJi  body_abJk -- FIXED HERE
 fromTermSig (BooleanSig b)
   = Language.Sprite.Syntax.Inner.Abs.Boolean b
+fromTermSig (HVarSig x_aa3C x_aa3D)
+      = Language.Sprite.Syntax.Inner.Abs.HVar x_aa3C x_aa3D
 fromPattern ::
   Pattern o i -> Language.Sprite.Syntax.Inner.Abs.Pattern
 fromPattern (PatternVar x_abJl)
@@ -185,8 +200,14 @@ toTermSig
   (Language.Sprite.Syntax.Inner.Abs.TypeFun binder_abJM _x_abJL -- FIXED HERE
                                             body_abJN)
   = Right (TypeFunSig _x_abJL (binder_abJM, body_abJN))
+toTermSig
+  (Language.Sprite.Syntax.Inner.Abs.TypeRefinedUnknown _x_aaaF)
+  = Right (TypeRefinedUnknownSig _x_aaaF)
 toTermSig (Language.Sprite.Syntax.Inner.Abs.Boolean b)
   = Right (BooleanSig b)
+
+toTermSig (Language.Sprite.Syntax.Inner.Abs.HVar _x_aa4m _x_aa4n)
+    = Right (HVarSig _x_aa4m _x_aa4n)
 toPattern ::
   forall o r_abJX. (Foil.Distinct o,
                     Ord Language.Sprite.Syntax.Inner.Abs.VarIdent) =>

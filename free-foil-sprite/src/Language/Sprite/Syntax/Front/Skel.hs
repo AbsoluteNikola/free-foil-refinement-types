@@ -19,6 +19,18 @@ transVarIdent :: Language.Sprite.Syntax.Front.Abs.VarIdent -> Result
 transVarIdent x = case x of
   Language.Sprite.Syntax.Front.Abs.VarIdent string -> failure x
 
+transProgram :: Language.Sprite.Syntax.Front.Abs.Program -> Result
+transProgram x = case x of
+  Language.Sprite.Syntax.Front.Abs.Program qualifiers term -> failure x
+
+transQualifier :: Language.Sprite.Syntax.Front.Abs.Qualifier -> Result
+transQualifier x = case x of
+  Language.Sprite.Syntax.Front.Abs.Qualifier varident qualifierargs pred -> failure x
+
+transQualifierArg :: Language.Sprite.Syntax.Front.Abs.QualifierArg -> Result
+transQualifierArg x = case x of
+  Language.Sprite.Syntax.Front.Abs.QualifierArg varident basetype -> failure x
+
 transTerm :: Language.Sprite.Syntax.Front.Abs.Term -> Result
 transTerm x = case x of
   Language.Sprite.Syntax.Front.Abs.ConstInt integer -> failure x
@@ -59,6 +71,7 @@ transIntOp x = case x of
 transRType :: Language.Sprite.Syntax.Front.Abs.RType -> Result
 transRType x = case x of
   Language.Sprite.Syntax.Front.Abs.TypeRefined basetype varident pred -> failure x
+  Language.Sprite.Syntax.Front.Abs.TypeRefinedUnknown basetype -> failure x
   Language.Sprite.Syntax.Front.Abs.TypeFun funcarg scopedrtype -> failure x
 
 transScopedRType :: Language.Sprite.Syntax.Front.Abs.ScopedRType -> Result
