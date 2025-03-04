@@ -29,9 +29,9 @@ data Term
     | Bool ConstBool
     | Var VarIdent
     | If FuncAppArg Term Term
-    | Let Decl ScopedTerm
-    | Fun VarIdent ScopedTerm
-    | App Term FuncAppArg
+    | Let Decl Term
+    | Fun VarIdent Term
+    | App VarIdent FuncAppArg
     | Op FuncAppArg IntOp FuncAppArg
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
@@ -61,10 +61,7 @@ data IntOp
 data RType
     = TypeRefined BaseType VarIdent Pred
     | TypeRefinedUnknown BaseType
-    | TypeFun FuncArg ScopedRType
-  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
-
-data ScopedRType = ScopedRType RType
+    | TypeFun FuncArg RType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data FuncArg = NamedFuncArg VarIdent RType
@@ -85,9 +82,6 @@ data Pred
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data Pattern = PatternVar VarIdent
-  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
-
-data ScopedTerm = ScopedTerm Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data BaseType = BaseTypeInt | BaseTypeBool
