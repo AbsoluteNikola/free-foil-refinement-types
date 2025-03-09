@@ -1,4 +1,4 @@
-/*@ val sum : n:int[n|true] => int[v|true] */
+/*@ val sum : n:int => int */
 let rec sum = (n) => {
    let z = n - 1;
    sum(z)

@@ -1,4 +1,4 @@
-/*@ val dec : x:int[x|true] => int[v|v==x-1] */
+/*@ val dec : x:int => int[v|v==x-1] */
 let dec = (x) => {
     x - 1
 };

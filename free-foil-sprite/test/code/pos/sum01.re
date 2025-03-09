@@ -1,10 +1,10 @@
 /**@ qualif pos(v:int):        (0 <= v) */
 /**@ qualif geq(v:int, n:int): (n <= v) */
 
-/*@ val cassert : b:bool[b|b] => int[v|true] */
+/*@ val cassert : b:bool[b|b] => int */
 let cassert = (b) => { 0 };
 
-/*@ val sum : n:int[v|true] => int[?] */
+/*@ val sum : n:int => int[?] */
 let rec sum = (n) => {
     let cond = n <= 0;
     if (cond) {
@@ -16,14 +16,14 @@ let rec sum = (n) => {
     }
 };
 
-/*@ val check1 : arg0:int[v|true] => int[v|true] */
+/*@ val check1 : arg0:int => int */
 let check1 = (y) => {
   let res  = sum(y);
   let ok   = 0 <= res;
   cassert(ok)
 };
 
-/*@ val check2 : arg0:int[v|true] => int[v|true] */
+/*@ val check2 : arg0:int => int */
 let check2 = (y) => {
   let res = sum(y);
   let ok  = y <= res;
