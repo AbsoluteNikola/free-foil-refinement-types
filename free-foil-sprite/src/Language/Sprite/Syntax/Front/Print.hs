@@ -201,11 +201,14 @@ instance Print Language.Sprite.Syntax.Front.Abs.RType where
   prt i = \case
     Language.Sprite.Syntax.Front.Abs.TypeRefined basetype varident pred -> prPrec i 2 (concatD [prt 0 basetype, doc (showString "["), prt 0 varident, doc (showString "|"), prt 0 pred, doc (showString "]")])
     Language.Sprite.Syntax.Front.Abs.TypeRefinedUnknown basetype -> prPrec i 2 (concatD [prt 0 basetype, doc (showString "["), doc (showString "?"), doc (showString "]")])
+    Language.Sprite.Syntax.Front.Abs.TypeRefinedSimple basetype -> prPrec i 3 (concatD [prt 0 basetype])
+    Language.Sprite.Syntax.Front.Abs.TypeVar varident -> prPrec i 2 (concatD [doc (showString "'"), prt 0 varident])
     Language.Sprite.Syntax.Front.Abs.TypeFun funcarg rtype -> prPrec i 1 (concatD [prt 0 funcarg, doc (showString "=>"), prt 2 rtype])
 
 instance Print Language.Sprite.Syntax.Front.Abs.FuncArg where
   prt i = \case
     Language.Sprite.Syntax.Front.Abs.NamedFuncArg varident rtype -> prPrec i 0 (concatD [prt 0 varident, doc (showString ":"), prt 0 rtype])
+    Language.Sprite.Syntax.Front.Abs.UnNamedFuncArg rtype -> prPrec i 0 (concatD [doc (showString "_"), doc (showString ":"), prt 0 rtype])
 
 instance Print Language.Sprite.Syntax.Front.Abs.Pred where
   prt i = \case
@@ -220,10 +223,6 @@ instance Print Language.Sprite.Syntax.Front.Abs.Pred where
     Language.Sprite.Syntax.Front.Abs.PPlus pred1 pred2 -> prPrec i 3 (concatD [prt 3 pred1, doc (showString "+"), prt 4 pred2])
     Language.Sprite.Syntax.Front.Abs.PMinus pred1 pred2 -> prPrec i 3 (concatD [prt 3 pred1, doc (showString "-"), prt 4 pred2])
     Language.Sprite.Syntax.Front.Abs.PMultiply pred1 pred2 -> prPrec i 3 (concatD [prt 3 pred1, doc (showString "*"), prt 4 pred2])
-
-instance Print Language.Sprite.Syntax.Front.Abs.Pattern where
-  prt i = \case
-    Language.Sprite.Syntax.Front.Abs.PatternVar varident -> prPrec i 0 (concatD [prt 0 varident])
 
 instance Print Language.Sprite.Syntax.Front.Abs.BaseType where
   prt i = \case

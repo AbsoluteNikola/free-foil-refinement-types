@@ -26,10 +26,16 @@ data Term
     | App Term Term
     | Ann Term Term
     | OpExpr Term Op Term
-    | TypeRefined BaseType Pattern ScopedTerm
-    | TypeRefinedUnknown BaseType
+    | TAbs Pattern ScopedTerm
+    | TApp Term Term
+    | TypeRefined Term Pattern ScopedTerm
+    | TypeRefinedUnknown Term
     | TypeFun Pattern Term ScopedTerm
+    | TypeForall Pattern ScopedTerm
     | HVar VarIdent [Term]
+    | BaseTypeInt
+    | BaseTypeBool
+    | BaseTypeVar Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data ConstBool = ConstTrue | ConstFalse
@@ -52,9 +58,6 @@ data Pattern = PatternVar VarIdent
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data ScopedTerm = ScopedTerm Term
-  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
-
-data BaseType = BaseTypeInt | BaseTypeBool
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 newtype VarIdent = VarIdent String

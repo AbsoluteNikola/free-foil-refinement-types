@@ -28,7 +28,7 @@ subtype :: F.Distinct i => F.Scope i -> Term  i -> Term i -> CheckerM Constraint
   Γ ⊢ b{v:p} <: b{w:q}
  -}
 subtype scope lt@(TypeRefined lb leftVarPat@(PatternVar v) _) (TypeRefined rb rightVarPat@(PatternVar w) rightPredicate)
-  | lb /= rb = throwError
+  | not (baseTypeEq lb rb) = throwError
     $ "Invalid subtyping. Different refinement base: " <> pShowT lb <> " and " <> pShowT rb
   | otherwise = withRule "[Sub-Base]" $ do
       case (F.assertDistinct leftVarPat, F.assertExt leftVarPat) of
@@ -201,7 +201,7 @@ check scope env currentTerm currentType = case currentTerm of
                 let
                   scope' = F.extendScope freshY scope
                   t = TypeRefined
-                    Inner.BaseTypeBool
+                    BaseTypeBool
                     (PatternVar freshY)
                     (OpExpr (F.sink cond)
                       Inner.EqOp
@@ -235,7 +235,7 @@ buildImplicationFromType msg scope argVarPat@(PatternVar argVarId) typ constrain
       Inner.VarIdent argVarIdRawName = argVarIdRaw
 
     debugPrintT $ "Implication: " <> "varId = " <> showT argVarIdRawName <> ", term = " <> showT p'
-    pure $ CImplication argVarIdRaw base (fromTerm p') constraint msg
+    pure $ CImplication argVarIdRaw (fromTerm base) (fromTerm p') constraint msg
   TypeFun{} -> pure constraint
   otherTerm -> throwError $
     "can't buildImplicationFromType\n"

@@ -30,10 +30,11 @@ The reserved words used in Inner are the following:
 The symbols used in Inner are the following:
   | ( | ) | { | }
   | = | ; | /*@ | */
-  | => | [ | | | ]
-  | ? | : | == | <=
-  | < | >= | > | +
-  | - | * | && | ||
+  | => | /\ | : | [
+  | ] | | | ? | ∀
+  | == | <= | < | >=
+  | > | + | - | *
+  | && | || | ' |
 
 ===Comments===
 There are no single-line comments in the grammar.There are no multiple-line comments in the grammar.
@@ -54,10 +55,16 @@ All other symbols are terminals.
   |  |  **|**  | //Term// ``(`` //Term// ``)``
   |  |  **|**  | ``/*@`` //Term// ``*/`` //Term//
   |  |  **|**  | ``(`` //Term// //Op// //Term// ``)``
-  |  |  **|**  | //BaseType// ``[`` //Pattern// ``|`` //ScopedTerm// ``]``
-  |  |  **|**  | //BaseType// ``[`` ``?`` ``]``
+  |  |  **|**  | ``/\`` //Pattern// ``:`` //ScopedTerm//
+  |  |  **|**  | //Term// ``[`` //Term// ``]``
+  |  |  **|**  | //Term// ``[`` //Pattern// ``|`` //ScopedTerm// ``]``
+  |  |  **|**  | //Term// ``[`` ``?`` ``]``
   |  |  **|**  | //Pattern// ``:`` //Term// ``=>`` //ScopedTerm//
+  |  |  **|**  | ``∀`` //Pattern// ``:`` //ScopedTerm//
   |  |  **|**  | //VarIdent// ``(`` //[Term]// ``)``
+  |  |  **|**  | ``int``
+  |  |  **|**  | ``bool``
+  |  |  **|**  | ``'`` //Term//
   | //ConstBool// | -> | ``true``
   |  |  **|**  | ``false``
   | //Op// | -> | ``==``
@@ -72,8 +79,6 @@ All other symbols are terminals.
   |  |  **|**  | ``||``
   | //Pattern// | -> | //VarIdent//
   | //ScopedTerm// | -> | //Term//
-  | //BaseType// | -> | ``int``
-  |  |  **|**  | ``bool``
   | //[Term]// | -> | //Term//
   |  |  **|**  | //Term// //[Term]//
 

@@ -61,10 +61,12 @@ data IntOp
 data RType
     = TypeRefined BaseType VarIdent Pred
     | TypeRefinedUnknown BaseType
+    | TypeRefinedSimple BaseType
+    | TypeVar VarIdent
     | TypeFun FuncArg RType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data FuncArg = NamedFuncArg VarIdent RType
+data FuncArg = NamedFuncArg VarIdent RType | UnNamedFuncArg RType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data Pred
@@ -79,9 +81,6 @@ data Pred
     | PPlus Pred Pred
     | PMinus Pred Pred
     | PMultiply Pred Pred
-  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
-
-data Pattern = PatternVar VarIdent
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data BaseType = BaseTypeInt | BaseTypeBool

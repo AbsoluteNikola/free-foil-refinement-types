@@ -11,3 +11,4 @@ let main = (x) => {
   cassert(cond)
 };
 main(0)
+Add syntax for type polymorphism

@@ -13,10 +13,15 @@ App.          Term ::= Term "(" Term ")" ;
 Ann.          Term ::= "/*@" Term "*/" Term; -- FIXME: Problem with TH generations when "/*@" Pattern : Term "*/" Term;
 OpExpr.       Term ::= "(" Term Op Term ")";
 
--- type terms
-TypeRefined.         Term ::= BaseType "[" Pattern "|" ScopedTerm "]" ;
-TypeRefinedUnknown.  Term ::= BaseType "[" "?" "]" ;
-TypeFun.             Term ::= Pattern ":" Term "=>" ScopedTerm ;   -- FIXME: same problem as with Let
+-- polymorphism
+TAbs.         Term ::= "/\\" Pattern ":" ScopedTerm ;
+TApp.         Term ::= Term "[" Term "]" ;
+
+-- type terms, first term should be one of base types
+TypeRefined.         Term ::= Term "[" Pattern "|" ScopedTerm "]" ;
+TypeRefinedUnknown.  Term ::= Term "[" "?" "]" ;
+TypeFun.             Term ::= Pattern ":" Term "=>" ScopedTerm ;
+TypeForall.          Term ::= "∀" Pattern ":" ScopedTerm ;
 
 -- predicate terms
 ConstTrue.      ConstBool ::= "true" ;
@@ -39,7 +44,9 @@ OrOp.            Op ::= "||";
 PatternVar. Pattern ::= VarIdent ;
 ScopedTerm. ScopedTerm ::= Term ;
 
-BaseTypeInt.  BaseType ::= "int" ;
-BaseTypeBool.  BaseType ::= "bool" ;
+-- base types
+BaseTypeInt.  Term ::= "int" ;
+BaseTypeBool. Term ::= "bool" ;
+BaseTypeVar.  Term ::= "'" Term; -- should be Var
 
 separator nonempty Term " " ;

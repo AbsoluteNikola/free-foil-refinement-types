@@ -45,13 +45,17 @@ IntGreaterThan. IntOp ::= ">";
 IntGreaterOrEqThan. IntOp ::= ">=";
 
 -- type terms
+-- TODO: rewrite to move type var to base type
 TypeRefined.         RType2 ::= BaseType "[" VarIdent "|" Pred "]" ;
 TypeRefinedUnknown.  RType2 ::= BaseType "[" "?" "]" ;
+TypeRefinedSimple.   RType3 ::= BaseType;
+TypeVar.             RType2 ::= "'" VarIdent;
 TypeFun.             RType1 ::= FuncArg "=>" RType2 ;
 
-coercions RType 2;
+coercions RType 3;
 
 NamedFuncArg.   FuncArg ::= VarIdent ":" RType;
+UnNamedFuncArg. FuncArg ::= "_" ":" RType;
 
 -- predicates
 PVar.               Pred4 ::= VarIdent;
@@ -67,9 +71,6 @@ PMinus.             Pred3 ::= Pred3 "-" Pred4 ;
 PMultiply.          Pred3 ::= Pred3 "*" Pred4 ;
 
 coercions Pred 4 ;
-
-PatternVar. Pattern ::= VarIdent ;
-
 
 BaseTypeInt.  BaseType ::= "int" ;
 BaseTypeBool.  BaseType ::= "bool" ;

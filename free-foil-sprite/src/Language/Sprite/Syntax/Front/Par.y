@@ -23,40 +23,42 @@ import Language.Sprite.Syntax.Front.Lex
 %monad { Err } { (>>=) } { return }
 %tokentype {Token}
 %token
-  '('        { PT _ (TS _ 1)        }
-  ')'        { PT _ (TS _ 2)        }
-  '*'        { PT _ (TS _ 3)        }
-  '*/'       { PT _ (TS _ 4)        }
-  '+'        { PT _ (TS _ 5)        }
-  ','        { PT _ (TS _ 6)        }
-  '-'        { PT _ (TS _ 7)        }
-  '/**@'     { PT _ (TS _ 8)        }
-  '/*@'      { PT _ (TS _ 9)        }
-  ':'        { PT _ (TS _ 10)       }
-  ';'        { PT _ (TS _ 11)       }
-  '<'        { PT _ (TS _ 12)       }
-  '<='       { PT _ (TS _ 13)       }
-  '='        { PT _ (TS _ 14)       }
-  '=='       { PT _ (TS _ 15)       }
-  '=>'       { PT _ (TS _ 16)       }
-  '>'        { PT _ (TS _ 17)       }
-  '>='       { PT _ (TS _ 18)       }
-  '?'        { PT _ (TS _ 19)       }
-  '['        { PT _ (TS _ 20)       }
-  ']'        { PT _ (TS _ 21)       }
-  'bool'     { PT _ (TS _ 22)       }
-  'else'     { PT _ (TS _ 23)       }
-  'false'    { PT _ (TS _ 24)       }
-  'if'       { PT _ (TS _ 25)       }
-  'int'      { PT _ (TS _ 26)       }
-  'let'      { PT _ (TS _ 27)       }
-  'qualif'   { PT _ (TS _ 28)       }
-  'rec'      { PT _ (TS _ 29)       }
-  'true'     { PT _ (TS _ 30)       }
-  'val'      { PT _ (TS _ 31)       }
-  '{'        { PT _ (TS _ 32)       }
-  '|'        { PT _ (TS _ 33)       }
-  '}'        { PT _ (TS _ 34)       }
+  '\''       { PT _ (TS _ 1)        }
+  '('        { PT _ (TS _ 2)        }
+  ')'        { PT _ (TS _ 3)        }
+  '*'        { PT _ (TS _ 4)        }
+  '*/'       { PT _ (TS _ 5)        }
+  '+'        { PT _ (TS _ 6)        }
+  ','        { PT _ (TS _ 7)        }
+  '-'        { PT _ (TS _ 8)        }
+  '/**@'     { PT _ (TS _ 9)        }
+  '/*@'      { PT _ (TS _ 10)       }
+  ':'        { PT _ (TS _ 11)       }
+  ';'        { PT _ (TS _ 12)       }
+  '<'        { PT _ (TS _ 13)       }
+  '<='       { PT _ (TS _ 14)       }
+  '='        { PT _ (TS _ 15)       }
+  '=='       { PT _ (TS _ 16)       }
+  '=>'       { PT _ (TS _ 17)       }
+  '>'        { PT _ (TS _ 18)       }
+  '>='       { PT _ (TS _ 19)       }
+  '?'        { PT _ (TS _ 20)       }
+  '['        { PT _ (TS _ 21)       }
+  ']'        { PT _ (TS _ 22)       }
+  '_'        { PT _ (TS _ 23)       }
+  'bool'     { PT _ (TS _ 24)       }
+  'else'     { PT _ (TS _ 25)       }
+  'false'    { PT _ (TS _ 26)       }
+  'if'       { PT _ (TS _ 27)       }
+  'int'      { PT _ (TS _ 28)       }
+  'let'      { PT _ (TS _ 29)       }
+  'qualif'   { PT _ (TS _ 30)       }
+  'rec'      { PT _ (TS _ 31)       }
+  'true'     { PT _ (TS _ 32)       }
+  'val'      { PT _ (TS _ 33)       }
+  '{'        { PT _ (TS _ 34)       }
+  '|'        { PT _ (TS _ 35)       }
+  '}'        { PT _ (TS _ 36)       }
   L_integ    { PT _ (TI $$)         }
   L_VarIdent { PT _ (T_VarIdent $$) }
 
@@ -131,6 +133,12 @@ RType2 :: { Language.Sprite.Syntax.Front.Abs.RType }
 RType2
   : BaseType '[' VarIdent '|' Pred ']' { Language.Sprite.Syntax.Front.Abs.TypeRefined $1 $3 $5 }
   | BaseType '[' '?' ']' { Language.Sprite.Syntax.Front.Abs.TypeRefinedUnknown $1 }
+  | '\'' VarIdent { Language.Sprite.Syntax.Front.Abs.TypeVar $2 }
+  | RType3 { $1 }
+
+RType3 :: { Language.Sprite.Syntax.Front.Abs.RType }
+RType3
+  : BaseType { Language.Sprite.Syntax.Front.Abs.TypeRefinedSimple $1 }
   | '(' RType ')' { $2 }
 
 RType1 :: { Language.Sprite.Syntax.Front.Abs.RType }
@@ -144,6 +152,7 @@ RType : RType1 { $1 }
 FuncArg :: { Language.Sprite.Syntax.Front.Abs.FuncArg }
 FuncArg
   : VarIdent ':' RType { Language.Sprite.Syntax.Front.Abs.NamedFuncArg $1 $3 }
+  | '_' ':' RType { Language.Sprite.Syntax.Front.Abs.UnNamedFuncArg $3 }
 
 Pred4 :: { Language.Sprite.Syntax.Front.Abs.Pred }
 Pred4
@@ -174,10 +183,6 @@ Pred3
 
 Pred :: { Language.Sprite.Syntax.Front.Abs.Pred }
 Pred : Pred1 { $1 }
-
-Pattern :: { Language.Sprite.Syntax.Front.Abs.Pattern }
-Pattern
-  : VarIdent { Language.Sprite.Syntax.Front.Abs.PatternVar $1 }
 
 BaseType :: { Language.Sprite.Syntax.Front.Abs.BaseType }
 BaseType

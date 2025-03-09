@@ -35,6 +35,7 @@ The symbols used in Front are the following:
   | + | - | * | ==
   | < | <= | > | >=
   | [ | | | ] | ?
+  | ' | _ |  |
 
 ===Comments===
 There are no single-line comments in the grammar.There are no multiple-line comments in the grammar.
@@ -77,11 +78,15 @@ All other symbols are terminals.
   |  |  **|**  | ``>=``
   | //RType2// | -> | //BaseType// ``[`` //VarIdent// ``|`` //Pred// ``]``
   |  |  **|**  | //BaseType// ``[`` ``?`` ``]``
+  |  |  **|**  | ``'`` //VarIdent//
+  |  |  **|**  | //RType3//
+  | //RType3// | -> | //BaseType//
   |  |  **|**  | ``(`` //RType// ``)``
   | //RType1// | -> | //FuncArg// ``=>`` //RType2//
   |  |  **|**  | //RType2//
   | //RType// | -> | //RType1//
   | //FuncArg// | -> | //VarIdent// ``:`` //RType//
+  |  |  **|**  | ``_`` ``:`` //RType//
   | //Pred4// | -> | //VarIdent//
   |  |  **|**  | //ConstBool//
   |  |  **|**  | //Integer//
@@ -98,7 +103,6 @@ All other symbols are terminals.
   |  |  **|**  | //Pred3// ``*`` //Pred4//
   |  |  **|**  | //Pred4//
   | //Pred// | -> | //Pred1//
-  | //Pattern// | -> | //VarIdent//
   | //BaseType// | -> | ``int``
   |  |  **|**  | ``bool``
   | //FuncAppArg// | -> | //ConstBool//

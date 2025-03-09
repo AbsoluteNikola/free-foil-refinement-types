@@ -2,6 +2,8 @@ module Language.Sprite.Syntax.Convert.FrontToInner where
 
 import Language.Sprite.Syntax.Front.Abs qualified as F
 import Language.Sprite.Syntax.Inner.Abs qualified as I
+import Data.List (nub)
+import Data.Foldable (foldl')
 
 data ConvertError
   = DifferentNameForBindingAndAnnotationError
@@ -63,8 +65,9 @@ convertDecl decl = case decl of
       DifferentNameForBindingAndAnnotationError annId varId decl
     | otherwise -> do
       convertedVarValue <- convert varValue
+      let annTyp = mkForAll typ $ convertRType typ
       pure $ \letBody ->
-        I.Let (convertVarIdToPattern varId) (I.Ann (convertRType typ) convertedVarValue) letBody
+        I.Let (convertVarIdToPattern varId) (I.Ann annTyp convertedVarValue) letBody
   F.UnAnnotatedDecl varId varValue ->  do
       convertedVarValue <- convert varValue
       pure $ \letBody ->
@@ -74,8 +77,9 @@ convertDecl decl = case decl of
         DifferentNameForBindingAndAnnotationError annId varId decl
     | otherwise -> do
       convertedVarValue <- convert varValue
+      let annTyp = mkForAll typ $ convertRType typ
       pure $ \letBody ->
-        I.LetRec (convertRType typ) (convertVarIdToPattern varId) (I.ScopedTerm convertedVarValue) letBody
+        I.LetRec annTyp (convertVarIdToPattern varId) (I.ScopedTerm convertedVarValue) letBody
 
 convertRType :: F.RType -> I.Term
 convertRType rType = case rType of
@@ -90,10 +94,16 @@ convertRType rType = case rType of
       (convertVarIdToPattern argId)
       (convertRType argType)
       (I.ScopedTerm $ convertRType retType)
-
+  F.TypeFun (F.UnNamedFuncArg argType) retType ->
+    I.TypeFun
+      (I.PatternVar $ I.VarIdent "_arg")
+      (convertRType argType)
+      (I.ScopedTerm $ convertRType retType)
+  F.TypeVar varId -> mkSimpleType (I.BaseTypeVar $ I.Var (convertVarId varId))
   F.TypeRefinedUnknown base -> I.TypeRefinedUnknown (convertBaseType base)
+  F.TypeRefinedSimple base -> mkSimpleType (convertBaseType base)
 
-convertBaseType :: F.BaseType -> I.BaseType
+convertBaseType :: F.BaseType -> I.Term
 convertBaseType = \case
   F.BaseTypeInt -> I.BaseTypeInt
   F.BaseTypeBool -> I.BaseTypeBool
@@ -116,3 +126,23 @@ convertPredicate predicate = case predicate of
   F.PPlus l r ->  I.OpExpr (convertPredicate l) I.PlusOp (convertPredicate r)
   F.PMinus l r ->  I.OpExpr (convertPredicate l) I.MinusOp (convertPredicate r)
   F.PMultiply l r ->  I.OpExpr (convertPredicate l) I.MultiplyOp (convertPredicate r)
+
+mkSimpleType :: I.Term -> I.Term
+mkSimpleType base = I.TypeRefined base (I.PatternVar "v") (I.ScopedTerm $ I.Boolean I.ConstTrue)
+
+collectFreeVars :: F.RType -> [I.VarIdent]
+collectFreeVars = nub . map convertVarId . go
+  where
+    go = \case
+      F.TypeRefined{} -> []
+      F.TypeFun (F.NamedFuncArg _ argType) retType -> go argType ++ go retType
+      F.TypeFun (F.UnNamedFuncArg argType) retType -> go argType ++ go retType
+      F.TypeVar varId -> [varId]
+      F.TypeRefinedUnknown _ -> []
+      F.TypeRefinedSimple _ -> []
+
+mkForAll :: F.RType -> I.Term -> I.Term
+mkForAll typ term = foldl' f term freeVars
+  where
+    freeVars = collectFreeVars typ
+    f curTerm typeVar = I.TypeForall (I.PatternVar typeVar) (I.ScopedTerm curTerm)

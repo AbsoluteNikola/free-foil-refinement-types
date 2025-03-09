@@ -7,20 +7,21 @@ import Control.Monad.Free.Foil qualified as F
 import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import Language.Sprite.TypeCheck.Monad
 import Control.Monad.Error.Class (MonadError(throwError))
-import Data.Maybe (mapMaybe)
+import Data.Maybe (catMaybes)
 import Language.Sprite.TypeCheck.Constraints (baseTypeToSort)
+import Data.Traversable (for)
 
 constIntT :: Integer -> Term F.VoidS
 constIntT x = F.withFreshBinder F.emptyScope $
-  \binder -> TypeRefined Inner.BaseTypeInt (PatternVar binder) (OpExpr (F.Var (F.nameOf binder)) Inner.EqOp (ConstInt x))
+  \binder -> TypeRefined BaseTypeInt (PatternVar binder) (OpExpr (F.Var (F.nameOf binder)) Inner.EqOp (ConstInt x))
 
 anyIntT :: Term F.VoidS
 anyIntT = F.withFreshBinder F.emptyScope $ \binder ->
-    TypeRefined Inner.BaseTypeInt (PatternVar binder) (Boolean Inner.ConstTrue)
+    TypeRefined BaseTypeInt (PatternVar binder) (Boolean Inner.ConstTrue)
 
 anyBoolT :: Term F.VoidS
 anyBoolT = F.withFreshBinder F.emptyScope $ \binder ->
-    TypeRefined Inner.BaseTypeBool (PatternVar binder) (Boolean Inner.ConstTrue)
+    TypeRefined BaseTypeBool (PatternVar binder) (Boolean Inner.ConstTrue)
 
 {- |  see 4.3.2 Synthesis and figure 4.3
 
@@ -71,10 +72,16 @@ fresh scope env curType = case curType of
     ...x = arguments from env
   -}
   TypeRefinedUnknown base -> do
-    let
-      (names, sorts) = unzip $ flip mapMaybe (envToList env) $
-        \(name, typ) -> (name, ) . baseTypeToSort <$> getBaseType typ
-    newHornVarName <- mkFreshHornVar (baseTypeToSort base : sorts)
+    (catMaybes -> unzip -> (names, sorts)) <-
+      for (envToList env) $ \(name, typ) -> case getBaseType typ of
+        Nothing -> pure Nothing
+        Just b -> case baseTypeToSort (fromTerm b) of
+          Just sort -> pure $ Just (name, sort)
+          Nothing -> throwError $ "Unknown base: " <> pShowT base
+    typeSort <-  case baseTypeToSort (fromTerm base) of
+      Just sort -> pure sort
+      Nothing -> throwError $ "Unknown base: " <> pShowT base
+    newHornVarName <- mkFreshHornVar (typeSort : sorts)
 
     F.withFreshBinder scope $ \freshBinder ->
       case (F.assertDistinct freshBinder, F.assertExt freshBinder) of
@@ -88,9 +95,14 @@ fresh scope env curType = case curType of
   otherTerm -> throwError $
     "fresh should be called only on type, not term:\n" <> pShowT otherTerm
 
-
-getBaseType :: Term i -> Maybe Inner.BaseType
+getBaseType :: Term i -> Maybe (Term i)
 getBaseType = \case
   TypeRefined base _ _ -> Just base
   TypeRefinedUnknown base -> Just base
   _ -> Nothing
+
+baseTypeEq :: Term i -> Term i -> Bool
+baseTypeEq BaseTypeBool BaseTypeBool = True
+baseTypeEq BaseTypeInt BaseTypeInt = True
+baseTypeEq (BaseTypeVar (F.Var v1)) (BaseTypeVar (F.Var v2)) = v1 == v2
+baseTypeEq _ _ = False

@@ -12,6 +12,7 @@ data ConvertError
   = UnsupportedTerm I.Term
   | HVarArgumentNotVar I.Term
   | FlattedMoreThanOneAnd [I.Term]
+  | UnknownBaseType I.Term
   deriving (Show)
 
 convertTerm :: I.Term -> Either ConvertError T.Expr

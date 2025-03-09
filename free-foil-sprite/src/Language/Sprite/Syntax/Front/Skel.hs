@@ -72,11 +72,14 @@ transRType :: Language.Sprite.Syntax.Front.Abs.RType -> Result
 transRType x = case x of
   Language.Sprite.Syntax.Front.Abs.TypeRefined basetype varident pred -> failure x
   Language.Sprite.Syntax.Front.Abs.TypeRefinedUnknown basetype -> failure x
+  Language.Sprite.Syntax.Front.Abs.TypeRefinedSimple basetype -> failure x
+  Language.Sprite.Syntax.Front.Abs.TypeVar varident -> failure x
   Language.Sprite.Syntax.Front.Abs.TypeFun funcarg rtype -> failure x
 
 transFuncArg :: Language.Sprite.Syntax.Front.Abs.FuncArg -> Result
 transFuncArg x = case x of
   Language.Sprite.Syntax.Front.Abs.NamedFuncArg varident rtype -> failure x
+  Language.Sprite.Syntax.Front.Abs.UnNamedFuncArg rtype -> failure x
 
 transPred :: Language.Sprite.Syntax.Front.Abs.Pred -> Result
 transPred x = case x of
@@ -91,10 +94,6 @@ transPred x = case x of
   Language.Sprite.Syntax.Front.Abs.PPlus pred1 pred2 -> failure x
   Language.Sprite.Syntax.Front.Abs.PMinus pred1 pred2 -> failure x
   Language.Sprite.Syntax.Front.Abs.PMultiply pred1 pred2 -> failure x
-
-transPattern :: Language.Sprite.Syntax.Front.Abs.Pattern -> Result
-transPattern x = case x of
-  Language.Sprite.Syntax.Front.Abs.PatternVar varident -> failure x
 
 transBaseType :: Language.Sprite.Syntax.Front.Abs.BaseType -> Result
 transBaseType x = case x of
