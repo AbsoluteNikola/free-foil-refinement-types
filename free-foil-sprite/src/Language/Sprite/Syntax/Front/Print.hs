@@ -212,17 +212,19 @@ instance Print Language.Sprite.Syntax.Front.Abs.FuncArg where
 
 instance Print Language.Sprite.Syntax.Front.Abs.Pred where
   prt i = \case
-    Language.Sprite.Syntax.Front.Abs.PVar varident -> prPrec i 4 (concatD [prt 0 varident])
-    Language.Sprite.Syntax.Front.Abs.PBool constbool -> prPrec i 4 (concatD [prt 0 constbool])
-    Language.Sprite.Syntax.Front.Abs.PInt n -> prPrec i 4 (concatD [prt 0 n])
-    Language.Sprite.Syntax.Front.Abs.PEq pred1 pred2 -> prPrec i 1 (concatD [prt 1 pred1, doc (showString "=="), prt 2 pred2])
-    Language.Sprite.Syntax.Front.Abs.PLessThan pred1 pred2 -> prPrec i 2 (concatD [prt 2 pred1, doc (showString "<"), prt 3 pred2])
-    Language.Sprite.Syntax.Front.Abs.PLessOrEqThan pred1 pred2 -> prPrec i 2 (concatD [prt 2 pred1, doc (showString "<="), prt 3 pred2])
-    Language.Sprite.Syntax.Front.Abs.PGreaterThan pred1 pred2 -> prPrec i 2 (concatD [prt 2 pred1, doc (showString ">"), prt 3 pred2])
-    Language.Sprite.Syntax.Front.Abs.PGreaterOrEqThan pred1 pred2 -> prPrec i 2 (concatD [prt 2 pred1, doc (showString ">="), prt 3 pred2])
-    Language.Sprite.Syntax.Front.Abs.PPlus pred1 pred2 -> prPrec i 3 (concatD [prt 3 pred1, doc (showString "+"), prt 4 pred2])
-    Language.Sprite.Syntax.Front.Abs.PMinus pred1 pred2 -> prPrec i 3 (concatD [prt 3 pred1, doc (showString "-"), prt 4 pred2])
-    Language.Sprite.Syntax.Front.Abs.PMultiply pred1 pred2 -> prPrec i 3 (concatD [prt 3 pred1, doc (showString "*"), prt 4 pred2])
+    Language.Sprite.Syntax.Front.Abs.PVar varident -> prPrec i 6 (concatD [prt 0 varident])
+    Language.Sprite.Syntax.Front.Abs.PBool constbool -> prPrec i 6 (concatD [prt 0 constbool])
+    Language.Sprite.Syntax.Front.Abs.PInt n -> prPrec i 6 (concatD [prt 0 n])
+    Language.Sprite.Syntax.Front.Abs.POr pred1 pred2 -> prPrec i 1 (concatD [prt 1 pred1, doc (showString "||"), prt 2 pred2])
+    Language.Sprite.Syntax.Front.Abs.PAnd pred1 pred2 -> prPrec i 2 (concatD [prt 2 pred1, doc (showString "&&"), prt 3 pred2])
+    Language.Sprite.Syntax.Front.Abs.PEq pred1 pred2 -> prPrec i 3 (concatD [prt 3 pred1, doc (showString "=="), prt 4 pred2])
+    Language.Sprite.Syntax.Front.Abs.PLessThan pred1 pred2 -> prPrec i 4 (concatD [prt 4 pred1, doc (showString "<"), prt 5 pred2])
+    Language.Sprite.Syntax.Front.Abs.PLessOrEqThan pred1 pred2 -> prPrec i 4 (concatD [prt 4 pred1, doc (showString "<="), prt 5 pred2])
+    Language.Sprite.Syntax.Front.Abs.PGreaterThan pred1 pred2 -> prPrec i 4 (concatD [prt 4 pred1, doc (showString ">"), prt 5 pred2])
+    Language.Sprite.Syntax.Front.Abs.PGreaterOrEqThan pred1 pred2 -> prPrec i 4 (concatD [prt 4 pred1, doc (showString ">="), prt 5 pred2])
+    Language.Sprite.Syntax.Front.Abs.PPlus pred1 pred2 -> prPrec i 5 (concatD [prt 5 pred1, doc (showString "+"), prt 6 pred2])
+    Language.Sprite.Syntax.Front.Abs.PMinus pred1 pred2 -> prPrec i 5 (concatD [prt 5 pred1, doc (showString "-"), prt 6 pred2])
+    Language.Sprite.Syntax.Front.Abs.PMultiply pred1 pred2 -> prPrec i 5 (concatD [prt 5 pred1, doc (showString "*"), prt 6 pred2])
 
 instance Print Language.Sprite.Syntax.Front.Abs.BaseType where
   prt i = \case

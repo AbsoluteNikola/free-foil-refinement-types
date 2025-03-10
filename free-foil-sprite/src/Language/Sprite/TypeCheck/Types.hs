@@ -23,6 +23,10 @@ anyBoolT :: Term F.VoidS
 anyBoolT = F.withFreshBinder F.emptyScope $ \binder ->
     TypeRefined BaseTypeBool (PatternVar binder) (Boolean Inner.ConstTrue)
 
+boolWithT :: Inner.ConstBool -> Term F.VoidS
+boolWithT b = F.withFreshBinder F.emptyScope $ \binder ->
+    TypeRefined BaseTypeBool (PatternVar binder) (OpExpr (F.Var (F.nameOf binder)) Inner.EqOp (Boolean b))
+
 {- |  see 4.3.2 Synthesis and figure 4.3
 
 G(x) = b[v|p] -> b[v|p && v = x]

@@ -126,6 +126,8 @@ convertPredicate predicate = case predicate of
   F.PPlus l r ->  I.OpExpr (convertPredicate l) I.PlusOp (convertPredicate r)
   F.PMinus l r ->  I.OpExpr (convertPredicate l) I.MinusOp (convertPredicate r)
   F.PMultiply l r ->  I.OpExpr (convertPredicate l) I.MultiplyOp (convertPredicate r)
+  F.POr l r ->  I.OpExpr (convertPredicate l) I.OrOp (convertPredicate r)
+  F.PAnd l r ->  I.OpExpr (convertPredicate l) I.AndOp (convertPredicate r)
 
 mkSimpleType :: I.Term -> I.Term
 mkSimpleType base = I.TypeRefined base (I.PatternVar "v") (I.ScopedTerm $ I.Boolean I.ConstTrue)

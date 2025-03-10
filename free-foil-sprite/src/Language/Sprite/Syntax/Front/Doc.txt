@@ -35,7 +35,7 @@ The symbols used in Front are the following:
   | + | - | * | ==
   | < | <= | > | >=
   | [ | | | ] | ?
-  | ' | _ |  |
+  | ' | _ | || | &&
 
 ===Comments===
 There are no single-line comments in the grammar.There are no multiple-line comments in the grammar.
@@ -87,21 +87,25 @@ All other symbols are terminals.
   | //RType// | -> | //RType1//
   | //FuncArg// | -> | //VarIdent// ``:`` //RType//
   |  |  **|**  | ``_`` ``:`` //RType//
-  | //Pred4// | -> | //VarIdent//
+  | //Pred6// | -> | //VarIdent//
   |  |  **|**  | //ConstBool//
   |  |  **|**  | //Integer//
   |  |  **|**  | ``(`` //Pred// ``)``
-  | //Pred1// | -> | //Pred1// ``==`` //Pred2//
+  | //Pred1// | -> | //Pred1// ``||`` //Pred2//
   |  |  **|**  | //Pred2//
-  | //Pred2// | -> | //Pred2// ``<`` //Pred3//
-  |  |  **|**  | //Pred2// ``<=`` //Pred3//
-  |  |  **|**  | //Pred2// ``>`` //Pred3//
-  |  |  **|**  | //Pred2// ``>=`` //Pred3//
+  | //Pred2// | -> | //Pred2// ``&&`` //Pred3//
   |  |  **|**  | //Pred3//
-  | //Pred3// | -> | //Pred3// ``+`` //Pred4//
-  |  |  **|**  | //Pred3// ``-`` //Pred4//
-  |  |  **|**  | //Pred3// ``*`` //Pred4//
+  | //Pred3// | -> | //Pred3// ``==`` //Pred4//
   |  |  **|**  | //Pred4//
+  | //Pred4// | -> | //Pred4// ``<`` //Pred5//
+  |  |  **|**  | //Pred4// ``<=`` //Pred5//
+  |  |  **|**  | //Pred4// ``>`` //Pred5//
+  |  |  **|**  | //Pred4// ``>=`` //Pred5//
+  |  |  **|**  | //Pred5//
+  | //Pred5// | -> | //Pred5// ``+`` //Pred6//
+  |  |  **|**  | //Pred5// ``-`` //Pred6//
+  |  |  **|**  | //Pred5// ``*`` //Pred6//
+  |  |  **|**  | //Pred6//
   | //Pred// | -> | //Pred1//
   | //BaseType// | -> | ``int``
   |  |  **|**  | ``bool``

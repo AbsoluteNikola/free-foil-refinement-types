@@ -73,6 +73,8 @@ data Pred
     = PVar VarIdent
     | PBool ConstBool
     | PInt Integer
+    | POr Pred Pred
+    | PAnd Pred Pred
     | PEq Pred Pred
     | PLessThan Pred Pred
     | PLessOrEqThan Pred Pred

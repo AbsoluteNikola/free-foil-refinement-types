@@ -86,6 +86,8 @@ transPred x = case x of
   Language.Sprite.Syntax.Front.Abs.PVar varident -> failure x
   Language.Sprite.Syntax.Front.Abs.PBool constbool -> failure x
   Language.Sprite.Syntax.Front.Abs.PInt integer -> failure x
+  Language.Sprite.Syntax.Front.Abs.POr pred1 pred2 -> failure x
+  Language.Sprite.Syntax.Front.Abs.PAnd pred1 pred2 -> failure x
   Language.Sprite.Syntax.Front.Abs.PEq pred1 pred2 -> failure x
   Language.Sprite.Syntax.Front.Abs.PLessThan pred1 pred2 -> failure x
   Language.Sprite.Syntax.Front.Abs.PLessOrEqThan pred1 pred2 -> failure x

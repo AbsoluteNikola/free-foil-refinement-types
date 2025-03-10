@@ -85,6 +85,7 @@ run filePath (Front.Program rawQualifiers rawFrontTerm) = do
       exitFailure
   let scopedTerm =  S.toTerm Foil.emptyScope Map.empty rawInnerTerm
   -- pPrint rawFrontTerm
+  print rawInnerTerm
   print scopedTerm
   result <- vcgen qualifiers scopedTerm >>= \case
     Left err -> do
