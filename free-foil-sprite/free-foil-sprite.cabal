@@ -14,9 +14,6 @@ build-type:     Simple
 extra-source-files:
     README.md
     CHANGELOG.md
-    grammar/Sprite/Syntax.cf
-    src/Language/Sprite/Syntax/Lex.x
-    src/Language/Sprite/Syntax/Par.y
 
 source-repository head
   type: git
@@ -38,6 +35,8 @@ common extensions
       DataKinds
       StandaloneDeriving
       FlexibleContexts
+      DuplicateRecordFields
+      TupleSections
 
 library
   import: extensions
@@ -46,6 +45,7 @@ library
       Language.Sprite.Syntax
       Language.Sprite.Syntax.Convert.FrontToInner
       Language.Sprite.Syntax.Convert.InnerToFTR
+      Language.Sprite.Syntax.Convert.QualifierToFTR
       Language.Sprite.Syntax.Front.Abs
       Language.Sprite.Syntax.Front.Lex
       Language.Sprite.Syntax.Front.Par
@@ -56,6 +56,7 @@ library
       Language.Sprite.Syntax.Inner.Print
       Language.Sprite.TypeCheck.Check
       Language.Sprite.TypeCheck.Constraints
+      Language.Sprite.TypeCheck.Monad
       Language.Sprite.TypeCheck.Predicates
       Language.Sprite.TypeCheck.Run
       Language.Sprite.TypeCheck.Types

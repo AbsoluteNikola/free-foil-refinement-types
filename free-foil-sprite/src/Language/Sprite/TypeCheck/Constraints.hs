@@ -27,7 +27,7 @@ constraintsToFHT :: Constraint -> Either InnerToFTR.ConvertError (H.Cstr Text)
 constraintsToFHT = \case
   CPred p msg -> do
     pred' <- InnerToFTR.convert p
-    pure $ H.Head (H.Reft pred') msg
+    pure $ H.Head pred' msg
   CAnd cs -> do H.CAnd <$> traverse constraintsToFHT cs
   CImplication (I.VarIdent varId) base p c msg -> do
     p' <- InnerToFTR.convert p
@@ -36,6 +36,6 @@ constraintsToFHT = \case
       (H.Bind
         (fromString varId)
         (baseTypeToSort base)
-        (H.Reft p')
+        p'
         msg)
       c'

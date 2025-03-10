@@ -19,15 +19,27 @@ transVarIdent :: Language.Sprite.Syntax.Front.Abs.VarIdent -> Result
 transVarIdent x = case x of
   Language.Sprite.Syntax.Front.Abs.VarIdent string -> failure x
 
+transProgram :: Language.Sprite.Syntax.Front.Abs.Program -> Result
+transProgram x = case x of
+  Language.Sprite.Syntax.Front.Abs.Program qualifiers term -> failure x
+
+transQualifier :: Language.Sprite.Syntax.Front.Abs.Qualifier -> Result
+transQualifier x = case x of
+  Language.Sprite.Syntax.Front.Abs.Qualifier varident qualifierargs pred -> failure x
+
+transQualifierArg :: Language.Sprite.Syntax.Front.Abs.QualifierArg -> Result
+transQualifierArg x = case x of
+  Language.Sprite.Syntax.Front.Abs.QualifierArg varident basetype -> failure x
+
 transTerm :: Language.Sprite.Syntax.Front.Abs.Term -> Result
 transTerm x = case x of
   Language.Sprite.Syntax.Front.Abs.ConstInt integer -> failure x
   Language.Sprite.Syntax.Front.Abs.Bool constbool -> failure x
   Language.Sprite.Syntax.Front.Abs.Var varident -> failure x
   Language.Sprite.Syntax.Front.Abs.If funcapparg term1 term2 -> failure x
-  Language.Sprite.Syntax.Front.Abs.Let decl scopedterm -> failure x
-  Language.Sprite.Syntax.Front.Abs.Fun varident scopedterm -> failure x
-  Language.Sprite.Syntax.Front.Abs.App term funcapparg -> failure x
+  Language.Sprite.Syntax.Front.Abs.Let decl term -> failure x
+  Language.Sprite.Syntax.Front.Abs.Fun varident term -> failure x
+  Language.Sprite.Syntax.Front.Abs.App varident funcapparg -> failure x
   Language.Sprite.Syntax.Front.Abs.Op funcapparg1 intop funcapparg2 -> failure x
 
 transConstBool :: Language.Sprite.Syntax.Front.Abs.ConstBool -> Result
@@ -59,11 +71,8 @@ transIntOp x = case x of
 transRType :: Language.Sprite.Syntax.Front.Abs.RType -> Result
 transRType x = case x of
   Language.Sprite.Syntax.Front.Abs.TypeRefined basetype varident pred -> failure x
-  Language.Sprite.Syntax.Front.Abs.TypeFun funcarg scopedrtype -> failure x
-
-transScopedRType :: Language.Sprite.Syntax.Front.Abs.ScopedRType -> Result
-transScopedRType x = case x of
-  Language.Sprite.Syntax.Front.Abs.ScopedRType rtype -> failure x
+  Language.Sprite.Syntax.Front.Abs.TypeRefinedUnknown basetype -> failure x
+  Language.Sprite.Syntax.Front.Abs.TypeFun funcarg rtype -> failure x
 
 transFuncArg :: Language.Sprite.Syntax.Front.Abs.FuncArg -> Result
 transFuncArg x = case x of
@@ -86,10 +95,6 @@ transPred x = case x of
 transPattern :: Language.Sprite.Syntax.Front.Abs.Pattern -> Result
 transPattern x = case x of
   Language.Sprite.Syntax.Front.Abs.PatternVar varident -> failure x
-
-transScopedTerm :: Language.Sprite.Syntax.Front.Abs.ScopedTerm -> Result
-transScopedTerm x = case x of
-  Language.Sprite.Syntax.Front.Abs.ScopedTerm term -> failure x
 
 transBaseType :: Language.Sprite.Syntax.Front.Abs.BaseType -> Result
 transBaseType x = case x of

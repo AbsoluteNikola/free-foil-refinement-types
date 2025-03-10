@@ -20,15 +20,15 @@ convert ft = case ft of
     elseB' <- convert elseB
     pure $ I.If (convertFuncAppArg cond) ifB' elseB'
   F.Var varId -> pure $ I.Var (convertVarId varId)
-  F.Let decl (F.ScopedTerm body) -> do
+  F.Let decl body -> do
     (I.ScopedTerm -> convertedBody) <- convert body
     let_ <- convertDecl decl
     pure $ let_ convertedBody
-  F.Fun argId (F.ScopedTerm body) -> do
+  F.Fun argId body -> do
     (I.ScopedTerm -> convertedBody) <- convert body
     pure $ I.Fun (convertVarIdToPattern argId) convertedBody
-  F.App funcTerm argTerm -> do
-    convertedFuncTerm <- convert funcTerm
+  F.App funcName argTerm -> do
+    let convertedFuncTerm = I.Var $ convertVarId funcName
     let convertedArgTerm = convertFuncAppArg argTerm
     pure $ I.App convertedFuncTerm convertedArgTerm
   F.Op lArg op rArg -> pure $
@@ -85,11 +85,13 @@ convertRType rType = case rType of
       (convertVarIdToPattern varId)
       (I.ScopedTerm $ convertPredicate predicate)
 
-  F.TypeFun (F.NamedFuncArg argId argType) (F.ScopedRType retType) ->
+  F.TypeFun (F.NamedFuncArg argId argType) retType ->
     I.TypeFun
       (convertVarIdToPattern argId)
       (convertRType argType)
       (I.ScopedTerm $ convertRType retType)
+
+  F.TypeRefinedUnknown base -> I.TypeRefinedUnknown (convertBaseType base)
 
 convertBaseType :: F.BaseType -> I.BaseType
 convertBaseType = \case
