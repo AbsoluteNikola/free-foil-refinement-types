@@ -60,6 +60,8 @@ data TermSig scope term
     BaseTypeIntSig :: TermSig scope term
     BaseTypeBoolSig :: TermSig scope term
     BaseTypeVarSig :: term -> TermSig scope term
+    BaseTypeTempVarSig :: Language.Sprite.Syntax.Inner.Abs.VarIdent ->
+      TermSig scope term
     deriving (GHC.Generics.Generic, Functor, Foldable, Traversable)
 type Term = Control.Monad.Free.Foil.AST Pattern TermSig
 type ScopedTerm = Control.Monad.Free.Foil.ScopedAST Pattern TermSig
@@ -126,6 +128,8 @@ pattern BaseTypeBool :: Term o
 pattern BaseTypeBool = Control.Monad.Free.Foil.Node BaseTypeBoolSig
 pattern BaseTypeVar :: Term o -> Term o
 pattern BaseTypeVar x_aMZF = Control.Monad.Free.Foil.Node (BaseTypeVarSig x_aMZF)
+pattern BaseTypeTempVar ::Language.Sprite.Syntax.Inner.Abs.VarIdent -> Term o
+pattern BaseTypeTempVar varId = Control.Monad.Free.Foil.Node (BaseTypeTempVarSig varId)
 {-# COMPLETE Control.Monad.Free.Foil.Var, ConstInt, Boolean, If, Let, LetRec, Fun, App, Ann, OpExpr, TAbs, TApp, TypeRefined, TypeRefinedUnknown, TypeFun, TypeForall, HVar, BaseTypeInt, BaseTypeBool, BaseTypeVar #-}
 
 
@@ -187,6 +191,8 @@ fromTermSig BaseTypeBoolSig
   = Language.Sprite.Syntax.Inner.Abs.BaseTypeBool
 fromTermSig (BaseTypeVarSig x_aawz)
   = Language.Sprite.Syntax.Inner.Abs.BaseTypeVar x_aawz
+fromTermSig (BaseTypeTempVarSig varId)
+  = Language.Sprite.Syntax.Inner.Abs.BaseTypeTempVar varId
 
 
 fromPattern ::
@@ -256,6 +262,8 @@ toTermSig Language.Sprite.Syntax.Inner.Abs.BaseTypeBool
   = Right BaseTypeBoolSig
 toTermSig (Language.Sprite.Syntax.Inner.Abs.BaseTypeVar _x_aaxw)
   = Right (BaseTypeVarSig _x_aaxw)
+toTermSig (Language.Sprite.Syntax.Inner.Abs.BaseTypeTempVar varId)
+  = Right (BaseTypeTempVarSig varId)
 
 toPattern ::
   forall o r_abJX. (Foil.Distinct o,

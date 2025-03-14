@@ -59,9 +59,9 @@ data IntOp
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data RType
-    = TypeRefined BaseType VarIdent Pred
+    = TypeRefinedSimple BaseType
+    | TypeRefined BaseType VarIdent Pred
     | TypeRefinedUnknown BaseType
-    | TypeRefinedSimple BaseType
     | TypeVar VarIdent
     | TypeFun FuncArg RType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)

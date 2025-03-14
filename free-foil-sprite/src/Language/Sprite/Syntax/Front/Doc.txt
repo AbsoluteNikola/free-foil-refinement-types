@@ -76,12 +76,12 @@ All other symbols are terminals.
   |  |  **|**  | ``<=``
   |  |  **|**  | ``>``
   |  |  **|**  | ``>=``
+  | //RType3// | -> | //BaseType//
+  |  |  **|**  | ``(`` //RType// ``)``
   | //RType2// | -> | //BaseType// ``[`` //VarIdent// ``|`` //Pred// ``]``
   |  |  **|**  | //BaseType// ``[`` ``?`` ``]``
   |  |  **|**  | ``'`` //VarIdent//
   |  |  **|**  | //RType3//
-  | //RType3// | -> | //BaseType//
-  |  |  **|**  | ``(`` //RType// ``)``
   | //RType1// | -> | //FuncArg// ``=>`` //RType2//
   |  |  **|**  | //RType2//
   | //RType// | -> | //RType1//

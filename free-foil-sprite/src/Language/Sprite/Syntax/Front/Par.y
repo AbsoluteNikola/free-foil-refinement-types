@@ -131,17 +131,17 @@ IntOp
   | '>' { Language.Sprite.Syntax.Front.Abs.IntGreaterThan }
   | '>=' { Language.Sprite.Syntax.Front.Abs.IntGreaterOrEqThan }
 
+RType3 :: { Language.Sprite.Syntax.Front.Abs.RType }
+RType3
+  : BaseType { Language.Sprite.Syntax.Front.Abs.TypeRefinedSimple $1 }
+  | '(' RType ')' { $2 }
+
 RType2 :: { Language.Sprite.Syntax.Front.Abs.RType }
 RType2
   : BaseType '[' VarIdent '|' Pred ']' { Language.Sprite.Syntax.Front.Abs.TypeRefined $1 $3 $5 }
   | BaseType '[' '?' ']' { Language.Sprite.Syntax.Front.Abs.TypeRefinedUnknown $1 }
   | '\'' VarIdent { Language.Sprite.Syntax.Front.Abs.TypeVar $2 }
   | RType3 { $1 }
-
-RType3 :: { Language.Sprite.Syntax.Front.Abs.RType }
-RType3
-  : BaseType { Language.Sprite.Syntax.Front.Abs.TypeRefinedSimple $1 }
-  | '(' RType ')' { $2 }
 
 RType1 :: { Language.Sprite.Syntax.Front.Abs.RType }
 RType1

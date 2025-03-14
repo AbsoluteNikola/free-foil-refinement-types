@@ -46,9 +46,9 @@ IntGreaterOrEqThan. IntOp ::= ">=";
 
 -- type terms
 -- TODO: rewrite to move type var to base type
+TypeRefinedSimple.   RType3 ::= BaseType;
 TypeRefined.         RType2 ::= BaseType "[" VarIdent "|" Pred "]" ;
 TypeRefinedUnknown.  RType2 ::= BaseType "[" "?" "]" ;
-TypeRefinedSimple.   RType3 ::= BaseType;
 TypeVar.             RType2 ::= "'" VarIdent;
 TypeFun.             RType1 ::= FuncArg "=>" RType2 ;
 

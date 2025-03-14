@@ -41,6 +41,7 @@ transTerm x = case x of
   Language.Sprite.Syntax.Inner.Abs.BaseTypeInt -> failure x
   Language.Sprite.Syntax.Inner.Abs.BaseTypeBool -> failure x
   Language.Sprite.Syntax.Inner.Abs.BaseTypeVar term -> failure x
+  Language.Sprite.Syntax.Inner.Abs.BaseTypeTempVar varident -> failure x
 
 transConstBool :: Language.Sprite.Syntax.Inner.Abs.ConstBool -> Result
 transConstBool x = case x of

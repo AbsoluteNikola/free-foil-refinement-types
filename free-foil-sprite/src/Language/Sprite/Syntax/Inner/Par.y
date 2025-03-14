@@ -35,39 +35,40 @@ import Language.Sprite.Syntax.Inner.Lex
 %token
   '&&'       { PT _ (TS _ 1)        }
   '\''       { PT _ (TS _ 2)        }
-  '('        { PT _ (TS _ 3)        }
-  ')'        { PT _ (TS _ 4)        }
-  '*'        { PT _ (TS _ 5)        }
-  '*/'       { PT _ (TS _ 6)        }
-  '+'        { PT _ (TS _ 7)        }
-  '-'        { PT _ (TS _ 8)        }
-  '/*@'      { PT _ (TS _ 9)        }
-  '/\\'      { PT _ (TS _ 10)       }
-  ':'        { PT _ (TS _ 11)       }
-  ';'        { PT _ (TS _ 12)       }
-  '<'        { PT _ (TS _ 13)       }
-  '<='       { PT _ (TS _ 14)       }
-  '='        { PT _ (TS _ 15)       }
-  '=='       { PT _ (TS _ 16)       }
-  '=>'       { PT _ (TS _ 17)       }
-  '>'        { PT _ (TS _ 18)       }
-  '>='       { PT _ (TS _ 19)       }
-  '?'        { PT _ (TS _ 20)       }
-  '['        { PT _ (TS _ 21)       }
-  ']'        { PT _ (TS _ 22)       }
-  'bool'     { PT _ (TS _ 23)       }
-  'else'     { PT _ (TS _ 24)       }
-  'false'    { PT _ (TS _ 25)       }
-  'if'       { PT _ (TS _ 26)       }
-  'int'      { PT _ (TS _ 27)       }
-  'let'      { PT _ (TS _ 28)       }
-  'rec'      { PT _ (TS _ 29)       }
-  'true'     { PT _ (TS _ 30)       }
-  '{'        { PT _ (TS _ 31)       }
-  '|'        { PT _ (TS _ 32)       }
-  '||'       { PT _ (TS _ 33)       }
-  '}'        { PT _ (TS _ 34)       }
-  '∀'        { PT _ (TS _ 35)       }
+  '\'\''     { PT _ (TS _ 3)        }
+  '('        { PT _ (TS _ 4)        }
+  ')'        { PT _ (TS _ 5)        }
+  '*'        { PT _ (TS _ 6)        }
+  '*/'       { PT _ (TS _ 7)        }
+  '+'        { PT _ (TS _ 8)        }
+  '-'        { PT _ (TS _ 9)        }
+  '/*@'      { PT _ (TS _ 10)       }
+  '/\\'      { PT _ (TS _ 11)       }
+  ':'        { PT _ (TS _ 12)       }
+  ';'        { PT _ (TS _ 13)       }
+  '<'        { PT _ (TS _ 14)       }
+  '<='       { PT _ (TS _ 15)       }
+  '='        { PT _ (TS _ 16)       }
+  '=='       { PT _ (TS _ 17)       }
+  '=>'       { PT _ (TS _ 18)       }
+  '>'        { PT _ (TS _ 19)       }
+  '>='       { PT _ (TS _ 20)       }
+  '?'        { PT _ (TS _ 21)       }
+  '['        { PT _ (TS _ 22)       }
+  ']'        { PT _ (TS _ 23)       }
+  'bool'     { PT _ (TS _ 24)       }
+  'else'     { PT _ (TS _ 25)       }
+  'false'    { PT _ (TS _ 26)       }
+  'if'       { PT _ (TS _ 27)       }
+  'int'      { PT _ (TS _ 28)       }
+  'let'      { PT _ (TS _ 29)       }
+  'rec'      { PT _ (TS _ 30)       }
+  'true'     { PT _ (TS _ 31)       }
+  '{'        { PT _ (TS _ 32)       }
+  '|'        { PT _ (TS _ 33)       }
+  '||'       { PT _ (TS _ 34)       }
+  '}'        { PT _ (TS _ 35)       }
+  '∀'        { PT _ (TS _ 36)       }
   L_integ    { PT _ (TI $$)         }
   L_VarIdent { PT _ (T_VarIdent $$) }
 
@@ -101,6 +102,7 @@ Term
   | 'int' { Language.Sprite.Syntax.Inner.Abs.BaseTypeInt }
   | 'bool' { Language.Sprite.Syntax.Inner.Abs.BaseTypeBool }
   | '\'' Term { Language.Sprite.Syntax.Inner.Abs.BaseTypeVar $2 }
+  | '\'\'' VarIdent { Language.Sprite.Syntax.Inner.Abs.BaseTypeTempVar $2 }
 
 ConstBool :: { Language.Sprite.Syntax.Inner.Abs.ConstBool }
 ConstBool

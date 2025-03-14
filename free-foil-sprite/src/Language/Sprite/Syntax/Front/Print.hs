@@ -199,9 +199,9 @@ instance Print Language.Sprite.Syntax.Front.Abs.IntOp where
 
 instance Print Language.Sprite.Syntax.Front.Abs.RType where
   prt i = \case
+    Language.Sprite.Syntax.Front.Abs.TypeRefinedSimple basetype -> prPrec i 3 (concatD [prt 0 basetype])
     Language.Sprite.Syntax.Front.Abs.TypeRefined basetype varident pred -> prPrec i 2 (concatD [prt 0 basetype, doc (showString "["), prt 0 varident, doc (showString "|"), prt 0 pred, doc (showString "]")])
     Language.Sprite.Syntax.Front.Abs.TypeRefinedUnknown basetype -> prPrec i 2 (concatD [prt 0 basetype, doc (showString "["), doc (showString "?"), doc (showString "]")])
-    Language.Sprite.Syntax.Front.Abs.TypeRefinedSimple basetype -> prPrec i 3 (concatD [prt 0 basetype])
     Language.Sprite.Syntax.Front.Abs.TypeVar varident -> prPrec i 2 (concatD [doc (showString "'"), prt 0 varident])
     Language.Sprite.Syntax.Front.Abs.TypeFun funcarg rtype -> prPrec i 1 (concatD [prt 0 funcarg, doc (showString "=>"), prt 2 rtype])
 

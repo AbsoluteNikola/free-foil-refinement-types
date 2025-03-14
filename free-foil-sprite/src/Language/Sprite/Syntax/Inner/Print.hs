@@ -161,6 +161,7 @@ instance Print Language.Sprite.Syntax.Inner.Abs.Term where
     Language.Sprite.Syntax.Inner.Abs.BaseTypeInt -> prPrec i 0 (concatD [doc (showString "int")])
     Language.Sprite.Syntax.Inner.Abs.BaseTypeBool -> prPrec i 0 (concatD [doc (showString "bool")])
     Language.Sprite.Syntax.Inner.Abs.BaseTypeVar term -> prPrec i 0 (concatD [doc (showString "'"), prt 0 term])
+    Language.Sprite.Syntax.Inner.Abs.BaseTypeTempVar varident -> prPrec i 0 (concatD [doc (showString "''"), prt 0 varident])
 
 instance Print Language.Sprite.Syntax.Inner.Abs.ConstBool where
   prt i = \case

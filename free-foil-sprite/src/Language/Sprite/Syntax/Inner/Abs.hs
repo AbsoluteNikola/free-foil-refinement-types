@@ -36,6 +36,7 @@ data Term
     | BaseTypeInt
     | BaseTypeBool
     | BaseTypeVar Term
+    | BaseTypeTempVar VarIdent
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data ConstBool = ConstTrue | ConstFalse

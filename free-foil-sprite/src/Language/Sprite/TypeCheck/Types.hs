@@ -27,6 +27,37 @@ boolWithT :: Inner.ConstBool -> Term F.VoidS
 boolWithT b = F.withFreshBinder F.emptyScope $ \binder ->
     TypeRefined BaseTypeBool (PatternVar binder) (OpExpr (F.Var (F.nameOf binder)) Inner.EqOp (Boolean b))
 
+extendTypeToCurrentScope :: F.Distinct i => F.Scope i -> Term i -> CheckerM (Term i)
+extendTypeToCurrentScope scope typ = case typ of
+  TypeRefined b oldVar p -> F.withFreshBinder scope $ \newBinder ->
+    case (F.assertDistinct newBinder, F.assertExt newBinder) of
+      (F.Distinct, F.Ext) -> do
+        let
+          scope' = F.extendScope newBinder scope
+          newPred = F.substitutePattern scope' (F.sink F.identitySubst) oldVar [F.Var (F.nameOf newBinder)] p
+        pure $ TypeRefined b (PatternVar newBinder) newPred
+  TypeFun argName argTyp retTyp ->  F.withFreshBinder scope $ \newBinder ->
+    case (F.assertDistinct newBinder, F.assertExt newBinder) of
+      (F.Distinct, F.Ext) -> do
+        argTypExtended <- extendTypeToCurrentScope scope argTyp
+        let
+          scope' = F.extendScope newBinder scope
+          newRetType = F.substitutePattern scope' (F.sink F.identitySubst) argName [F.Var (F.nameOf newBinder)] retTyp
+        newRetTypeExtended <- extendTypeToCurrentScope scope' newRetType
+        pure $ TypeFun (PatternVar newBinder) argTypExtended newRetTypeExtended
+  TypeRefinedUnknown b -> pure $ TypeRefinedUnknown b
+  TypeForall v typUnderForall -> F.withFreshBinder scope $ \newBinder ->
+    case (F.assertDistinct newBinder, F.assertExt newBinder) of
+      (F.Distinct, F.Ext) -> do
+        let
+          scope' = F.extendScope newBinder scope
+          newTypUnderForall = F.substitutePattern scope' (F.sink F.identitySubst) v [F.Var (F.nameOf newBinder)] typUnderForall
+        pure $ TypeForall (PatternVar newBinder) newTypUnderForall
+  _ -> throwError $
+    "extendTypeToCurrentScope should be called only on type, not term\n"
+    <> showT typ
+
+
 {- |  see 4.3.2 Synthesis and figure 4.3
 
 G(x) = b[v|p] -> b[v|p && v = x]
@@ -109,4 +140,5 @@ baseTypeEq :: Term i -> Term i -> Bool
 baseTypeEq BaseTypeBool BaseTypeBool = True
 baseTypeEq BaseTypeInt BaseTypeInt = True
 baseTypeEq (BaseTypeVar (F.Var v1)) (BaseTypeVar (F.Var v2)) = v1 == v2
+baseTypeEq (BaseTypeTempVar v1) (BaseTypeTempVar v2) = v1 == v2
 baseTypeEq _ _ = False

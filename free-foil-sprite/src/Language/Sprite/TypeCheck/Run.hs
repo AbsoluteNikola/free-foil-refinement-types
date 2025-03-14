@@ -7,7 +7,7 @@ import Language.Sprite.TypeCheck.Check qualified as Check
 import Language.Sprite.TypeCheck.Constraints qualified as Check
 import Language.Sprite.TypeCheck.Monad qualified as Check
 import Language.Sprite.Syntax qualified as S
-import System.Exit (exitFailure)
+import System.Exit (exitFailure, exitSuccess)
 import qualified Data.Map as Map
 import qualified Control.Monad.Foil as Foil
 import Data.Text (Text)
@@ -27,22 +27,35 @@ import Control.Monad.State (StateT (runStateT))
 import qualified Language.Sprite.TypeCheck.Types as S
 import qualified Language.Fixpoint.Horn.Types as F
 import qualified Language.Sprite.Syntax.Convert.QualifierToFTR as QualifiersToFTR
+import qualified Language.Sprite.TypeCheck.Elaboration as Elaboration
+import Text.Pretty.Simple (pPrint)
 
 -- TODO: add better errors
 instance F.Loc T.Text where
   srcSpan _ = F.dummySpan
 
 
+runM :: Check.CheckerM a -> IO (Either Text a, Check.CheckerState)
+runM =  flip runStateT Check.defaultCheckerState
+  . flip runReaderT Check.defaultCheckerDebugEnv
+  . runExceptT
+  . Check.runCheckerM
+
 vcgen :: [F.Qualifier] -> S.Term Foil.VoidS -> IO (Either Text (H.Query Text))
 vcgen qualifiers term = do
   let
     programType = S.anyIntT
+  elaboratedTerm <- runM (Elaboration.check Foil.emptyScope Check.EmptyEnv term programType)
+    >>= \case
+      (Left err, _) -> do
+        print ("Elaboration errors:" :: Text)
+        print err
+        exitFailure
+      (Right t, _) -> pure t
+  print ("Elaborated term:" :: Text)
+  pPrint $ elaboratedTerm
   (eConstraints, checkerState) <-
-    flip runStateT Check.defaultCheckerState
-    . flip runReaderT Check.defaultCheckerDebugEnv
-    . runExceptT
-    . Check.runCheckerM
-    $ Check.check Foil.emptyScope Check.EmptyEnv term programType
+    runM $ Check.check Foil.emptyScope Check.EmptyEnv elaboratedTerm programType
   let
     mkQuery c = do
       c' <- first Check.showT $ Check.constraintsToFHT c
@@ -84,9 +97,7 @@ run filePath (Front.Program rawQualifiers rawFrontTerm) = do
       print errs
       exitFailure
   let scopedTerm =  S.toTerm Foil.emptyScope Map.empty rawInnerTerm
-  -- pPrint rawFrontTerm
-  print rawInnerTerm
-  print scopedTerm
+  pPrint $ S.fromTerm scopedTerm
   result <- vcgen qualifiers scopedTerm >>= \case
     Left err -> do
       putStrLn "Type check error: "

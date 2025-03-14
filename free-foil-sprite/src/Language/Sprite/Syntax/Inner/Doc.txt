@@ -34,7 +34,7 @@ The symbols used in Inner are the following:
   | ] | | | ? | ∀
   | == | <= | < | >=
   | > | + | - | *
-  | && | || | ' |
+  | && | || | ' | ''
 
 ===Comments===
 There are no single-line comments in the grammar.There are no multiple-line comments in the grammar.
@@ -65,6 +65,7 @@ All other symbols are terminals.
   |  |  **|**  | ``int``
   |  |  **|**  | ``bool``
   |  |  **|**  | ``'`` //Term//
+  |  |  **|**  | ``''`` //VarIdent//
   | //ConstBool// | -> | ``true``
   |  |  **|**  | ``false``
   | //Op// | -> | ``==``

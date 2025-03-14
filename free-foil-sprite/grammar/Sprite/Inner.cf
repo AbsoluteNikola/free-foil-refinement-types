@@ -45,8 +45,12 @@ PatternVar. Pattern ::= VarIdent ;
 ScopedTerm. ScopedTerm ::= Term ;
 
 -- base types
-BaseTypeInt.  Term ::= "int" ;
-BaseTypeBool. Term ::= "bool" ;
-BaseTypeVar.  Term ::= "'" Term; -- should be Var
+BaseTypeInt.      Term ::= "int" ;
+BaseTypeBool.     Term ::= "bool" ;
+BaseTypeVar.      Term ::= "'" Term; -- should be Var
+
+-- used only on elaboration phase to infer types.
+-- Should not appear on refinement check phase
+BaseTypeTempVar.  Term ::= "''" VarIdent;
 
 separator nonempty Term " " ;

@@ -1,17 +1,65 @@
-module Language.Sprite.TypeCheck.Elaboration where
+module Language.Sprite.TypeCheck.Elaboration (check) where
 
 import Control.Monad.Foil qualified as F
 import Control.Monad.Free.Foil qualified as F
 import Language.Sprite.Syntax
 import Control.Monad.Except (MonadError (throwError))
-import Data.Text (Text)
-import Control.Monad.IO.Class (MonadIO (liftIO))
-import Language.Sprite.TypeCheck.Constraints
 import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import Language.Sprite.TypeCheck.Predicates
 import Language.Sprite.TypeCheck.Types
-import qualified Data.Unique as Unique
 import Language.Sprite.TypeCheck.Monad
+import Data.Biapplicative (bimap)
+import Unsafe.Coerce (unsafeCoerce)
+import Debug.Trace (trace)
+import Debug.Pretty.Simple (pTraceShowId)
+
+unify ::
+  F.Distinct i =>
+  F.Scope i ->
+  -- | left type to unify
+  Term i ->
+  -- | right type to unify
+  Term i ->
+  -- | term where to substitute tempTypeVariable on new type
+  Term i ->
+  -- | (term with substituted temp type variables, result type )
+  CheckerM (Term i , Term i)
+unify scope (TypeRefined (BaseTypeTempVar varId) _ _) t term = do
+  debugPrintT "Unify 1!"
+  let substitutedTerm = substTempTypeVar scope varId t F.identitySubst term
+  pure (substitutedTerm, t)
+unify scope t (TypeRefined (BaseTypeTempVar varId) _ _) term = withRule "[Unify]" $ do
+  debugPrintT $ "VarId: " <> showT varId
+  debugPrintT $ "Change on: " <> showT t
+  debugPrintT $ "Was: " <> showT term
+  let substitutedTerm = substTempTypeVar scope varId t F.identitySubst term
+  debugPrintT $ "Became: " <> showT substitutedTerm
+  pure (substitutedTerm, t)
+unify _scope t1@(TypeRefined b1 _ _) _t2@(TypeRefined b2 _ _) term
+  | baseTypeEq b1 b2 = pure (term, t1) -- should we merge refinements?
+unify scope (TypeFun v1 argTyp1 retTyp1) (TypeFun v2 argTyp2 retTyp2) term = do
+  (term', argTyp) <- unify scope argTyp1 argTyp2 term
+  case (F.assertDistinct v2, F.assertExt v2) of
+    (F.Distinct, F.Ext) -> do
+      let
+        scope' = F.extendScopePattern v2 scope
+        subst = F.addRename (F.sink F.identitySubst)
+          (getNameBinderFromPattern v1)
+          (F.nameOf $ getNameBinderFromPattern v2)
+        retTyp1' =
+          F.substitute scope' subst retTyp1
+      (term'', retType) <- unify scope' retTyp1' retTyp2 (F.sink term')
+      {- TODO: придумать как удалить unsafe coerce
+      Из-за того что мы зашли под скоуп из TypeFun и синканули терм под него
+      можно сказать что переменно v2 там нет, поэтому мы как бы можем вернуть терм
+      обратно в его скоуп. Верно ли утверждение? Подумать?
+      -}
+      pure (unsafeCoerce term'', TypeFun v2 argTyp retType)
+
+unify _ t1 t2 _ = throwError $
+  "Can't unify:\n"
+  <> "left type: " <> showT t1
+  <> "\nright type: " <> showT t2
 
 
 check :: (F.DExt F.VoidS i) =>
@@ -21,7 +69,7 @@ check :: (F.DExt F.VoidS i) =>
   Term i ->
   -- | type to check with
   Term i ->
-  CheckerM (Term i)
+  CheckerM (Term i {- elaborated term -})
 check scope env currentTerm currentType = case currentTerm of
   {- [Chk-Lam]
   G, x:s |- e[y := x] <== t
@@ -31,6 +79,10 @@ check scope env currentTerm currentType = case currentTerm of
   Fun varPattern body -> withRule "[Chk-Lam]" $ do
     extendedCurrentType <- extendTypeToCurrentScope scope currentType
     case extendedCurrentType of
+      -- На самом деле в процессе вывода делать переименования аргумента функции не обязательно,
+      -- но retType и body имеют разные скоупы потому что расширяются разными паттернами
+      -- в этом случае можно переименовать переменную в теле на переменную из типа,
+      -- либо наоборот: в типе на переменную из аргумента. Сделал как в Check.hs
       TypeFun typeFunArgIdPat@(PatternVar typeFunArgIdBinder) argType returnType -> do
         case  (F.assertExt typeFunArgIdBinder, F.assertDistinct typeFunArgIdBinder) of
           (F.Ext, F.Distinct) -> do
@@ -42,12 +94,12 @@ check scope env currentTerm currentType = case currentTerm of
                   (getNameBinderFromPattern varPattern)
                   (F.nameOf typeFunArgIdBinder)
               bodySubstituted = F.substitute scope' bodySubst body
-
             elaboratedBody <- withExtendedEnv env typeFunArgIdBinder argType $ \env' ->
               check scope' env' bodySubstituted returnType
             debugPrintT $ "Arg type: " <> showT argType
+            -- В терме теперь новое имя потому что мы y переименовали в x
             pure $ Fun typeFunArgIdPat elaboratedBody
-      _ -> throwError $ "Function type should be Function, not: " <> pShowT extendedCurrentType
+      _ -> throwError $ "Function type should be Function, not: " <> showT extendedCurrentType
 
   {- [Chk-Let]
     G |- e1 ==> t1        G, x:t1 |- e2 <== t2
@@ -57,22 +109,17 @@ check scope env currentTerm currentType = case currentTerm of
   Let newVarPat newVarValue body -> withRule "[Chk-Let]" $ do
     -- G |- e1 ==> t1
     debugPrintT $  "synths " <> showT newVarPat
-    (newVarConstraints, newVarType) <- synths scope env newVarValue
+    (newVar', newVarType) <- synths scope env newVarValue
     case (F.assertDistinct newVarPat, F.assertExt newVarPat) of
       (F.Distinct, F.Ext) ->  do
         --  x:t1 |- e2 <== t2
         withExtendedEnv env (getNameBinderFromPattern newVarPat) newVarType $ \env' -> do
           let scope' = F.extendScopePattern newVarPat scope
           extendedCurrentType <- extendTypeToCurrentScope scope' (F.sink currentType)
-          bodyConstraints <- check scope' env' body extendedCurrentType
-          implMsg <- mkSolverErrorMessage "Checking let error"
-          implLetBodyConstraint <-
-            buildImplicationFromType implMsg scope' newVarPat (F.sink newVarType) bodyConstraints
-
-          pure $ CAnd [newVarConstraints, implLetBodyConstraint]
+          elaboratedBody <- check scope' env' body extendedCurrentType
+          pure $ Let newVarPat newVar' elaboratedBody
 
   {- [Chk-Rec]
-    s1 |> t1
     G |- t1 : k
     G, x:t1 |- e1 <== t1
     G, x:t1 |- e2 <== t2
@@ -81,62 +128,35 @@ check scope env currentTerm currentType = case currentTerm of
   -}
   LetRec newVarType newVarPat1 newVarPat2 newVarValue body -> withRule "[Chk-Rec]" $ do
     debugPrintT $  "new var type: " <> showT newVarType
-    freshedNewVarType <- fresh scope env newVarType
-    debugPrintT $  "freshed new var type: " <> showT freshedNewVarType
+    extendedVarType <- extendTypeToCurrentScope scope newVarType
+    debugPrintT $  "extended new var type: " <> showT extendedVarType
     -- G |- t1 : k, t1 - newVarType
     case (F.assertDistinct newVarPat1, F.assertDistinct newVarPat2, F.assertExt newVarPat1,  F.assertExt newVarPat2) of
       (F.Distinct, F.Distinct, F.Ext, F.Ext) ->  do
         --  G, x:t1 |- e1 <== t1
         debugPrintT $  "check new var: " <> showT newVarPat1
-        newVarC <- withExtendedEnv env (getNameBinderFromPattern newVarPat1) freshedNewVarType $ \env' -> do
+        newVarValue' <- withExtendedEnv env (getNameBinderFromPattern newVarPat1) extendedVarType $ \env' -> do
           let
             scope' = F.extendScopePattern newVarPat1 scope
-          newVarConstraints <- check scope' env' newVarValue (F.sink freshedNewVarType)
-          implBodyMsg <- mkSolverErrorMessage "Chk-Rec: new var"
-          buildImplicationFromType implBodyMsg scope' newVarPat1 (F.sink freshedNewVarType) newVarConstraints
-        -- G, x:t1 |- e2 <== t2
-        bodyC <- withExtendedEnv env (getNameBinderFromPattern newVarPat2) freshedNewVarType $ \env' -> do
+          check scope' env' newVarValue (F.sink extendedVarType)
+          -- G, x:t1 |- e2 <== t2
+        body' <- withExtendedEnv env (getNameBinderFromPattern newVarPat2) extendedVarType $ \env' -> do
           let scope' = F.extendScopePattern newVarPat2 scope
           extendedCurrentType <- extendTypeToCurrentScope scope' (F.sink currentType)
-          bodyConstraints <- check scope' env' body extendedCurrentType
-          implBodyMsg <- mkSolverErrorMessage "Chk-Rec: body"
-          buildImplicationFromType implBodyMsg scope' newVarPat2 (F.sink freshedNewVarType) bodyConstraints
-        pure $ CAnd [newVarC, bodyC]
+          check scope' env' body extendedCurrentType
+        pure $ LetRec newVarType newVarPat1 newVarPat2 newVarValue' body'
 
   {- [Chk-If]
-  y is fresh, need to pass condition value to constraints,
-
-  Γ ⊢  <== bool    G, y:int[y|x] |- e1 <== t     G, y:int[y|not x]  |- e2 <== t
+  G |- e1 <== t     G |- e2 <== t
   -----------------------------------------------------------------------------
       G |- if x then e1 else e2 <== t
   -}
   If cond thenTerm elseTerm -> withRule "[Chk-If]" $ do
-    condCheckConstraints <- check scope env cond (F.sink anyBoolT)
-    debugPrintT "Left branch"
-    thenConstraints <- mkIfBranchCheck Inner.ConstTrue thenTerm
-      "type check If error in then branch"
-    debugPrintT "Right branch"
-    elseConstraints <- mkIfBranchCheck Inner.ConstFalse elseTerm
-      "type check If error in else branch"
-
-    pure $ CAnd [condCheckConstraints, thenConstraints, elseConstraints]
-    where
-      mkIfBranchCheck condShouldBe brachTerm message = do
-        F.withFreshBinder scope $ \freshY ->
-          case (F.assertDistinct freshY, F.assertExt freshY) of
-            (F.Distinct, F.Ext) ->
-              withExtendedEnv env freshY (F.sink anyBoolT) $ \env' -> do
-                let
-                  scope' = F.extendScope freshY scope
-                  t = TypeRefined
-                    BaseTypeBool
-                    (PatternVar freshY)
-                    (OpExpr (F.sink cond)
-                      Inner.EqOp
-                      (Boolean condShouldBe))
-                extendedCurrentType <- extendTypeToCurrentScope scope' (F.sink currentType)
-                branchCheckConstraints <- check scope' env' (F.sink brachTerm) extendedCurrentType
-                buildImplicationFromType message scope' (PatternVar freshY) (F.sink t) branchCheckConstraints
+    extendedCurrentType <- extendTypeToCurrentScope scope currentType
+    cond' <- check scope env cond (F.sink anyBoolT)
+    thenTerm' <-  check scope env thenTerm extendedCurrentType
+    elseTerm' <- check scope env elseTerm extendedCurrentType
+    pure $ If cond' thenTerm' elseTerm'
 
   {- [Chk-Syn]
   G |- e ==> s        G |- s <: t
@@ -144,38 +164,16 @@ check scope env currentTerm currentType = case currentTerm of
             G |- e <== t
   -}
   term -> withRule "[Chk-Syn]" $ do
-    (synthsConstraints, termType) <- synths scope env term
-    extendedCurrentType <- extendTypeToCurrentScope scope currentType
-    debugPrintT "on term" >> debugPrint term
-    debugPrintT "calling subtype"
-    debugPrintT "left type: " >> debugPrint termType
-    debugPrintT "right type: " >> debugPrint extendedCurrentType
-    subtypingConstraints <- subtype scope termType extendedCurrentType
-    pure $ CAnd [synthsConstraints, subtypingConstraints]
-
-buildImplicationFromType :: (F.DExt i o) => Text -> F.Scope o -> Pattern i o -> Term o -> Constraint -> CheckerM Constraint
-buildImplicationFromType msg scope argVarPat@(PatternVar argVarId) typ constraint = case typ of
-  TypeRefined base (PatternVar typVarId) p -> do
-    let
-      subst = F.addRename (F.sink F.identitySubst) typVarId (F.nameOf argVarId)
-      p' = F.substitute scope subst p
-      argVarIdRaw = getRawVarIdFromPattern argVarPat
-      Inner.VarIdent argVarIdRawName = argVarIdRaw
-
-    debugPrintT $ "Implication: " <> "varId = " <> showT argVarIdRawName <> ", term = " <> showT p'
-    pure $ CImplication argVarIdRaw (fromTerm base) (fromTerm p') constraint msg
-  TypeFun{} -> pure constraint
-  otherTerm -> throwError $
-    "can't buildImplicationFromType\n"
-    <> "context message: " <> msg <> "\n"
-    <> "term: " <> showT otherTerm
+    (term', termType) <- synths scope env term
+    (resTerm, _resType)<- unify scope currentType termType term'
+    pure resTerm
 
 synths ::
   (F.DExt F.VoidS i) =>
   F.Scope i ->
   Env i ->
   Term i ->
-  CheckerM (Constraint, Term i)
+  CheckerM (Term i {- term -}, Term i {- typ -})
 synths scope env currentTerm = case currentTerm of
   {- [Syn-Var]
     G(x) = t
@@ -183,14 +181,11 @@ synths scope env currentTerm = case currentTerm of
     G |- x ==> self(x, t)
   -}
   F.Var varId -> withRule "[Syn-Var]" $ do
-    let
-      typ = lookupEnv env varId
-    typExtended <- extendTypeToCurrentScope scope typ
-    let
-      typWithSelf = singletonT varId typExtended
-    debugPrintT $ "lookup: " <> showT currentTerm
-    debugPrintT $ "typ: " <> showT typWithSelf
-    pure (cTrue, typWithSelf)
+    typ <- extendTypeToCurrentScope scope $ lookupEnv env varId
+    debugPrintT $ "Getting: " <> showT currentTerm
+    debugPrintT $ "Type: " <> showT typ
+    mkTAppIfNecessary scope currentTerm typ
+
 
   {- [Syn-Con]
    -----------------
@@ -198,8 +193,7 @@ synths scope env currentTerm = case currentTerm of
   -}
   ConstInt x -> withRule "[Syn-Con]" $ do
     debugPrintT "type: " >> debugPrint (constIntT x)
-    extendedConstInt <- extendTypeToCurrentScope scope (F.sink (constIntT x))
-    pure (cTrue, extendedConstInt)
+    (currentTerm, ) <$> extendTypeToCurrentScope scope (F.sink (constIntT x))
 
   {- [Syn-App]
    G |- e ==> x:s -> t       G |- y <== s
@@ -208,19 +202,46 @@ synths scope env currentTerm = case currentTerm of
   -}
   App funcTerm argTerm -> withRule "[Syn-App]" $ do
      -- G |- e ==> x:s -> t
-    (funcConstraints, funcType) <- synths scope env funcTerm
+    (funcTerm', funcType) <- synths scope env funcTerm
     case funcType of
       TypeFun varPattern varType returnType -> do
-        debugPrintT "checking argument"
-        debugPrintT "argument term: " >> debugPrint argTerm
-        debugPrintT "argument type: " >> debugPrint varType
-        argConstraints <- check scope env argTerm varType
+        (argTerm', argType) <- synths scope env argTerm
+        (funcTerm'', _argType') <-  unify scope argType varType funcTerm'
+        debugPrintT $ "Arg type: " <> showT argType
+        debugPrintT $ "Var type: " <> showT varType
+        debugPrintT $ "Before unification: " <> showT funcTerm'
+        debugPrintT $ "After unification: " <> showT funcTerm''
+
         let
+          -- Сделать только для того чтоб сравнять скоупы
           resultType =
             F.substitutePattern scope F.identitySubst varPattern [argTerm] returnType
-        debugPrintT "resultType: " >> debugPrint resultType
-        pure (CAnd [funcConstraints, argConstraints], resultType)
-      _ -> error "unimplemented case"
+        debugPrintT $ "Return type: " <> showT returnType
+        debugPrintT $ "Result type: " <> showT resultType
+        pure (App funcTerm'' argTerm', resultType)
+      _ -> throwError $ "Application to non function: " <> showT funcType
+
+  {-
+  [Syn-Con] (op type is predefined) + [Syn-App] (type operator like function application)
+  -}
+  OpExpr lTerm op rTerm -> withRule "OpExr [Syn-Con] + [Syn-App]" $ do
+    let
+      (argTypBase, retTypBase) = getBaseTypesForOp scope op
+    argTyp <- extendTypeToCurrentScope scope =<< case argTypBase of
+      BaseTypeInt -> pure $ F.sink anyIntT
+      BaseTypeBool -> pure $ F.sink anyBoolT
+      _ -> throwError $ "Unknown base type of operator args" <> showT argTypBase
+    retTyp <- extendTypeToCurrentScope scope =<< case retTypBase of
+      BaseTypeInt -> pure $ F.sink anyIntT
+      BaseTypeBool -> pure $ F.sink anyBoolT
+      _ -> throwError $ "Unknown base type for operator return type" <> showT argTypBase
+    lTerm' <- check scope env lTerm argTyp
+    rTerm' <- check scope env rTerm argTyp
+    pure (OpExpr lTerm' op rTerm', retTyp)
+
+  Boolean b -> do
+    typ <- extendTypeToCurrentScope scope $ F.sink $ boolWithT b
+    pure (currentTerm, typ)
 
   {- [Syn-Ann]
    G |- e <== t
@@ -228,55 +249,121 @@ synths scope env currentTerm = case currentTerm of
    G |- e:t => t
   -}
   Ann annType term -> withRule "[Syn-Ann]" $ do
-    freshedAnnType <- fresh scope env annType
-    extendedAnnType <- extendTypeToCurrentScope scope freshedAnnType
-    checkConstraints <- check scope env term extendedAnnType
-    pure (checkConstraints, extendedAnnType)
+    extAnnType <- extendTypeToCurrentScope scope annType
+    -- Проблема в том что мы хотим запустить check на типе без forall
+    -- Но Forall накидывает скоупы, из-за этого мы не можем тип под forall поднять на верх
+    -- решение - вызвать check term annType внутри mkTLamIfNecessary
+    -- term' <- check scope env term extAnnType
+    termWIthTLam <- mkTLamIfNecessary scope env term extAnnType
+    pure (Ann annType termWIthTLam, extAnnType)
 
-  {-
-  [Syn-Con] (op type is predefined) + [Syn-App] (type operator like function application)
-  -}
-  OpExpr lTerm op rTerm -> withRule "OpExr [Syn-Con] + [Syn-App]" $ case binOpTypes scope op of
-    BinOpType xBinder xType yBinder yType resType -> do
-      leftTermConstraints <- check scope env lTerm xType
-      let scopeWithX = F.extendScope xBinder scope
-      -- чтоб проверить rTerm нам на самом деле не нужен xBinder в окружении, но нужен корректный env чтоб компилятор переварил.
-      rightTermConstraints <- withExtendedEnv env xBinder xType $ \env' ->
-        check scopeWithX env' (F.sink rTerm) yType
-      let
-        xSubst = F.addSubst F.identitySubst xBinder lTerm
-        ySubst = F.addSubst F.identitySubst yBinder (F.sink rTerm)
-        substitutedReturnType = F.substitute scope xSubst $
-          F.substitute scopeWithX ySubst resType
-      debugPrintT "return type" >> debugPrint substitutedReturnType
-      pure (CAnd [leftTermConstraints, rightTermConstraints], substitutedReturnType)
-  _ -> error "unimplemented case"
+  _ -> throwError $ "unimplemented case: " <> showT currentTerm
 
 getNameBinderFromPattern :: Pattern i o -> F.NameBinder i o
 getNameBinderFromPattern (PatternVar binder) = binder
 
-getRawVarIdFromPattern :: Pattern i o -> Inner.VarIdent
-getRawVarIdFromPattern varPat = case fromPattern varPat of
-  Inner.PatternVar v -> v
+mkTAppIfNecessary ::
+  (F.DExt F.VoidS i) =>
+  F.Scope i ->
+  -- | Term
+  Term i ->
+  -- | type
+  Term i ->
+  CheckerM (Term i {- new term with TApp -}, Term i {- new typ without Forall -})
+mkTAppIfNecessary scope term typ = case typ of
+  TypeForall (PatternVar typVarBinder) typUnderForall -> do
+    case (F.assertDistinct typVarBinder, F.assertExt typVarBinder) of
+      (F.Distinct, F.Ext) -> do
+        (F.sink -> newTempTypVar) <- mkFreshTempTypVar
+        let
+          resultTypeSubst = F.addSubst F.identitySubst typVarBinder newTempTypVar
+        resultType <- extendTypeToCurrentScope scope $
+            substTypeVar scope resultTypeSubst typUnderForall
+        debugPrintT $ "Was: " <> showT typUnderForall
+        debugPrintT $ "Became: " <> showT resultType
+        (term', typ') <- mkTAppIfNecessary scope term resultType
+        typ'' <- extendTypeToCurrentScope scope typ'
+        pure (TApp term' newTempTypVar, typ'')
+  -- все Forall у нас наверху типа, смотреть FrontToInner.hs mkForAll поэтому если мы встретили что-то иное то возвращать терм как есть
+  _ -> pure (term, typ)
 
-extendTypeToCurrentScope :: F.Distinct i => F.Scope i -> Term i -> CheckerM (Term i)
-extendTypeToCurrentScope scope typ = case typ of
-  TypeRefined b oldVar p -> F.withFreshBinder scope $ \newBinder ->
-    case (F.assertDistinct newBinder, F.assertExt newBinder) of
+mkTLamIfNecessary ::
+  (F.DExt F.VoidS i) =>
+  F.Scope i ->
+  Env i ->
+  -- | Term
+  Term i ->
+  -- | type
+  Term i ->
+  CheckerM (Term i {- new term with TApp -})
+mkTLamIfNecessary scope env term typ = case typ of
+  TypeForall typVar typUnderForall ->
+    case (F.assertDistinct typVar, F.assertExt typVar) of
       (F.Distinct, F.Ext) -> do
         let
-          scope' = F.extendScope newBinder scope
-          newPred = F.substitutePattern scope' (F.sink F.identitySubst) oldVar [F.Var (F.nameOf newBinder)] p
-        pure $ TypeRefined b (PatternVar newBinder) newPred
-  TypeFun argName argTyp retTyp ->  F.withFreshBinder scope $ \newBinder ->
-    case (F.assertDistinct newBinder, F.assertExt newBinder) of
-      (F.Distinct, F.Ext) -> do
-        argTypExtended <- extendTypeToCurrentScope scope argTyp
-        let
-          scope' = F.extendScope newBinder scope
-          newRetType = F.substitutePattern scope' (F.sink F.identitySubst) argName [F.Var (F.nameOf newBinder)] retTyp
-        newRetTypeExtended <- extendTypeToCurrentScope scope' newRetType
-        pure $ TypeFun (PatternVar newBinder) argTypExtended newRetTypeExtended
-  _ -> throwError $
-    "extendTypeToCurrentScope should be called only on type, not term\n"
-    <> showT typ
+          scope' = F.extendScopePattern typVar scope
+        -- на самом деле нам тут env расширять не нужно, но скоупы есть скоупы
+        term' <- withExtendedEnv env (getNameBinderFromPattern typVar) (F.sink anyIntT) $ \env' ->
+          mkTLamIfNecessary scope' env' (F.sink term) typUnderForall
+        pure (TAbs typVar term')
+  {-
+  Есть некоторый нюанс в том что если мы спускаем term i вниз через sink i1 -> i2 -> i3.
+  И в этих скоупах добавляются новые биндеры, то у изначально терма i со своими биндерами i1 -> i2 -> i3,
+  может быть конфликт имен. Поэтому надо рефрешнуть все биндеру снизу у изначального терма
+
+  Проблема что check вызывается здесь а не в Syn-Ann
+  Forall накидывает скоупы, из-за этого мы не можем тип под forall поднять на верх
+  решение - вызвать check term annType внутри mkTLamIfNecessary
+  -}
+  _ -> check scope env term typ
+
+-- | Тоже самое что и Foil.substitute, только правильно подставляет type var (она вложена в base typ)
+-- Поэтому в переданная подстановка должна содержать например [a -> int[v|true]] и тогда на выходе будет 'a[v|v < 0] -> int[v|true]
+substTypeVar ::
+  F.Distinct i =>
+  F.Scope i ->
+  F.Substitution Term o i  ->
+  -- In what type
+  Term o ->
+  Term i
+substTypeVar scope subst inType = case inType of
+  TypeRefined (BaseTypeVar (F.Var v)) _ _
+    -> F.lookupSubst subst v
+  TypeRefinedUnknown (BaseTypeVar (F.Var v))
+    -> F.lookupSubst subst v
+  F.Var v -> F.lookupSubst subst v
+  F.Node node -> F.Node (bimap f (substTypeVar scope subst) node)
+  where
+    f (F.ScopedAST binder body) =
+      F.withRefreshedPattern scope binder $ \extendSubst binder' ->
+        let subst' = extendSubst (F.sink subst)
+            scope' = F.extendScopePattern binder' scope
+            body' =  substTypeVar scope' subst' body
+        in F.ScopedAST binder' body'
+
+substTempTypeVar ::
+  F.Distinct i =>
+  F.Scope i ->
+  -- | What temp type var name
+  Inner.VarIdent ->
+  -- | On what type change temp var
+  Term i ->
+  -- | should be identity subst
+  F.Substitution Term o i  ->
+  -- In what type
+  Term o ->
+  Term i
+substTempTypeVar scope tempTypeVar typToSubst subst inType = case inType of
+  TypeRefined (BaseTypeTempVar varId) _ _
+    | tempTypeVar == varId -> trace "substTempTypeVar matched!" $ typToSubst
+  TypeRefinedUnknown (BaseTypeTempVar varId)
+    | tempTypeVar == varId -> typToSubst
+  F.Var v -> F.lookupSubst subst v
+  F.Node node -> F.Node (bimap f (substTempTypeVar scope tempTypeVar typToSubst subst) node)
+  where
+    f (F.ScopedAST binder body) =
+        F.withRefreshedPattern scope binder $ \extendSubst binder' ->
+          let subst' = extendSubst (F.sink subst)
+              scope' = F.extendScopePattern binder' scope
+              body' =  substTempTypeVar scope' tempTypeVar (F.sink typToSubst) subst' body
+          in F.ScopedAST binder' body'

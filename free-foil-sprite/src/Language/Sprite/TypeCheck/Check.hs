@@ -333,25 +333,3 @@ getNameBinderFromPattern (PatternVar binder) = binder
 getRawVarIdFromPattern :: Pattern i o -> Inner.VarIdent
 getRawVarIdFromPattern varPat = case fromPattern varPat of
   Inner.PatternVar v -> v
-
-extendTypeToCurrentScope :: F.Distinct i => F.Scope i -> Term i -> CheckerM (Term i)
-extendTypeToCurrentScope scope typ = case typ of
-  TypeRefined b oldVar p -> F.withFreshBinder scope $ \newBinder ->
-    case (F.assertDistinct newBinder, F.assertExt newBinder) of
-      (F.Distinct, F.Ext) -> do
-        let
-          scope' = F.extendScope newBinder scope
-          newPred = F.substitutePattern scope' (F.sink F.identitySubst) oldVar [F.Var (F.nameOf newBinder)] p
-        pure $ TypeRefined b (PatternVar newBinder) newPred
-  TypeFun argName argTyp retTyp ->  F.withFreshBinder scope $ \newBinder ->
-    case (F.assertDistinct newBinder, F.assertExt newBinder) of
-      (F.Distinct, F.Ext) -> do
-        argTypExtended <- extendTypeToCurrentScope scope argTyp
-        let
-          scope' = F.extendScope newBinder scope
-          newRetType = F.substitutePattern scope' (F.sink F.identitySubst) argName [F.Var (F.nameOf newBinder)] retTyp
-        newRetTypeExtended <- extendTypeToCurrentScope scope' newRetType
-        pure $ TypeFun (PatternVar newBinder) argTypExtended newRetTypeExtended
-  _ -> throwError $
-    "extendTypeToCurrentScope should be called only on type, not term\n"
-    <> showT typ
