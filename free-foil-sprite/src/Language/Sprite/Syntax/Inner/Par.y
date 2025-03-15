@@ -63,12 +63,13 @@ import Language.Sprite.Syntax.Inner.Lex
   'int'      { PT _ (TS _ 28)       }
   'let'      { PT _ (TS _ 29)       }
   'rec'      { PT _ (TS _ 30)       }
-  'true'     { PT _ (TS _ 31)       }
-  '{'        { PT _ (TS _ 32)       }
-  '|'        { PT _ (TS _ 33)       }
-  '||'       { PT _ (TS _ 34)       }
-  '}'        { PT _ (TS _ 35)       }
-  '∀'        { PT _ (TS _ 36)       }
+  't('       { PT _ (TS _ 31)       }
+  'true'     { PT _ (TS _ 32)       }
+  '{'        { PT _ (TS _ 33)       }
+  '|'        { PT _ (TS _ 34)       }
+  '||'       { PT _ (TS _ 35)       }
+  '}'        { PT _ (TS _ 36)       }
+  '∀'        { PT _ (TS _ 37)       }
   L_integ    { PT _ (TI $$)         }
   L_VarIdent { PT _ (T_VarIdent $$) }
 
@@ -93,7 +94,7 @@ Term
   | '/*@' Term '*/' Term { Language.Sprite.Syntax.Inner.Abs.Ann $2 $4 }
   | '(' Term Op Term ')' { Language.Sprite.Syntax.Inner.Abs.OpExpr $2 $3 $4 }
   | '/\\' Pattern ':' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.TAbs $2 $4 }
-  | Term '[' Term ']' { Language.Sprite.Syntax.Inner.Abs.TApp $1 $3 }
+  | Term 't(' Term ')' { Language.Sprite.Syntax.Inner.Abs.TApp $1 $3 }
   | Term '[' Pattern '|' ScopedTerm ']' { Language.Sprite.Syntax.Inner.Abs.TypeRefined $1 $3 $5 }
   | Term '[' '?' ']' { Language.Sprite.Syntax.Inner.Abs.TypeRefinedUnknown $1 }
   | Pattern ':' Term '=>' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.TypeFun $1 $3 $5 }

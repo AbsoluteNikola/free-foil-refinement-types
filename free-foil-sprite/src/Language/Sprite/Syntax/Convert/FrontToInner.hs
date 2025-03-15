@@ -3,7 +3,6 @@ module Language.Sprite.Syntax.Convert.FrontToInner where
 import Language.Sprite.Syntax.Front.Abs qualified as F
 import Language.Sprite.Syntax.Inner.Abs qualified as I
 import Data.List (nub)
-import Data.Foldable (foldl')
 
 data ConvertError
   = DifferentNameForBindingAndAnnotationError
@@ -144,7 +143,7 @@ collectFreeVars = nub . map convertVarId . go
       F.TypeRefinedSimple _ -> []
 
 mkForAll :: F.RType -> I.Term -> I.Term
-mkForAll typ term = foldl' f term freeVars
+mkForAll typ term = foldr f term freeVars
   where
     freeVars = collectFreeVars typ
-    f curTerm typeVar = I.TypeForall (I.PatternVar typeVar) (I.ScopedTerm curTerm)
+    f typeVar curTerm = I.TypeForall (I.PatternVar typeVar) (I.ScopedTerm curTerm)

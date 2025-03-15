@@ -18,6 +18,7 @@ import qualified Language.Fixpoint.Types.Config as FC
 import qualified Language.Fixpoint.Utils.Files as F
 import qualified Language.Fixpoint.Misc as F
 import qualified Data.Text as T
+import qualified Data.Text.IO as TIO
 import qualified Text.PrettyPrint.HughesPJ.Compat as PJ
 import Data.Foldable (for_)
 import Control.Monad.Trans.Except (runExceptT)
@@ -29,6 +30,8 @@ import qualified Language.Fixpoint.Horn.Types as F
 import qualified Language.Sprite.Syntax.Convert.QualifierToFTR as QualifiersToFTR
 import qualified Language.Sprite.TypeCheck.Elaboration as Elaboration
 import Text.Pretty.Simple (pPrint)
+import qualified Language.Sprite.Syntax.Inner.Print as Inner
+import qualified Text.Pretty.Simple as Check
 
 -- TODO: add better errors
 instance F.Loc T.Text where
@@ -52,8 +55,9 @@ vcgen qualifiers term = do
         print err
         exitFailure
       (Right t, _) -> pure t
+  pPrint $ S.fromTerm elaboratedTerm
   print ("Elaborated term:" :: Text)
-  pPrint $ elaboratedTerm
+  TIO.putStrLn $ Check.showT elaboratedTerm
   (eConstraints, checkerState) <-
     runM $ Check.check Foil.emptyScope Check.EmptyEnv elaboratedTerm programType
   let
@@ -97,7 +101,7 @@ run filePath (Front.Program rawQualifiers rawFrontTerm) = do
       print errs
       exitFailure
   let scopedTerm =  S.toTerm Foil.emptyScope Map.empty rawInnerTerm
-  pPrint $ S.fromTerm scopedTerm
+  putStrLn $ Inner.printTree rawInnerTerm
   result <- vcgen qualifiers scopedTerm >>= \case
     Left err -> do
       putStrLn "Type check error: "

@@ -128,7 +128,7 @@ fresh scope env curType = case curType of
             (HVar newHornVarName $ F.Var (F.nameOf freshBinder) : (F.Var . F.sink <$> names ))
 
   otherTerm -> throwError $
-    "fresh should be called only on type, not term:\n" <> pShowT otherTerm
+    "fresh should be called only on type, not term:\n" <> showT otherTerm
 
 getBaseType :: Term i -> Maybe (Term i)
 getBaseType = \case

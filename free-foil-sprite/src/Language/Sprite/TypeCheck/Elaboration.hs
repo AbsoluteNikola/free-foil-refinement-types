@@ -211,14 +211,16 @@ synths scope env currentTerm = case currentTerm of
         debugPrintT $ "Var type: " <> showT varType
         debugPrintT $ "Before unification: " <> showT funcTerm'
         debugPrintT $ "After unification: " <> showT funcTerm''
-
         let
           -- Сделать только для того чтоб сравнять скоупы
           resultType =
             F.substitutePattern scope F.identitySubst varPattern [argTerm] returnType
+        -- Из-за алгоритма унифакации надо отдельно делать это для retyurn type, чтоб подставить туда TempVar
+        -- В идеале сделать список всех подстановок, но я пока не придумал как это сделать
+        (resultType', _) <-  unify scope argType varType resultType
         debugPrintT $ "Return type: " <> showT returnType
         debugPrintT $ "Result type: " <> showT resultType
-        pure (App funcTerm'' argTerm', resultType)
+        pure (App funcTerm'' argTerm', resultType')
       _ -> throwError $ "Application to non function: " <> showT funcType
 
   {-
@@ -281,11 +283,14 @@ mkTAppIfNecessary scope term typ = case typ of
             substTypeVar scope resultTypeSubst typUnderForall
         debugPrintT $ "Was: " <> showT typUnderForall
         debugPrintT $ "Became: " <> showT resultType
-        (term', typ') <- mkTAppIfNecessary scope term resultType
+        (term', typ') <- mkTAppIfNecessary scope (TApp term newTempTypVar) resultType
         typ'' <- extendTypeToCurrentScope scope typ'
-        pure (TApp term' newTempTypVar, typ'')
+        pure (term', typ'')
   -- все Forall у нас наверху типа, смотреть FrontToInner.hs mkForAll поэтому если мы встретили что-то иное то возвращать терм как есть
-  _ -> pure (term, typ)
+  _ -> do
+    debugPrintT $ "mkTApp result term: " <> showT term
+    debugPrintT $ "mkTApp result typ: " <> showT typ
+    pure (term, typ)
 
 mkTLamIfNecessary ::
   (F.DExt F.VoidS i) =>
