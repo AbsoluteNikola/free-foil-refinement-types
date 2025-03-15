@@ -108,7 +108,10 @@ convertRType rType = case rType of
       (convertRType argType)
       (I.ScopedTerm $ convertRType retType)
   F.TypeVar varId -> mkSimpleType (I.BaseTypeVar $ I.Var (convertVarId varId))
-  F.TypeRefinedUnknown base -> I.TypeRefinedUnknown (convertBaseType base)
+  F.TypeRefinedUnknown base -> I.TypeRefined
+    (convertBaseType base)
+    (I.PatternVar (I.VarIdent "v"))
+    (I.ScopedTerm I.Unknown)
   F.TypeRefinedSimple base -> mkSimpleType (convertBaseType base)
 
 convertBaseType :: F.BaseType -> I.Term

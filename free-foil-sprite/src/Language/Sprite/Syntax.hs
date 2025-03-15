@@ -51,12 +51,12 @@ data TermSig scope term
     TAbsSig :: scope -> TermSig scope term
     TAppSig :: term -> term -> TermSig scope term
     TypeRefinedSig :: term -> scope -> TermSig scope term
-    TypeRefinedUnknownSig :: term -> TermSig scope term
     TypeFunSig :: term -> scope -> TermSig scope term
     TypeForallSig :: scope -> TermSig scope term
     HVarSig :: Language.Sprite.Syntax.Inner.Abs.VarIdent ->
                 [term] ->
                 TermSig scope term
+    UnknownSig :: TermSig scope term
     BaseTypeIntSig :: TermSig scope term
     BaseTypeBoolSig :: TermSig scope term
     BaseTypeVarSig :: term -> TermSig scope term
@@ -107,8 +107,6 @@ pattern TypeRefined :: Term o -> Pattern o i -> Term i -> Term o
 pattern TypeRefined x_aMZu binder_aMZv body_aMZw = Control.Monad.Free.Foil.Node (TypeRefinedSig x_aMZu
                                                                                                 (Control.Monad.Free.Foil.ScopedAST binder_aMZv
                                                                                                                                     body_aMZw))
-pattern TypeRefinedUnknown :: Term o -> Term o
-pattern TypeRefinedUnknown x_aMZx = Control.Monad.Free.Foil.Node (TypeRefinedUnknownSig x_aMZx)
 
 pattern TypeFun :: Pattern o i -> Term o -> Term i -> Term o -- FIXED HERE
 pattern TypeFun binder_a961 x_a960 body_a962 = Control.Monad.Free.Foil.Node
@@ -122,6 +120,8 @@ pattern TypeForall binder_aMZB body_aMZC = Control.Monad.Free.Foil.Node (TypeFor
 pattern HVar ::Language.Sprite.Syntax.Inner.Abs.VarIdent -> [Term o] -> Term o
 pattern HVar x_aMZD x_aMZE = Control.Monad.Free.Foil.Node (HVarSig x_aMZD
                                                                     x_aMZE)
+pattern Unknown :: Term o
+pattern Unknown = Control.Monad.Free.Foil.Node UnknownSig
 pattern BaseTypeInt :: Term o
 pattern BaseTypeInt = Control.Monad.Free.Foil.Node BaseTypeIntSig
 pattern BaseTypeBool :: Term o
@@ -130,7 +130,7 @@ pattern BaseTypeVar :: Term o -> Term o
 pattern BaseTypeVar x_aMZF = Control.Monad.Free.Foil.Node (BaseTypeVarSig x_aMZF)
 pattern BaseTypeTempVar ::Language.Sprite.Syntax.Inner.Abs.VarIdent -> Term o
 pattern BaseTypeTempVar varId = Control.Monad.Free.Foil.Node (BaseTypeTempVarSig varId)
-{-# COMPLETE Control.Monad.Free.Foil.Var, ConstInt, Boolean, If, Let, LetRec, Fun, App, Ann, OpExpr, TAbs, TApp, TypeRefined, TypeRefinedUnknown, TypeFun, TypeForall, HVar, BaseTypeInt, BaseTypeBool, BaseTypeVar #-}
+{-# COMPLETE Control.Monad.Free.Foil.Var, ConstInt, Boolean, If, Let, LetRec, Fun, App, Ann, OpExpr, TAbs, TApp, TypeRefined, TypeFun, TypeForall, HVar, BaseTypeInt, BaseTypeBool, BaseTypeVar #-}
 
 
 deriveBifunctor ''TermSig
@@ -176,8 +176,6 @@ fromTermSig (TAppSig x_aawm x_aawn)
 fromTermSig (TypeRefinedSig x_aawo (binder_aawp, body_aawq))
   = Language.Sprite.Syntax.Inner.Abs.TypeRefined
       x_aawo binder_aawp body_aawq
-fromTermSig (TypeRefinedUnknownSig x_aawr)
-  = Language.Sprite.Syntax.Inner.Abs.TypeRefinedUnknown x_aawr
 fromTermSig (TypeFunSig x_abJi (binder_abJj, body_abJk))
   = Language.Sprite.Syntax.Inner.Abs.TypeFun
       binder_abJj x_abJi  body_abJk -- FIXED HERE
@@ -187,6 +185,8 @@ fromTermSig (HVarSig x_aawx x_aawy)
   = Language.Sprite.Syntax.Inner.Abs.HVar x_aawx x_aawy
 fromTermSig BaseTypeIntSig
   = Language.Sprite.Syntax.Inner.Abs.BaseTypeInt
+fromTermSig UnknownSig
+  = Language.Sprite.Syntax.Inner.Abs.Unknown
 fromTermSig BaseTypeBoolSig
   = Language.Sprite.Syntax.Inner.Abs.BaseTypeBool
 fromTermSig (BaseTypeVarSig x_aawz)
@@ -245,9 +245,6 @@ toTermSig
                                                 body_aaxg)
   = Right (TypeRefinedSig _x_aaxe (binder_aaxf, body_aaxg))
 toTermSig
-  (Language.Sprite.Syntax.Inner.Abs.TypeRefinedUnknown _x_aaxi)
-  = Right (TypeRefinedUnknownSig _x_aaxi)
-toTermSig
   (Language.Sprite.Syntax.Inner.Abs.TypeFun binder_abJM _x_abJL -- FIXED HERE
                                             body_abJN)
   = Right (TypeFunSig _x_abJL (binder_abJM, body_abJN))
@@ -256,6 +253,8 @@ toTermSig
   = Right (TypeForallSig (binder_aaxo, body_aaxp))
 toTermSig (Language.Sprite.Syntax.Inner.Abs.HVar _x_aaxr _x_aaxs)
   = Right (HVarSig _x_aaxr _x_aaxs)
+toTermSig Language.Sprite.Syntax.Inner.Abs.Unknown
+  = Right UnknownSig
 toTermSig Language.Sprite.Syntax.Inner.Abs.BaseTypeInt
   = Right BaseTypeIntSig
 toTermSig Language.Sprite.Syntax.Inner.Abs.BaseTypeBool

@@ -45,7 +45,6 @@ extendTypeToCurrentScope scope typ = case typ of
           newRetType = F.substitutePattern scope' (F.sink F.identitySubst) argName [F.Var (F.nameOf newBinder)] retTyp
         newRetTypeExtended <- extendTypeToCurrentScope scope' newRetType
         pure $ TypeFun (PatternVar newBinder) argTypExtended newRetTypeExtended
-  TypeRefinedUnknown b -> pure $ TypeRefinedUnknown b
   TypeForall v typUnderForall -> F.withFreshBinder scope $ \newBinder ->
     case (F.assertDistinct newBinder, F.assertExt newBinder) of
       (F.Distinct, F.Ext) -> do
@@ -82,31 +81,12 @@ singletonT varName typ = case typ of
 fresh ::F.Distinct i => F.Scope i -> Env i -> Term i -> CheckerM (Term i)
 fresh scope env curType = case curType of
   {-
-  fresh(G, b[v|p]) = b[v|p]
-  -}
-  t@TypeRefined{} -> pure t
-
-  {-
-  fresh(G, x:s -> t) = x:s' -> t'
-    s' = fresh(G, s)
-    t' = fresh(G; x:s, t)
-  -}
-  TypeFun (PatternVar argBinder) artTyp retTyp -> do
-    argType' <- fresh scope env artTyp
-    retType' <- case (F.assertDistinct argBinder, F.assertExt argBinder) of
-      (F.Distinct, F.Ext) ->
-        withExtendedEnv env argBinder artTyp $ \env' -> do
-          let scope' = F.extendScope argBinder scope
-          fresh scope' env' retTyp
-    pure $ TypeFun (PatternVar argBinder) argType' retType'
-
-  {-
   fresh(G, b[?]) = b[v| k(v,...x) ]
     k = fresh horn variable of sorts b : ...x sorts
     v = fresh binder
     ...x = arguments from env
   -}
-  TypeRefinedUnknown base -> do
+  TypeRefined base _ Unknown -> do
     (catMaybes -> unzip -> (names, sorts)) <-
       for (envToList env) $ \(name, typ) -> case getBaseType typ of
         Nothing -> pure Nothing
@@ -127,13 +107,32 @@ fresh scope env curType = case curType of
             -- k(v,...x)
             (HVar newHornVarName $ F.Var (F.nameOf freshBinder) : (F.Var . F.sink <$> names ))
 
+
+  {-
+  fresh(G, b[v|p]) = b[v|p]
+  -}
+  t@TypeRefined{} -> pure t
+
+  {-
+  fresh(G, x:s -> t) = x:s' -> t'
+    s' = fresh(G, s)
+    t' = fresh(G; x:s, t)
+  -}
+  TypeFun (PatternVar argBinder) artTyp retTyp -> do
+    argType' <- fresh scope env artTyp
+    retType' <- case (F.assertDistinct argBinder, F.assertExt argBinder) of
+      (F.Distinct, F.Ext) ->
+        withExtendedEnv env argBinder artTyp $ \env' -> do
+          let scope' = F.extendScope argBinder scope
+          fresh scope' env' retTyp
+    pure $ TypeFun (PatternVar argBinder) argType' retType'
+
   otherTerm -> throwError $
     "fresh should be called only on type, not term:\n" <> showT otherTerm
 
 getBaseType :: Term i -> Maybe (Term i)
 getBaseType = \case
   TypeRefined base _ _ -> Just base
-  TypeRefinedUnknown base -> Just base
   _ -> Nothing
 
 baseTypeEq :: Term i -> Term i -> Bool

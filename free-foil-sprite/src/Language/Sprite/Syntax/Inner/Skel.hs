@@ -34,10 +34,10 @@ transTerm x = case x of
   Language.Sprite.Syntax.Inner.Abs.TAbs pattern_ scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.TApp term1 term2 -> failure x
   Language.Sprite.Syntax.Inner.Abs.TypeRefined term pattern_ scopedterm -> failure x
-  Language.Sprite.Syntax.Inner.Abs.TypeRefinedUnknown term -> failure x
   Language.Sprite.Syntax.Inner.Abs.TypeFun pattern_ term scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.TypeForall pattern_ scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.HVar varident terms -> failure x
+  Language.Sprite.Syntax.Inner.Abs.Unknown -> failure x
   Language.Sprite.Syntax.Inner.Abs.BaseTypeInt -> failure x
   Language.Sprite.Syntax.Inner.Abs.BaseTypeBool -> failure x
   Language.Sprite.Syntax.Inner.Abs.BaseTypeVar term -> failure x

@@ -42,13 +42,6 @@ unify scope t (TypeRefined (BaseTypeTempVar varId) _ _) term = withRule "[Unify]
   pure (substitutedTerm, t)
 unify _scope t1@(TypeRefined b1 _ _) _t2@(TypeRefined b2 _ _) term
   | baseTypeEq b1 b2 = pure (term, t1)
-unify _scope t1@(TypeRefinedUnknown b1) _t2@(TypeRefinedUnknown b2) term
-  | baseTypeEq b1 b2 = pure (term, t1)
-unify _scope t1@(TypeRefined b1 _ _) _t2@(TypeRefinedUnknown b2) term
-  | baseTypeEq b1 b2 = pure (term, t1)
-unify _scope _t1@(TypeRefinedUnknown b1) t2@(TypeRefined b2 _ _) term
-  | baseTypeEq b1 b2 = pure (term, t2)
-
 unify scope (TypeFun v1 argTyp1 retTyp1) (TypeFun v2 argTyp2 retTyp2) term = do
   (term', argTyp) <- unify scope argTyp1 argTyp2 term
   case (F.assertDistinct v2, F.assertExt v2) of
@@ -346,8 +339,6 @@ substTypeVar ::
 substTypeVar scope subst inType = case inType of
   TypeRefined (BaseTypeVar (F.Var v)) _ _
     -> F.lookupSubst subst v
-  TypeRefinedUnknown (BaseTypeVar (F.Var v))
-    -> F.lookupSubst subst v
   F.Var v -> F.lookupSubst subst v
   F.Node node -> F.Node (bimap f (substTypeVar scope subst) node)
   where
@@ -373,8 +364,6 @@ substTempTypeVar ::
 substTempTypeVar scope tempTypeVar typToSubst subst inType = case inType of
   TypeRefined (BaseTypeTempVar varId) _ _
     | tempTypeVar == varId -> trace "substTempTypeVar matched!" $ typToSubst
-  TypeRefinedUnknown (BaseTypeTempVar varId)
-    | tempTypeVar == varId -> typToSubst
   F.Var v -> F.lookupSubst subst v
   F.Node node -> F.Node (bimap f (substTempTypeVar scope tempTypeVar typToSubst subst) node)
   where

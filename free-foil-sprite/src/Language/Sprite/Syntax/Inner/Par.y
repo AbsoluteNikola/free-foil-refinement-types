@@ -96,10 +96,10 @@ Term
   | '/\\' Pattern ':' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.TAbs $2 $4 }
   | Term 't(' Term ')' { Language.Sprite.Syntax.Inner.Abs.TApp $1 $3 }
   | Term '[' Pattern '|' ScopedTerm ']' { Language.Sprite.Syntax.Inner.Abs.TypeRefined $1 $3 $5 }
-  | Term '[' '?' ']' { Language.Sprite.Syntax.Inner.Abs.TypeRefinedUnknown $1 }
   | Pattern ':' Term '=>' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.TypeFun $1 $3 $5 }
   | '∀' Pattern ':' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.TypeForall $2 $4 }
   | VarIdent '(' ListTerm ')' { Language.Sprite.Syntax.Inner.Abs.HVar $1 $3 }
+  | '?' { Language.Sprite.Syntax.Inner.Abs.Unknown }
   | 'int' { Language.Sprite.Syntax.Inner.Abs.BaseTypeInt }
   | 'bool' { Language.Sprite.Syntax.Inner.Abs.BaseTypeBool }
   | '\'' Term { Language.Sprite.Syntax.Inner.Abs.BaseTypeVar $2 }

@@ -29,10 +29,10 @@ data Term
     | TAbs Pattern ScopedTerm
     | TApp Term Term
     | TypeRefined Term Pattern ScopedTerm
-    | TypeRefinedUnknown Term
     | TypeFun Pattern Term ScopedTerm
     | TypeForall Pattern ScopedTerm
     | HVar VarIdent [Term]
+    | Unknown
     | BaseTypeInt
     | BaseTypeBool
     | BaseTypeVar Term
