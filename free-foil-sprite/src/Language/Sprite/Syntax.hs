@@ -48,7 +48,7 @@ data TermSig scope term
                     Language.Sprite.Syntax.Inner.Abs.Op ->
                     term ->
                     TermSig scope term
-    TAbsSig :: scope -> TermSig scope term
+    TLamSig :: scope -> TermSig scope term
     TAppSig :: term -> term -> TermSig scope term
     TypeRefinedSig :: term -> scope -> TermSig scope term
     TypeFunSig :: term -> scope -> TermSig scope term
@@ -98,8 +98,8 @@ pattern OpExpr ::
             Term o -> Language.Sprite.Syntax.Inner.Abs.Op -> Term o -> Term o
 pattern OpExpr x_aMZo x_aMZp x_aMZq = Control.Monad.Free.Foil.Node (OpExprSig x_aMZo
                                                                                 x_aMZp x_aMZq)
-pattern TAbs :: Pattern o i -> Term i -> Term o
-pattern TAbs p term = Control.Monad.Free.Foil.Node (TAbsSig (Control.Monad.Free.Foil.ScopedAST p term))
+pattern TLam :: Pattern o i -> Term i -> Term o
+pattern TLam p term = Control.Monad.Free.Foil.Node (TLamSig (Control.Monad.Free.Foil.ScopedAST p term))
 pattern TApp :: Term o -> Term o -> Term o
 pattern TApp x_aMZs x_aMZt = Control.Monad.Free.Foil.Node (TAppSig x_aMZs
                                                                     x_aMZt)
@@ -130,7 +130,7 @@ pattern BaseTypeVar :: Term o -> Term o
 pattern BaseTypeVar x_aMZF = Control.Monad.Free.Foil.Node (BaseTypeVarSig x_aMZF)
 pattern BaseTypeTempVar ::Language.Sprite.Syntax.Inner.Abs.VarIdent -> Term o
 pattern BaseTypeTempVar varId = Control.Monad.Free.Foil.Node (BaseTypeTempVarSig varId)
-{-# COMPLETE Control.Monad.Free.Foil.Var, ConstInt, Boolean, If, Let, LetRec, Fun, App, Ann, OpExpr, TAbs, TApp, TypeRefined, TypeFun, TypeForall, HVar, BaseTypeInt, BaseTypeBool, BaseTypeVar #-}
+{-# COMPLETE Control.Monad.Free.Foil.Var, ConstInt, Boolean, If, Let, LetRec, Fun, App, Ann, OpExpr, TLam, TApp, TypeRefined, TypeFun, TypeForall, HVar, BaseTypeInt, BaseTypeBool, BaseTypeVar #-}
 
 
 deriveBifunctor ''TermSig
@@ -169,8 +169,8 @@ fromTermSig (AnnSig x_aawf x_aawg)
   = Language.Sprite.Syntax.Inner.Abs.Ann x_aawf x_aawg
 fromTermSig (OpExprSig x_aawh x_aawi x_aawj)
   = Language.Sprite.Syntax.Inner.Abs.OpExpr x_aawh x_aawi x_aawj
-fromTermSig (TAbsSig (binder_aawk, body_aawl))
-  = Language.Sprite.Syntax.Inner.Abs.TAbs binder_aawk body_aawl
+fromTermSig (TLamSig (binder_aawk, body_aawl))
+  = Language.Sprite.Syntax.Inner.Abs.TLam binder_aawk body_aawl
 fromTermSig (TAppSig x_aawm x_aawn)
   = Language.Sprite.Syntax.Inner.Abs.TApp x_aawm x_aawn
 fromTermSig (TypeRefinedSig x_aawo (binder_aawp, body_aawq))
@@ -236,8 +236,8 @@ toTermSig
   (Language.Sprite.Syntax.Inner.Abs.OpExpr _x_aax4 _x_aax5 _x_aax6)
   = Right (OpExprSig _x_aax4 _x_aax5 _x_aax6)
 toTermSig
-  (Language.Sprite.Syntax.Inner.Abs.TAbs binder_aax8 body_aax9)
-  = Right (TAbsSig (binder_aax8, body_aax9))
+  (Language.Sprite.Syntax.Inner.Abs.TLam binder_aax8 body_aax9)
+  = Right (TLamSig (binder_aax8, body_aax9))
 toTermSig (Language.Sprite.Syntax.Inner.Abs.TApp _x_aaxb _x_aaxc)
   = Right (TAppSig _x_aaxb _x_aaxc)
 toTermSig

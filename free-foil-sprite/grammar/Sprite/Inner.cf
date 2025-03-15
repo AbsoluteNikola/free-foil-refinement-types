@@ -14,7 +14,7 @@ Ann.          Term ::= "/*@" Term "*/" Term; -- FIXME: Problem with TH generatio
 OpExpr.       Term ::= "(" Term Op Term ")";
 
 -- polymorphism
-TAbs.         Term ::= "/\\" Pattern ":" ScopedTerm ;
+TLam.         Term ::= "/\\" Pattern ":" ScopedTerm ;
 TApp.         Term ::= Term "t(" Term ")" ;
 
 -- type terms, first term should be one of base types

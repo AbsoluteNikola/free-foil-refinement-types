@@ -29,7 +29,6 @@ import qualified Language.Sprite.TypeCheck.Types as S
 import qualified Language.Fixpoint.Horn.Types as F
 import qualified Language.Sprite.Syntax.Convert.QualifierToFTR as QualifiersToFTR
 import qualified Language.Sprite.TypeCheck.Elaboration as Elaboration
-import Text.Pretty.Simple (pPrint)
 import qualified Language.Sprite.Syntax.Inner.Print as Inner
 
 -- TODO: add better errors
@@ -54,7 +53,7 @@ vcgen qualifiers term = do
         print err
         exitFailure
       (Right t, _) -> pure t
-  pPrint $ S.fromTerm elaboratedTerm
+  -- pPrint $ S.fromTerm elaboratedTerm
   print ("Elaborated term:" :: Text)
   TIO.putStrLn $ Check.showT elaboratedTerm
   (eConstraints, checkerState) <-

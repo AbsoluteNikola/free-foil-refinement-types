@@ -2,6 +2,7 @@
 
 module Language.Sprite.TypeCheck.Check where
 import Control.Monad.Foil qualified as F
+import Control.Monad.Foil.Internal qualified as F
 import Control.Monad.Free.Foil qualified as F
 import Language.Sprite.Syntax
 import Control.Monad.Except (MonadError (throwError))
@@ -209,6 +210,29 @@ check scope env currentTerm currentType = case currentTerm of
                 extendedCurrentType <- extendTypeToCurrentScope scope' (F.sink currentType)
                 branchCheckConstraints <- check scope' env' (F.sink brachTerm) extendedCurrentType
                 buildImplicationFromType message scope' (PatternVar freshY) (F.sink t) branchCheckConstraints
+  {- [Chk-TLam]
+
+  G, a |- e <== t
+  ------------------------ [Chk-TLam]
+  G |- Λ a. e <== all a. t
+  -}
+  TLam typAppVar body -> withRule "[Chk-TLam]" $ do
+    case currentType of
+      TypeForall forAllVar typUnderForall -> do
+        case (F.assertDistinct forAllVar, F.assertExt forAllVar) of
+          (F.Distinct, F.Ext) -> do
+            let
+                scope' = F.extendScopePattern forAllVar scope
+                subst = F.addRename
+                  (F.sink F.identitySubst)
+                  (getNameBinderFromPattern typAppVar)
+                  (F.nameOf $ getNameBinderFromPattern forAllVar)
+                body' = F.substitute scope' subst body
+            -- Нужно чем-то расширить env до нужного скоупа, поэтому просто записываем туда Unknown
+            -- Unknown для этого не предназначен, но выстрелит если это расширение env будет где-то использоваться
+            withExtendedEnv env (getNameBinderFromPattern forAllVar) Unknown $ \env' ->
+              check scope' env' body' typUnderForall
+      _ -> throwError $ "TLam with type without forall: " <> showT currentType
 
   {- [Chk-Syn]
   G |- e ==> s        G |- s <: t
@@ -236,11 +260,11 @@ buildImplicationFromType msg scope argVarPat@(PatternVar argVarId) typ constrain
 
     debugPrintT $ "Implication: " <> "varId = " <> showT argVarIdRawName <> ", term = " <> showT p'
     pure $ CImplication argVarIdRaw (fromTerm base) (fromTerm p') constraint msg
-  TypeFun{} -> pure constraint
-  otherTerm -> throwError $
-    "can't buildImplicationFromType\n"
-    <> "context message: " <> msg <> "\n"
-    <> "term: " <> showT otherTerm
+  _ -> pure constraint
+  -- otherTerm -> throwError $
+  --   "can't buildImplicationFromType\n"
+  --   <> "context message: " <> msg <> "\n"
+  --   <> "term: " <> showT otherTerm
 
 synths ::
   (F.DExt F.VoidS i) =>
@@ -284,6 +308,7 @@ synths scope env currentTerm = case currentTerm of
     case funcType of
       TypeFun varPattern varType returnType -> do
         debugPrintT "checking argument"
+        debugPrintT $ "fun type: " <> showT funcType
         debugPrintT "argument term: " >> debugPrint argTerm
         debugPrintT "argument type: " >> debugPrint varType
         argConstraints <- check scope env argTerm varType
@@ -294,13 +319,35 @@ synths scope env currentTerm = case currentTerm of
         pure (CAnd [funcConstraints, argConstraints], resultType)
       _ -> throwError "Application to non function"
 
+  {- [Syn-TApp]
+  G |- e ==> all a. s
+  ---------------------------
+  G |- e[t] ==> s [ a := t]
+  -}
+  TApp funTerm typ -> withRule "[Syn-TApp]" $ do
+    (cSyn, funTyp) <- synths scope env funTerm
+    case funTyp of
+      TypeForall typVar typUnderForall -> do
+        let
+          subst = F.addSubst F.identitySubst (getNameBinderFromPattern typVar) typ
+          F.UnsafeName rawTypVarName = F.nameOf $ getNameBinderFromPattern typVar
+          typUnderForall' = substTypeVar scope subst rawTypVarName typUnderForall
+        debugPrintT $ "Check substTypeVar: " <> showT typVar <> " -> " <> showT typ
+        debugPrintT $ "Was: " <> showT funTyp
+        debugPrintT $ "Change: " <> showT typVar <> " on " <> showT typ
+        debugPrintT $ "Became: " <> showT typUnderForall'
+        pure (cSyn, typUnderForall')
+      _ -> throwError $ "type application to non forall: " <> showT funTyp
+
   {- [Syn-Ann]
    G |- e <== t
    -----------------
    G |- e:t => t
   -}
   Ann annType term -> withRule "[Syn-Ann]" $ do
+    debugPrintT $ "Freshing: " <> showT annType
     freshedAnnType <- fresh scope env annType
+    debugPrintT $ "Freshed: " <> showT annType
     extendedAnnType <- extendTypeToCurrentScope scope freshedAnnType
     checkConstraints <- check scope env term extendedAnnType
     pure (checkConstraints, extendedAnnType)

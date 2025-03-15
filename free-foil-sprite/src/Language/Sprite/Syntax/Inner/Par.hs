@@ -262,7 +262,7 @@ happyReduction_18 ((HappyAbsSyn16  happy_var_4) `HappyStk`
         _ `HappyStk`
         happyRest)
          = HappyAbsSyn12
-                 (Language.Sprite.Syntax.Inner.Abs.TAbs happy_var_2 happy_var_4
+                 (Language.Sprite.Syntax.Inner.Abs.TLam happy_var_2 happy_var_4
         ) `HappyStk` happyRest
 
 happyReduce_19 = happyReduce 4# 2# happyReduction_19

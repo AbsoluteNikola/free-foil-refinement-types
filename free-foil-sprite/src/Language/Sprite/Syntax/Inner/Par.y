@@ -93,7 +93,7 @@ Term
   | Term '(' Term ')' { Language.Sprite.Syntax.Inner.Abs.App $1 $3 }
   | '/*@' Term '*/' Term { Language.Sprite.Syntax.Inner.Abs.Ann $2 $4 }
   | '(' Term Op Term ')' { Language.Sprite.Syntax.Inner.Abs.OpExpr $2 $3 $4 }
-  | '/\\' Pattern ':' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.TAbs $2 $4 }
+  | '/\\' Pattern ':' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.TLam $2 $4 }
   | Term 't(' Term ')' { Language.Sprite.Syntax.Inner.Abs.TApp $1 $3 }
   | Term '[' Pattern '|' ScopedTerm ']' { Language.Sprite.Syntax.Inner.Abs.TypeRefined $1 $3 $5 }
   | Pattern ':' Term '=>' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.TypeFun $1 $3 $5 }

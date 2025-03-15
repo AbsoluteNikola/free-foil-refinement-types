@@ -31,7 +31,7 @@ transTerm x = case x of
   Language.Sprite.Syntax.Inner.Abs.App term1 term2 -> failure x
   Language.Sprite.Syntax.Inner.Abs.Ann term1 term2 -> failure x
   Language.Sprite.Syntax.Inner.Abs.OpExpr term1 op term2 -> failure x
-  Language.Sprite.Syntax.Inner.Abs.TAbs pattern_ scopedterm -> failure x
+  Language.Sprite.Syntax.Inner.Abs.TLam pattern_ scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.TApp term1 term2 -> failure x
   Language.Sprite.Syntax.Inner.Abs.TypeRefined term pattern_ scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.TypeFun pattern_ term scopedterm -> failure x

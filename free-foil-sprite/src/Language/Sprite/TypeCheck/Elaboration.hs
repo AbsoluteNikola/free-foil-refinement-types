@@ -1,16 +1,14 @@
 module Language.Sprite.TypeCheck.Elaboration (check) where
 
 import Control.Monad.Foil qualified as F
+import Control.Monad.Foil.Internal qualified as F
 import Control.Monad.Free.Foil qualified as F
 import Language.Sprite.Syntax
 import Control.Monad.Except (MonadError (throwError))
-import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import Language.Sprite.TypeCheck.Predicates
 import Language.Sprite.TypeCheck.Types
 import Language.Sprite.TypeCheck.Monad
-import Data.Biapplicative (bimap)
 import Unsafe.Coerce (unsafeCoerce)
-import Debug.Trace (trace)
 
 {-
 С текущим алгоритмом унификации есть проблема, в том она унифицирует переменную только в терме
@@ -284,8 +282,10 @@ mkTAppIfNecessary scope term typ = case typ of
         (F.sink -> newTempTypVar) <- mkFreshTempTypVar
         let
           resultTypeSubst = F.addSubst F.identitySubst typVarBinder newTempTypVar
+          F.UnsafeName rawTypVarBinder = F.nameOf typVarBinder
+        debugPrintT $ "Elab substTypeVar: " <> showT typVarBinder <> " -> " <> showT newTempTypVar
         resultType <- extendTypeToCurrentScope scope $
-            substTypeVar scope resultTypeSubst typUnderForall
+            substTypeVar scope resultTypeSubst rawTypVarBinder typUnderForall
         debugPrintT $ "Was: " <> showT typUnderForall
         debugPrintT $ "Became: " <> showT resultType
         (term', typ') <- mkTAppIfNecessary scope (TApp term newTempTypVar) resultType
@@ -315,7 +315,7 @@ mkTLamIfNecessary scope env term typ = case typ of
         -- на самом деле нам тут env расширять не нужно, но скоупы есть скоупы
         term' <- withExtendedEnv env (getNameBinderFromPattern typVar) (F.sink anyIntT) $ \env' ->
           mkTLamIfNecessary scope' env' (F.sink term) typUnderForall
-        pure (TAbs typVar term')
+        pure (TLam typVar term')
   {-
   Есть некоторый нюанс в том что если мы спускаем term i вниз через sink i1 -> i2 -> i3.
   И в этих скоупах добавляются новые биндеры, то у изначально терма i со своими биндерами i1 -> i2 -> i3,
@@ -326,50 +326,3 @@ mkTLamIfNecessary scope env term typ = case typ of
   решение - вызвать check term annType внутри mkTLamIfNecessary
   -}
   _ -> check scope env term typ
-
--- | Тоже самое что и Foil.substitute, только правильно подставляет type var (она вложена в base typ)
--- Поэтому в переданная подстановка должна содержать например [a -> int[v|true]] и тогда на выходе будет 'a[v|v < 0] -> int[v|true]
-substTypeVar ::
-  F.Distinct i =>
-  F.Scope i ->
-  F.Substitution Term o i  ->
-  -- In what type
-  Term o ->
-  Term i
-substTypeVar scope subst inType = case inType of
-  TypeRefined (BaseTypeVar (F.Var v)) _ _
-    -> F.lookupSubst subst v
-  F.Var v -> F.lookupSubst subst v
-  F.Node node -> F.Node (bimap f (substTypeVar scope subst) node)
-  where
-    f (F.ScopedAST binder body) =
-      F.withRefreshedPattern scope binder $ \extendSubst binder' ->
-        let subst' = extendSubst (F.sink subst)
-            scope' = F.extendScopePattern binder' scope
-            body' =  substTypeVar scope' subst' body
-        in F.ScopedAST binder' body'
-
-substTempTypeVar ::
-  F.Distinct i =>
-  F.Scope i ->
-  -- | What temp type var name
-  Inner.VarIdent ->
-  -- | On what type change temp var
-  Term i ->
-  -- | should be identity subst
-  F.Substitution Term o i  ->
-  -- In what type
-  Term o ->
-  Term i
-substTempTypeVar scope tempTypeVar typToSubst subst inType = case inType of
-  TypeRefined (BaseTypeTempVar varId) _ _
-    | tempTypeVar == varId -> trace "substTempTypeVar matched!" $ typToSubst
-  F.Var v -> F.lookupSubst subst v
-  F.Node node -> F.Node (bimap f (substTempTypeVar scope tempTypeVar typToSubst subst) node)
-  where
-    f (F.ScopedAST binder body) =
-        F.withRefreshedPattern scope binder $ \extendSubst binder' ->
-          let subst' = extendSubst (F.sink subst)
-              scope' = F.extendScopePattern binder' scope
-              body' =  substTempTypeVar scope' tempTypeVar (F.sink typToSubst) subst' body
-          in F.ScopedAST binder' body'

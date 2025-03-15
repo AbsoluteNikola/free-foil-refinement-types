@@ -6,11 +6,7 @@ pos_dir = os.path.join(test_dir, "pos")
 neg_dir = os.path.join(test_dir, "neg")
 executable = ["cabal", "run", "free-foil-sprite-exe", "--"]
 
-TESTS_TO_IGNORE = [
-    "const00.re",
-    "id01.re",
-    "id00.re"
-]
+TESTS_TO_IGNORE = []
 
 def run_test(test_path, expected):
     result = subprocess.run(executable + [test_path], capture_output=True, text=True)

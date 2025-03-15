@@ -26,7 +26,7 @@ data Term
     | App Term Term
     | Ann Term Term
     | OpExpr Term Op Term
-    | TAbs Pattern ScopedTerm
+    | TLam Pattern ScopedTerm
     | TApp Term Term
     | TypeRefined Term Pattern ScopedTerm
     | TypeFun Pattern Term ScopedTerm

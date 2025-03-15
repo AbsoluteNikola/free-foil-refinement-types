@@ -7,6 +7,7 @@ import Language.Fixpoint.Types.Sorts qualified as T
 import Data.String (fromString)
 import Data.Text (Text)
 import qualified Language.Sprite.Syntax.Inner.Abs as I
+import qualified Language.Fixpoint.Types as F
 
 
 data Constraint
@@ -22,6 +23,7 @@ baseTypeToSort :: I.Term ->  Maybe T.Sort
 baseTypeToSort = \case
   I.BaseTypeInt -> pure T.intSort
   I.BaseTypeBool -> pure T.boolSort
+  I.BaseTypeVar (I.Var (I.VarIdent v))-> pure . T.FObj . F.symbol $ v
   _ -> Nothing
 
 constraintsToFHT :: Constraint -> Either InnerToFTR.ConvertError (H.Cstr Text)
