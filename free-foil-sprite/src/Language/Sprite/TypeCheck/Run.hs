@@ -7,7 +7,7 @@ import Language.Sprite.TypeCheck.Check qualified as Check
 import Language.Sprite.TypeCheck.Constraints qualified as Check
 import Language.Sprite.TypeCheck.Monad qualified as Check
 import Language.Sprite.Syntax qualified as S
-import System.Exit (exitFailure, exitSuccess)
+import System.Exit (exitFailure)
 import qualified Data.Map as Map
 import qualified Control.Monad.Foil as Foil
 import Data.Text (Text)
@@ -31,7 +31,6 @@ import qualified Language.Sprite.Syntax.Convert.QualifierToFTR as QualifiersToFT
 import qualified Language.Sprite.TypeCheck.Elaboration as Elaboration
 import Text.Pretty.Simple (pPrint)
 import qualified Language.Sprite.Syntax.Inner.Print as Inner
-import qualified Text.Pretty.Simple as Check
 
 -- TODO: add better errors
 instance F.Loc T.Text where

@@ -1,9 +1,10 @@
-module X where
+module Language.Sprite.TypeCheck.Temp where
 import Language.Sprite.Syntax.Inner.Abs
 import Language.Sprite.Syntax (toTerm)
 import Control.Monad.Free.Foil qualified as F
 import Control.Monad.Foil qualified as F
 import qualified Data.Map as Map
+
 
 -- >>> toTerm F.emptyScope Map.empty z
 -- let x0 = /*@ ∀ x0 : ∀ x1 : x2 : ' x1 [x2 | true] => x3 : int [x3 | true] => x4 : ' x0 [x4 | true] => ' x1 [x5 | true] */ /\ x0 : /\ x1 : (x2) =>

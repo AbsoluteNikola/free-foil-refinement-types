@@ -11,8 +11,13 @@ import Language.Sprite.TypeCheck.Monad
 import Data.Biapplicative (bimap)
 import Unsafe.Coerce (unsafeCoerce)
 import Debug.Trace (trace)
-import Debug.Pretty.Simple (pTraceShowId)
 
+{-
+С текущим алгоритмом унификации есть проблема, в том она унифицирует переменную только в терме
+который был передан в unify. Если переменная унифицируется в другой ветке от TApp, то
+в TApp останется голая temp var, что некорректно. В текущей реализации это является проблемой
+при использовании каррирования
+-}
 unify ::
   F.Distinct i =>
   F.Scope i ->
@@ -36,7 +41,14 @@ unify scope t (TypeRefined (BaseTypeTempVar varId) _ _) term = withRule "[Unify]
   debugPrintT $ "Became: " <> showT substitutedTerm
   pure (substitutedTerm, t)
 unify _scope t1@(TypeRefined b1 _ _) _t2@(TypeRefined b2 _ _) term
-  | baseTypeEq b1 b2 = pure (term, t1) -- should we merge refinements?
+  | baseTypeEq b1 b2 = pure (term, t1)
+unify _scope t1@(TypeRefinedUnknown b1) _t2@(TypeRefinedUnknown b2) term
+  | baseTypeEq b1 b2 = pure (term, t1)
+unify _scope t1@(TypeRefined b1 _ _) _t2@(TypeRefinedUnknown b2) term
+  | baseTypeEq b1 b2 = pure (term, t1)
+unify _scope _t1@(TypeRefinedUnknown b1) t2@(TypeRefined b2 _ _) term
+  | baseTypeEq b1 b2 = pure (term, t2)
+
 unify scope (TypeFun v1 argTyp1 retTyp1) (TypeFun v2 argTyp2 retTyp2) term = do
   (term', argTyp) <- unify scope argTyp1 argTyp2 term
   case (F.assertDistinct v2, F.assertExt v2) of
@@ -215,7 +227,7 @@ synths scope env currentTerm = case currentTerm of
           -- Сделать только для того чтоб сравнять скоупы
           resultType =
             F.substitutePattern scope F.identitySubst varPattern [argTerm] returnType
-        -- Из-за алгоритма унифакации надо отдельно делать это для retyurn type, чтоб подставить туда TempVar
+        -- Из-за алгоритма унифакации надо отдельно делать это для return type, чтоб подставить туда TempVar
         -- В идеале сделать список всех подстановок, но я пока не придумал как это сделать
         (resultType', _) <-  unify scope argType varType resultType
         debugPrintT $ "Return type: " <> showT returnType

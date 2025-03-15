@@ -21,8 +21,8 @@ Bool.         Term ::= ConstBool ;
 Var.          Term ::= VarIdent ;
 If.           Term ::= "if" "(" FuncAppArg ")" "{" Term "}" "else" "{" Term "}";
 Let.          Term ::= Decl Term ;
-Fun.          Term ::= "(" VarIdent ")" "=>" "{" Term "}" ;
-App.          Term ::= VarIdent "(" FuncAppArg ")"; -- Program should be in ANF. See page 14
+Fun.          Term ::= "(" [FunArgName] ")" "=>" "{" Term "}" ;
+App.          Term ::= VarIdent "(" [FuncAppArg] ")"; -- Program should be in ANF. See page 14
 Op.           Term ::= FuncAppArg IntOp FuncAppArg; -- Program should be in ANF. See page 14
 _.            Term ::= "(" Term ")";
 
@@ -46,11 +46,11 @@ IntGreaterOrEqThan. IntOp ::= ">=";
 
 -- type terms
 -- TODO: rewrite to move type var to base type
-TypeRefinedSimple.   RType3 ::= BaseType;
-TypeRefined.         RType2 ::= BaseType "[" VarIdent "|" Pred "]" ;
-TypeRefinedUnknown.  RType2 ::= BaseType "[" "?" "]" ;
-TypeVar.             RType2 ::= "'" VarIdent;
-TypeFun.             RType1 ::= FuncArg "=>" RType2 ;
+TypeFun.             RType ::= FuncArg "=>" RType ;
+TypeRefined.         RType ::= BaseType "[" VarIdent "|" Pred "]" ;
+TypeRefinedUnknown.  RType ::= BaseType "[" "?" "]" ;
+TypeVar.             RType ::= "'" VarIdent;
+TypeRefinedSimple.   RType ::= BaseType;
 
 coercions RType 3;
 
@@ -77,11 +77,10 @@ coercions Pred 6 ;
 BaseTypeInt.  BaseType ::= "int" ;
 BaseTypeBool.  BaseType ::= "bool" ;
 
--- FunArgName. FunArgName ::= VarIdent;
--- separator nonempty FunArgsName "," ;
--- ArgList. ArgList ::= Term ;
--- separator nonempty ArgList "," ;
+FunArgName. FunArgName ::= VarIdent;
+separator nonempty FunArgName "," ;
 
 FuncAppArgBool. FuncAppArg ::= ConstBool;
 FuncAppArgInt. FuncAppArg ::= Integer;
 FuncAppArgVar. FuncAppArg ::= VarIdent;
+separator nonempty FuncAppArg "," ;

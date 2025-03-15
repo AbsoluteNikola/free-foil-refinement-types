@@ -58,8 +58,8 @@ All other symbols are terminals.
   |  |  **|**  | //VarIdent//
   |  |  **|**  | ``if`` ``(`` //FuncAppArg// ``)`` ``{`` //Term// ``}`` ``else`` ``{`` //Term// ``}``
   |  |  **|**  | //Decl// //Term//
-  |  |  **|**  | ``(`` //VarIdent// ``)`` ``=>`` ``{`` //Term// ``}``
-  |  |  **|**  | //VarIdent// ``(`` //FuncAppArg// ``)``
+  |  |  **|**  | ``(`` //[FunArgName]// ``)`` ``=>`` ``{`` //Term// ``}``
+  |  |  **|**  | //VarIdent// ``(`` //[FuncAppArg]// ``)``
   |  |  **|**  | //FuncAppArg// //IntOp// //FuncAppArg//
   |  |  **|**  | ``(`` //Term// ``)``
   | //ConstBool// | -> | ``true``
@@ -76,15 +76,15 @@ All other symbols are terminals.
   |  |  **|**  | ``<=``
   |  |  **|**  | ``>``
   |  |  **|**  | ``>=``
-  | //RType3// | -> | //BaseType//
-  |  |  **|**  | ``(`` //RType// ``)``
-  | //RType2// | -> | //BaseType// ``[`` //VarIdent// ``|`` //Pred// ``]``
+  | //RType// | -> | //FuncArg// ``=>`` //RType//
+  |  |  **|**  | //BaseType// ``[`` //VarIdent// ``|`` //Pred// ``]``
   |  |  **|**  | //BaseType// ``[`` ``?`` ``]``
   |  |  **|**  | ``'`` //VarIdent//
-  |  |  **|**  | //RType3//
-  | //RType1// | -> | //FuncArg// ``=>`` //RType2//
-  |  |  **|**  | //RType2//
-  | //RType// | -> | //RType1//
+  |  |  **|**  | //BaseType//
+  |  |  **|**  | //RType1//
+  | //RType1// | -> | //RType2//
+  | //RType2// | -> | //RType3//
+  | //RType3// | -> | ``(`` //RType// ``)``
   | //FuncArg// | -> | //VarIdent// ``:`` //RType//
   |  |  **|**  | ``_`` ``:`` //RType//
   | //Pred6// | -> | //VarIdent//
@@ -109,9 +109,14 @@ All other symbols are terminals.
   | //Pred// | -> | //Pred1//
   | //BaseType// | -> | ``int``
   |  |  **|**  | ``bool``
+  | //FunArgName// | -> | //VarIdent//
+  | //[FunArgName]// | -> | //FunArgName//
+  |  |  **|**  | //FunArgName// ``,`` //[FunArgName]//
   | //FuncAppArg// | -> | //ConstBool//
   |  |  **|**  | //Integer//
   |  |  **|**  | //VarIdent//
+  | //[FuncAppArg]// | -> | //FuncAppArg//
+  |  |  **|**  | //FuncAppArg// ``,`` //[FuncAppArg]//
 
 
 

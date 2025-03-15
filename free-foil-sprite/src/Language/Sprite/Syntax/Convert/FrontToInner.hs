@@ -25,13 +25,22 @@ convert ft = case ft of
     (I.ScopedTerm -> convertedBody) <- convert body
     let_ <- convertDecl decl
     pure $ let_ convertedBody
-  F.Fun argId body -> do
-    (I.ScopedTerm -> convertedBody) <- convert body
-    pure $ I.Fun (convertVarIdToPattern argId) convertedBody
-  F.App funcName argTerm -> do
-    let convertedFuncTerm = I.Var $ convertVarId funcName
-    let convertedArgTerm = convertFuncAppArg argTerm
-    pure $ I.App convertedFuncTerm convertedArgTerm
+  F.Fun args body -> do
+    convertedBody <- convert body
+    let
+      funs = foldr
+        (\(F.FunArgName argId) t -> I.Fun (convertVarIdToPattern argId) (I.ScopedTerm t))
+        convertedBody
+        args
+    pure funs
+  F.App funcName args -> do
+    let
+      convertedFuncTerm = I.Var $ convertVarId funcName
+      apps = foldl
+        (\t arg -> I.App t (convertFuncAppArg arg))
+        convertedFuncTerm
+        args
+    pure apps
   F.Op lArg op rArg -> pure $
     op_ (convertFuncAppArg lArg) (convertFuncAppArg rArg)
     where

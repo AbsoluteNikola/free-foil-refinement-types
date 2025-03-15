@@ -30,8 +30,8 @@ data Term
     | Var VarIdent
     | If FuncAppArg Term Term
     | Let Decl Term
-    | Fun VarIdent Term
-    | App VarIdent FuncAppArg
+    | Fun [FunArgName] Term
+    | App VarIdent [FuncAppArg]
     | Op FuncAppArg IntOp FuncAppArg
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
@@ -59,11 +59,11 @@ data IntOp
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data RType
-    = TypeRefinedSimple BaseType
+    = TypeFun FuncArg RType
     | TypeRefined BaseType VarIdent Pred
     | TypeRefinedUnknown BaseType
     | TypeVar VarIdent
-    | TypeFun FuncArg RType
+    | TypeRefinedSimple BaseType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data FuncArg = NamedFuncArg VarIdent RType | UnNamedFuncArg RType
@@ -86,6 +86,9 @@ data Pred
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data BaseType = BaseTypeInt | BaseTypeBool
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data FunArgName = FunArgName VarIdent
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data FuncAppArg

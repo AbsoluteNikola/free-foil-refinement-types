@@ -100,8 +100,8 @@ Term
   | VarIdent { Language.Sprite.Syntax.Front.Abs.Var $1 }
   | 'if' '(' FuncAppArg ')' '{' Term '}' 'else' '{' Term '}' { Language.Sprite.Syntax.Front.Abs.If $3 $6 $10 }
   | Decl Term { Language.Sprite.Syntax.Front.Abs.Let $1 $2 }
-  | '(' VarIdent ')' '=>' '{' Term '}' { Language.Sprite.Syntax.Front.Abs.Fun $2 $6 }
-  | VarIdent '(' FuncAppArg ')' { Language.Sprite.Syntax.Front.Abs.App $1 $3 }
+  | '(' ListFunArgName ')' '=>' '{' Term '}' { Language.Sprite.Syntax.Front.Abs.Fun $2 $6 }
+  | VarIdent '(' ListFuncAppArg ')' { Language.Sprite.Syntax.Front.Abs.App $1 $3 }
   | FuncAppArg IntOp FuncAppArg { Language.Sprite.Syntax.Front.Abs.Op $1 $2 $3 }
   | '(' Term ')' { $2 }
 
@@ -131,25 +131,23 @@ IntOp
   | '>' { Language.Sprite.Syntax.Front.Abs.IntGreaterThan }
   | '>=' { Language.Sprite.Syntax.Front.Abs.IntGreaterOrEqThan }
 
-RType3 :: { Language.Sprite.Syntax.Front.Abs.RType }
-RType3
-  : BaseType { Language.Sprite.Syntax.Front.Abs.TypeRefinedSimple $1 }
-  | '(' RType ')' { $2 }
-
-RType2 :: { Language.Sprite.Syntax.Front.Abs.RType }
-RType2
-  : BaseType '[' VarIdent '|' Pred ']' { Language.Sprite.Syntax.Front.Abs.TypeRefined $1 $3 $5 }
+RType :: { Language.Sprite.Syntax.Front.Abs.RType }
+RType
+  : FuncArg '=>' RType { Language.Sprite.Syntax.Front.Abs.TypeFun $1 $3 }
+  | BaseType '[' VarIdent '|' Pred ']' { Language.Sprite.Syntax.Front.Abs.TypeRefined $1 $3 $5 }
   | BaseType '[' '?' ']' { Language.Sprite.Syntax.Front.Abs.TypeRefinedUnknown $1 }
   | '\'' VarIdent { Language.Sprite.Syntax.Front.Abs.TypeVar $2 }
-  | RType3 { $1 }
+  | BaseType { Language.Sprite.Syntax.Front.Abs.TypeRefinedSimple $1 }
+  | RType1 { $1 }
 
 RType1 :: { Language.Sprite.Syntax.Front.Abs.RType }
-RType1
-  : FuncArg '=>' RType2 { Language.Sprite.Syntax.Front.Abs.TypeFun $1 $3 }
-  | RType2 { $1 }
+RType1 : RType2 { $1 }
 
-RType :: { Language.Sprite.Syntax.Front.Abs.RType }
-RType : RType1 { $1 }
+RType2 :: { Language.Sprite.Syntax.Front.Abs.RType }
+RType2 : RType3 { $1 }
+
+RType3 :: { Language.Sprite.Syntax.Front.Abs.RType }
+RType3 : '(' RType ')' { $2 }
 
 FuncArg :: { Language.Sprite.Syntax.Front.Abs.FuncArg }
 FuncArg
@@ -201,11 +199,25 @@ BaseType
   : 'int' { Language.Sprite.Syntax.Front.Abs.BaseTypeInt }
   | 'bool' { Language.Sprite.Syntax.Front.Abs.BaseTypeBool }
 
+FunArgName :: { Language.Sprite.Syntax.Front.Abs.FunArgName }
+FunArgName
+  : VarIdent { Language.Sprite.Syntax.Front.Abs.FunArgName $1 }
+
+ListFunArgName :: { [Language.Sprite.Syntax.Front.Abs.FunArgName] }
+ListFunArgName
+  : FunArgName { (:[]) $1 }
+  | FunArgName ',' ListFunArgName { (:) $1 $3 }
+
 FuncAppArg :: { Language.Sprite.Syntax.Front.Abs.FuncAppArg }
 FuncAppArg
   : ConstBool { Language.Sprite.Syntax.Front.Abs.FuncAppArgBool $1 }
   | Integer { Language.Sprite.Syntax.Front.Abs.FuncAppArgInt $1 }
   | VarIdent { Language.Sprite.Syntax.Front.Abs.FuncAppArgVar $1 }
+
+ListFuncAppArg :: { [Language.Sprite.Syntax.Front.Abs.FuncAppArg] }
+ListFuncAppArg
+  : FuncAppArg { (:[]) $1 }
+  | FuncAppArg ',' ListFuncAppArg { (:) $1 $3 }
 
 {
 
