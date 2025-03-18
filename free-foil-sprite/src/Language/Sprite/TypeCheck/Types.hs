@@ -11,9 +11,7 @@ import Control.Monad.Error.Class (MonadError(throwError))
 import Data.Maybe (catMaybes)
 import Language.Sprite.TypeCheck.Constraints (baseTypeToSort)
 import Data.Traversable (for)
-import Data.Bifunctor (bimap)
-import Debug.Pretty.Simple (pTraceShowId, pTrace)
-import Debug.Trace (trace)
+import Data.Biapplicative (bimap)
 
 constIntT :: Integer -> Term F.VoidS
 constIntT x = F.withFreshBinder F.emptyScope $
@@ -57,9 +55,33 @@ extendTypeToCurrentScope scope typ = do
           let
             scope' = F.extendScope newBinder scope
             newTypUnderForall = F.substitutePattern scope' (F.sink F.identitySubst) v [F.Var (F.nameOf newBinder)] typUnderForall
-          pure $ TypeForall (PatternVar newBinder) newTypUnderForall
+          newTypUnderForall' <- extendTypeToCurrentScope scope' newTypUnderForall
+          pure $ TypeForall (PatternVar newBinder) newTypUnderForall'
     _ -> throwError $
       "extendTypeToCurrentScope should be called only on type, not term\n"
+      <> showT typ
+
+mkPredicatesInTypeUnknown :: F.Distinct i => F.Scope i -> Term i -> CheckerM (Term i)
+mkPredicatesInTypeUnknown scope typ = do
+  debugPrintT $ "Extending: " <> showT typ
+  case typ of
+    TypeRefined b v _ -> pure $ TypeRefined b v Unknown
+    TypeFun argName argTyp retTyp -> case (F.assertDistinct argName, F.assertExt argName) of
+        (F.Distinct, F.Ext) -> do
+          argTypExtended <- mkPredicatesInTypeUnknown scope argTyp
+          let
+            scope' = F.extendScopePattern argName scope
+          newRetTypeExtended <- mkPredicatesInTypeUnknown scope' retTyp
+          pure $ TypeFun argName argTypExtended newRetTypeExtended
+    TypeForall v typUnderForall ->
+      case (F.assertDistinct v, F.assertExt v) of
+        (F.Distinct, F.Ext) -> do
+          let
+            scope' = F.extendScopePattern v scope
+          newTypUnderForall' <- mkPredicatesInTypeUnknown scope' typUnderForall
+          pure $ TypeForall v newTypUnderForall'
+    _ -> throwError $
+      "mkPredicatesInTypeUnknown should be called only on type, not term\n"
       <> showT typ
 
 
@@ -103,7 +125,9 @@ fresh scope env curType = case curType of
       Just sort -> pure sort
       Nothing -> throwError $ "Unknown base: " <> pShowT base
     newHornVarName <- mkFreshHornVar (typeSort : sorts)
-
+    debugPrintT $ "Horn var name: " <> showT newHornVarName
+    debugPrintT $ "Horn var args: " <> showT names
+    debugPrintT $ "Horn var sorts: " <> showT sorts
     F.withFreshBinder scope $ \freshBinder ->
       case (F.assertDistinct freshBinder, F.assertExt freshBinder) of
         (F.Distinct, F.Ext) -> pure $
@@ -138,7 +162,8 @@ fresh scope env curType = case curType of
   -}
   TypeForall (PatternVar typVarBinder) typeUnderForAll -> do
     typeUnderForAll' <- case (F.assertDistinct typVarBinder, F.assertExt typVarBinder) of
-      (F.Distinct, F.Ext) ->
+      (F.Distinct, F.Ext) -> do
+        -- TODO: env problem here
         withExtendedEnv env typVarBinder Unknown $ \env' -> do
           let scope' = F.extendScope typVarBinder scope
           fresh scope' env' typeUnderForAll
@@ -164,18 +189,18 @@ substTypeVar scope subst neededVar inType = case inType of
     ->
       let
         res = F.lookupSubst subst v
-        msg = "1: Was" <> show inType <> "\nBecame " <> show res <> "\n"
-      in trace msg res
+        -- msg = "1: Was" <> show inType <> "\nBecame " <> show res <> "\n"
+      in res
   F.Var v ->
     let
       res = F.lookupSubst subst v
-      msg = "2: Was " <> show inType <> "\nBecame " <> show res <> "\n"
-    in trace msg res
+      -- msg = "2: Was " <> show inType <> "\nBecame " <> show res <> "\n"
+    in res
   F.Node node ->
     let
       res = F.Node (bimap f (substTypeVar scope subst neededVar) node)
-      msg = "3: Was " <> show inType <> "\nBecame " <> show res <> "\n"
-    in trace msg res
+      -- msg = "3: Was " <> show inType <> "\nBecame " <> show res <> "\n"
+    in res
   where
     f (F.ScopedAST binder body) =
       F.withRefreshedPattern scope binder $ \extendSubst binder' ->

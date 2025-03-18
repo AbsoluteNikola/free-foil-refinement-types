@@ -8,9 +8,11 @@ import Control.Monad.Except (MonadError (throwError))
 import Language.Sprite.TypeCheck.Predicates
 import Language.Sprite.TypeCheck.Types
 import Language.Sprite.TypeCheck.Monad
-import Unsafe.Coerce (unsafeCoerce)
 
 {-
+В процессе вывода типов имеют значение только BaseTypes, предикаты будут проверяться и выводиться в
+процессе проверки уточняющих типов. Все предикаты типов в TApp становятся Unknown.
+
 С текущим алгоритмом унификации есть проблема, в том она унифицирует переменную только в терме
 который был передан в unify. Если переменная унифицируется в другой ветке от TApp, то
 в TApp останется голая temp var, что некорректно. В текущей реализации это является проблемой
@@ -29,13 +31,15 @@ unify ::
   CheckerM (Term i , Term i)
 unify scope (TypeRefined (BaseTypeTempVar varId) _ _) t term = do
   debugPrintT "Unify 1!"
-  let substitutedTerm = substTempTypeVar scope varId t F.identitySubst term
+  t' <- mkPredicatesInTypeUnknown scope t
+  let substitutedTerm = substTempTypeVar scope varId t' F.identitySubst term
   pure (substitutedTerm, t)
 unify scope t (TypeRefined (BaseTypeTempVar varId) _ _) term = withRule "[Unify]" $ do
+  t' <- mkPredicatesInTypeUnknown scope t
   debugPrintT $ "VarId: " <> showT varId
-  debugPrintT $ "Change on: " <> showT t
+  debugPrintT $ "Change on: " <> showT t'
   debugPrintT $ "Was: " <> showT term
-  let substitutedTerm = substTempTypeVar scope varId t F.identitySubst term
+  let substitutedTerm = substTempTypeVar scope varId t' F.identitySubst term
   debugPrintT $ "Became: " <> showT substitutedTerm
   pure (substitutedTerm, t)
 unify _scope t1@(TypeRefined b1 _ _) _t2@(TypeRefined b2 _ _) term
@@ -52,12 +56,21 @@ unify scope (TypeFun v1 argTyp1 retTyp1) (TypeFun v2 argTyp2 retTyp2) term = do
         retTyp1' =
           F.substitute scope' subst retTyp1
       (term'', retType) <- unify scope' retTyp1' retTyp2 (F.sink term')
-      {- TODO: придумать как удалить unsafe coerce
+      {-
       Из-за того что мы зашли под скоуп из TypeFun и синканули терм под него
-      можно сказать что переменно v2 там нет, поэтому мы как бы можем вернуть терм
-      обратно в его скоуп. Верно ли утверждение? Подумать?
+      можно сказать что переменной v2 там нет, поэтому мы как бы можем вернуть терм
+      обратно в его скоуп. В скоуп возвращаем с подстановкой Unknown, что используется
+      как знак о том что предикат нужно вывести, но во всех странных контекстах - он выстрелит
+      как необрабатываемый терм. Такой же ход используется для неявного расширения env до нужного скоупа
       -}
-      pure (unsafeCoerce term'', TypeFun v2 argTyp retType)
+      let
+        termSubst = F.addSubst (F.sink F.identitySubst)
+          (getNameBinderFromPattern v2)
+          Unknown
+        unifiedTermInNeededScope = F.substitute scope termSubst term''
+      debugPrintT $ "Unify fun var:" <> showT v1
+      debugPrintT $ "Unify term:" <> showT term'
+      pure (unifiedTermInNeededScope, TypeFun v2 argTyp retType)
 
 unify _ t1 t2 _ = throwError $
   "Can't unify:\n"
@@ -130,8 +143,8 @@ check scope env currentTerm currentType = case currentTerm of
         G |- let rec x = e1 : s1 in e2 <== t2
   -}
   LetRec newVarType newVarPat1 newVarPat2 newVarValue body -> withRule "[Chk-Rec]" $ do
-    debugPrintT $  "new var type: " <> showT newVarType
     extendedVarType <- extendTypeToCurrentScope scope newVarType
+    debugPrintT $  "new var type: " <> showT newVarType
     debugPrintT $  "extended new var type: " <> showT extendedVarType
     -- G |- t1 : k, t1 - newVarType
     case (F.assertDistinct newVarPat1, F.assertDistinct newVarPat2, F.assertExt newVarPat1,  F.assertExt newVarPat2) of
@@ -141,7 +154,11 @@ check scope env currentTerm currentType = case currentTerm of
         newVarValue' <- withExtendedEnv env (getNameBinderFromPattern newVarPat1) extendedVarType $ \env' -> do
           let
             scope' = F.extendScopePattern newVarPat1 scope
-          check scope' env' newVarValue (F.sink extendedVarType)
+          -- повторно расширили тип, потому что x появился в контексте и был конфликт при использовании типов
+          -- Просто синк тут не подходил, потому что переменная из типа затирала x в env
+          mkTLamIfNecessary scope' env' newVarValue
+            =<< extendTypeToCurrentScope scope' (F.sink extendedVarType)
+          -- check scope' env' newVarValue (F.sink extendedVarType)
           -- G, x:t1 |- e2 <== t2
         body' <- withExtendedEnv env (getNameBinderFromPattern newVarPat2) extendedVarType $ \env' -> do
           let scope' = F.extendScopePattern newVarPat2 scope
@@ -206,6 +223,8 @@ synths scope env currentTerm = case currentTerm of
   App funcTerm argTerm -> withRule "[Syn-App]" $ do
      -- G |- e ==> x:s -> t
     (funcTerm', funcType) <- synths scope env funcTerm
+    debugPrintT $ "Arg term: " <> showT argTerm
+    debugPrintT $ "Func term: " <> showT funcTerm
     case funcType of
       TypeFun varPattern varType returnType -> do
         (argTerm', argType) <- synths scope env argTerm

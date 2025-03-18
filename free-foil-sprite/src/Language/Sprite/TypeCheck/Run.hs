@@ -30,6 +30,7 @@ import qualified Language.Fixpoint.Horn.Types as F
 import qualified Language.Sprite.Syntax.Convert.QualifierToFTR as QualifiersToFTR
 import qualified Language.Sprite.TypeCheck.Elaboration as Elaboration
 import qualified Language.Sprite.Syntax.Inner.Print as Inner
+import Text.Pretty.Simple (pPrint)
 
 -- TODO: add better errors
 instance F.Loc T.Text where
@@ -62,6 +63,7 @@ vcgen qualifiers term = do
     mkQuery c = do
       c' <- first Check.showT $ Check.constraintsToFHT c
       pure $ H.Query qualifiers checkerState.hornVars c' mempty mempty mempty mempty mempty mempty mempty
+  pPrint eConstraints
   pure $ eConstraints >>= mkQuery
 
 config :: FC.Config
@@ -99,7 +101,10 @@ run filePath (Front.Program rawQualifiers rawFrontTerm) = do
       print errs
       exitFailure
   let scopedTerm =  S.toTerm Foil.emptyScope Map.empty rawInnerTerm
+  putStrLn "Raw inner term"
   putStrLn $ Inner.printTree rawInnerTerm
+  putStrLn "Raw scoped term"
+  print scopedTerm
   result <- vcgen qualifiers scopedTerm >>= \case
     Left err -> do
       putStrLn "Type check error: "

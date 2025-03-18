@@ -164,7 +164,7 @@ check scope env currentTerm currentType = case currentTerm of
         newVarC <- withExtendedEnv env (getNameBinderFromPattern newVarPat1) freshedNewVarType $ \env' -> do
           let
             scope' = F.extendScopePattern newVarPat1 scope
-          newVarConstraints <- check scope' env' newVarValue (F.sink freshedNewVarType)
+          newVarConstraints <- check scope' env' newVarValue =<< extendTypeToCurrentScope scope' (F.sink freshedNewVarType)
           implBodyMsg <- mkSolverErrorMessage "Chk-Rec: new var"
           buildImplicationFromType implBodyMsg scope' newVarPat1 (F.sink freshedNewVarType) newVarConstraints
         -- G, x:t1 |- e2 <== t2
@@ -208,7 +208,7 @@ check scope env currentTerm currentType = case currentTerm of
                       Inner.EqOp
                       (Boolean condShouldBe))
                 extendedCurrentType <- extendTypeToCurrentScope scope' (F.sink currentType)
-                branchCheckConstraints <- check scope' env' (F.sink brachTerm) extendedCurrentType
+                branchCheckConstraints <- check scope' env' (F.refreshAST scope' $ F.sink brachTerm) extendedCurrentType
                 buildImplicationFromType message scope' (PatternVar freshY) (F.sink t) branchCheckConstraints
   {- [Chk-TLam]
 
@@ -320,21 +320,22 @@ synths scope env currentTerm = case currentTerm of
       _ -> throwError "Application to non function"
 
   {- [Syn-TApp]
-  G |- e ==> all a. s
+  G |- e ==> forall a. t1 |> t2
   ---------------------------
-  G |- e[t] ==> s [ a := t]
+  G |- e[t1] ==> s [ a := t2]
   -}
   TApp funTerm typ -> withRule "[Syn-TApp]" $ do
     (cSyn, funTyp) <- synths scope env funTerm
+    freshedTyp <- fresh scope env typ
     case funTyp of
       TypeForall typVar typUnderForall -> do
         let
-          subst = F.addSubst F.identitySubst (getNameBinderFromPattern typVar) typ
+          subst = F.addSubst F.identitySubst (getNameBinderFromPattern typVar) freshedTyp
           F.UnsafeName rawTypVarName = F.nameOf $ getNameBinderFromPattern typVar
-          typUnderForall' = substTypeVar scope subst rawTypVarName typUnderForall
-        debugPrintT $ "Check substTypeVar: " <> showT typVar <> " -> " <> showT typ
+        let typUnderForall' = substTypeVar scope subst rawTypVarName typUnderForall
+        debugPrintT $ "Check substTypeVar: " <> showT typVar <> " -> " <> showT freshedTyp
         debugPrintT $ "Was: " <> showT funTyp
-        debugPrintT $ "Change: " <> showT typVar <> " on " <> showT typ
+        debugPrintT $ "Change: " <> showT typVar <> " on " <> showT freshedTyp
         debugPrintT $ "Became: " <> showT typUnderForall'
         pure (cSyn, typUnderForall')
       _ -> throwError $ "type application to non forall: " <> showT funTyp
