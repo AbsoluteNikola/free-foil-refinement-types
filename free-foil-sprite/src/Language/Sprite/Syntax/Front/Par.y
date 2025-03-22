@@ -98,12 +98,11 @@ Term
   : Integer { Language.Sprite.Syntax.Front.Abs.ConstInt $1 }
   | ConstBool { Language.Sprite.Syntax.Front.Abs.Bool $1 }
   | VarIdent { Language.Sprite.Syntax.Front.Abs.Var $1 }
+  | VarIdent '(' ListFuncAppArg ')' { Language.Sprite.Syntax.Front.Abs.App $1 $3 }
   | 'if' '(' FuncAppArg ')' '{' Term '}' 'else' '{' Term '}' { Language.Sprite.Syntax.Front.Abs.If $3 $6 $10 }
   | Decl Term { Language.Sprite.Syntax.Front.Abs.Let $1 $2 }
   | '(' ListFunArgName ')' '=>' '{' Term '}' { Language.Sprite.Syntax.Front.Abs.Fun $2 $6 }
-  | VarIdent '(' ListFuncAppArg ')' { Language.Sprite.Syntax.Front.Abs.App $1 $3 }
   | FuncAppArg IntOp FuncAppArg { Language.Sprite.Syntax.Front.Abs.Op $1 $2 $3 }
-  | '(' Term ')' { $2 }
 
 ConstBool :: { Language.Sprite.Syntax.Front.Abs.ConstBool }
 ConstBool

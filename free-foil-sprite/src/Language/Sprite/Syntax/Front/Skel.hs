@@ -36,10 +36,10 @@ transTerm x = case x of
   Language.Sprite.Syntax.Front.Abs.ConstInt integer -> failure x
   Language.Sprite.Syntax.Front.Abs.Bool constbool -> failure x
   Language.Sprite.Syntax.Front.Abs.Var varident -> failure x
+  Language.Sprite.Syntax.Front.Abs.App varident funcappargs -> failure x
   Language.Sprite.Syntax.Front.Abs.If funcapparg term1 term2 -> failure x
   Language.Sprite.Syntax.Front.Abs.Let decl term -> failure x
   Language.Sprite.Syntax.Front.Abs.Fun funargnames term -> failure x
-  Language.Sprite.Syntax.Front.Abs.App varident funcappargs -> failure x
   Language.Sprite.Syntax.Front.Abs.Op funcapparg1 intop funcapparg2 -> failure x
 
 transConstBool :: Language.Sprite.Syntax.Front.Abs.ConstBool -> Result

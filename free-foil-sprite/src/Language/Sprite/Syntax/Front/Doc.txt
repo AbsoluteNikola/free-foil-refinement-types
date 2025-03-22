@@ -56,12 +56,11 @@ All other symbols are terminals.
   | //Term// | -> | //Integer//
   |  |  **|**  | //ConstBool//
   |  |  **|**  | //VarIdent//
+  |  |  **|**  | //VarIdent// ``(`` //[FuncAppArg]// ``)``
   |  |  **|**  | ``if`` ``(`` //FuncAppArg// ``)`` ``{`` //Term// ``}`` ``else`` ``{`` //Term// ``}``
   |  |  **|**  | //Decl// //Term//
   |  |  **|**  | ``(`` //[FunArgName]// ``)`` ``=>`` ``{`` //Term// ``}``
-  |  |  **|**  | //VarIdent// ``(`` //[FuncAppArg]// ``)``
   |  |  **|**  | //FuncAppArg// //IntOp// //FuncAppArg//
-  |  |  **|**  | ``(`` //Term// ``)``
   | //ConstBool// | -> | ``true``
   |  |  **|**  | ``false``
   | //Annotation// | -> | ``/*@`` ``val`` //VarIdent// ``:`` //RType// ``*/``

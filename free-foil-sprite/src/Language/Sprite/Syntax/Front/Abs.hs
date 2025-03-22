@@ -28,10 +28,10 @@ data Term
     = ConstInt Integer
     | Bool ConstBool
     | Var VarIdent
+    | App VarIdent [FuncAppArg]
     | If FuncAppArg Term Term
     | Let Decl Term
     | Fun [FunArgName] Term
-    | App VarIdent [FuncAppArg]
     | Op FuncAppArg IntOp FuncAppArg
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 

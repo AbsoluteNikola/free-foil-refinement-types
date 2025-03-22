@@ -19,12 +19,11 @@ separator nonempty QualifierArg "," ;
 ConstInt.     Term ::= Integer ;
 Bool.         Term ::= ConstBool ;
 Var.          Term ::= VarIdent ;
+App.          Term ::= VarIdent "(" [FuncAppArg] ")"; -- Program should be in ANF. See page 14
 If.           Term ::= "if" "(" FuncAppArg ")" "{" Term "}" "else" "{" Term "}";
 Let.          Term ::= Decl Term ;
 Fun.          Term ::= "(" [FunArgName] ")" "=>" "{" Term "}" ;
-App.          Term ::= VarIdent "(" [FuncAppArg] ")"; -- Program should be in ANF. See page 14
 Op.           Term ::= FuncAppArg IntOp FuncAppArg; -- Program should be in ANF. See page 14
-_.            Term ::= "(" Term ")";
 
 ConstTrue.    ConstBool ::= "true";
 ConstFalse.   ConstBool ::= "false";
