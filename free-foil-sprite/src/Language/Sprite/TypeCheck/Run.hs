@@ -89,7 +89,7 @@ dumpQuery f q = do
 
 
 run :: FilePath -> Front.Program -> IO ()
-run filePath (Front.Program rawQualifiers rawFrontTerm) = do
+run filePath (Front.Program rawQualifiers _ _ rawFrontTerm) = do
   qualifiers <- case traverse (QualifiersToFTR.convertQualifier filePath) rawQualifiers of
     Right qualifiers -> pure qualifiers
     Left err -> do

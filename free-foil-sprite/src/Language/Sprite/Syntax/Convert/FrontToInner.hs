@@ -107,7 +107,6 @@ convertRType rType = case rType of
       (I.PatternVar $ I.VarIdent "_arg")
       (convertRType argType)
       (I.ScopedTerm $ convertRType retType)
-  F.TypeVar varId -> mkSimpleType (I.BaseTypeVar $ I.Var (convertVarId varId))
   F.TypeRefinedUnknown base -> I.TypeRefined
     (convertBaseType base)
     (I.PatternVar (I.VarIdent "v"))
@@ -118,6 +117,8 @@ convertBaseType :: F.BaseType -> I.Term
 convertBaseType = \case
   F.BaseTypeInt -> I.BaseTypeInt
   F.BaseTypeBool -> I.BaseTypeBool
+  F.BaseTypeVar (F.TypeVarId v) -> (I.BaseTypeVar $ I.Var (convertVarId v))
+
 
 convertConstBool :: F.ConstBool -> I.ConstBool
 convertConstBool = \case
@@ -147,12 +148,14 @@ collectFreeVars :: F.RType -> [I.VarIdent]
 collectFreeVars = nub . map convertVarId . go
   where
     go = \case
-      F.TypeRefined{} -> []
       F.TypeFun (F.NamedFuncArg _ argType) retType -> go argType ++ go retType
       F.TypeFun (F.UnNamedFuncArg argType) retType -> go argType ++ go retType
-      F.TypeVar varId -> [varId]
-      F.TypeRefinedUnknown _ -> []
-      F.TypeRefinedSimple _ -> []
+      F.TypeRefined b _ _ -> fromBase b
+      F.TypeRefinedUnknown b -> fromBase b
+      F.TypeRefinedSimple b -> fromBase b
+    fromBase = \case
+      F.BaseTypeVar (F.TypeVarId v) -> [v]
+      _ -> []
 
 mkForAll :: F.RType -> I.Term -> I.Term
 mkForAll typ term = foldr f term freeVars

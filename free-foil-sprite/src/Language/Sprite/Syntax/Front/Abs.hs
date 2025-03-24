@@ -15,13 +15,16 @@ import qualified Data.String
 import qualified Data.Data    as C (Data, Typeable)
 import qualified GHC.Generics as C (Generic)
 
-data Program = Program [Qualifier] Term
+data Program = Program [Qualifier] [Measure] [DataType] Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data Qualifier = Qualifier VarIdent [QualifierArg] Pred
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data QualifierArg = QualifierArg VarIdent BaseType
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data Measure = Measure VarIdent RType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data Term
@@ -33,6 +36,7 @@ data Term
     | Let Decl Term
     | Fun [FunArgName] Term
     | Op FuncAppArg IntOp FuncAppArg
+    | Switch VarIdent [SwitchCase]
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data ConstBool = ConstTrue | ConstFalse
@@ -45,6 +49,14 @@ data Decl
     = RecDecl Annotation VarIdent Term
     | AnnotatedDecl Annotation VarIdent Term
     | UnAnnotatedDecl VarIdent Term
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data SwitchCase = SwitchCase VarIdent SwitchCaseDataConArgs Term
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data SwitchCaseDataConArgs
+    = SwitchCaseNonEmptyDataConArgs [FunArgName]
+    | SwitchCaseEmptyDataConArgs
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data IntOp
@@ -62,8 +74,29 @@ data RType
     = TypeFun FuncArg RType
     | TypeRefined BaseType VarIdent Pred
     | TypeRefinedUnknown BaseType
-    | TypeVar VarIdent
     | TypeRefinedSimple BaseType
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data DataType
+    = DataType VarIdent DataTypeArgs [DataTypeConstructor]
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data DataTypeConstructor
+    = DataTypeConstructor VarIdent DataTypeConstructorArgs DataTypeConstructorPredicate
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data DataTypeConstructorArgs
+    = NonEmptyDataTypeConstructorArgs [FuncArg]
+    | EmptyDataTypeConstructorArgs
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data DataTypeConstructorPredicate
+    = NonEmptyDataTypeConstructorPredicate VarIdent Pred
+    | EmptyDataTypeConstructorPredicate
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data DataTypeArgs
+    = NonEmptyDataTypeArgs [TypeVarId] | EmptyDataTypeArgs
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data FuncArg = NamedFuncArg VarIdent RType | UnNamedFuncArg RType
@@ -73,6 +106,7 @@ data Pred
     = PVar VarIdent
     | PBool ConstBool
     | PInt Integer
+    | PMeasure VarIdent [FunArgName]
     | POr Pred Pred
     | PAnd Pred Pred
     | PEq Pred Pred
@@ -85,7 +119,22 @@ data Pred
     | PMultiply Pred Pred
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data BaseType = BaseTypeInt | BaseTypeBool
+data BaseType
+    = BaseTypeInt
+    | BaseTypeBool
+    | BaseTypeVar TypeVarId
+    | BaseTypeData VarIdent BaseTypeDataArgs
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data BaseTypeDataArgs
+    = NonEmptyBaseTypeDataArgs [BaseTypeDataArg]
+    | EmptyBaseTypeDataArgs
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data BaseTypeDataArg = BaseTypeDataArg RType
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data TypeVarId = TypeVarId VarIdent
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data FunArgName = FunArgName VarIdent
