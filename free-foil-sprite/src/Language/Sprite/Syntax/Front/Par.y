@@ -65,6 +65,7 @@ import Language.Sprite.Syntax.Front.Lex
   '}'        { PT _ (TS _ 40)       }
   L_integ    { PT _ (TI $$)         }
   L_VarIdent { PT _ (T_VarIdent $$) }
+  L_ConIdent { PT _ (T_ConIdent $$) }
 
 %%
 
@@ -73,6 +74,9 @@ Integer  : L_integ  { (read $1) :: Integer }
 
 VarIdent :: { Language.Sprite.Syntax.Front.Abs.VarIdent }
 VarIdent  : L_VarIdent { Language.Sprite.Syntax.Front.Abs.VarIdent $1 }
+
+ConIdent :: { Language.Sprite.Syntax.Front.Abs.ConIdent }
+ConIdent  : L_ConIdent { Language.Sprite.Syntax.Front.Abs.ConIdent $1 }
 
 Program :: { Language.Sprite.Syntax.Front.Abs.Program }
 Program
@@ -108,7 +112,8 @@ Term
   : Integer { Language.Sprite.Syntax.Front.Abs.ConstInt $1 }
   | ConstBool { Language.Sprite.Syntax.Front.Abs.Bool $1 }
   | VarIdent { Language.Sprite.Syntax.Front.Abs.Var $1 }
-  | VarIdent '(' ListFuncAppArg ')' { Language.Sprite.Syntax.Front.Abs.App $1 $3 }
+  | ConIdent ConAppArgs { Language.Sprite.Syntax.Front.Abs.ConApp $1 $2 }
+  | VarIdent '(' ListFuncAppArg ')' { Language.Sprite.Syntax.Front.Abs.FunApp $1 $3 }
   | 'if' '(' FuncAppArg ')' '{' Term '}' 'else' '{' Term '}' { Language.Sprite.Syntax.Front.Abs.If $3 $6 $10 }
   | Decl Term { Language.Sprite.Syntax.Front.Abs.Let $1 $2 }
   | '(' ListFunArgName ')' '=>' '{' Term '}' { Language.Sprite.Syntax.Front.Abs.Fun $2 $6 }
@@ -119,6 +124,11 @@ ConstBool :: { Language.Sprite.Syntax.Front.Abs.ConstBool }
 ConstBool
   : 'true' { Language.Sprite.Syntax.Front.Abs.ConstTrue }
   | 'false' { Language.Sprite.Syntax.Front.Abs.ConstFalse }
+
+ConAppArgs :: { Language.Sprite.Syntax.Front.Abs.ConAppArgs }
+ConAppArgs
+  : {- empty -} { Language.Sprite.Syntax.Front.Abs.EmptyConAppArgs }
+  | '(' ListFuncAppArg ')' { Language.Sprite.Syntax.Front.Abs.NonEmptyConAppArgs $2 }
 
 Annotation :: { Language.Sprite.Syntax.Front.Abs.Annotation }
 Annotation
@@ -154,22 +164,32 @@ IntOp
   | '>' { Language.Sprite.Syntax.Front.Abs.IntGreaterThan }
   | '>=' { Language.Sprite.Syntax.Front.Abs.IntGreaterOrEqThan }
 
+Refinement :: { Language.Sprite.Syntax.Front.Abs.Refinement }
+Refinement
+  : '[' VarIdent '|' Pred ']' { Language.Sprite.Syntax.Front.Abs.KnownRefinement $2 $4 }
+  | '[' '?' ']' { Language.Sprite.Syntax.Front.Abs.UnknownRefinement }
+  | {- empty -} { Language.Sprite.Syntax.Front.Abs.SimpleRefinement }
+
 RType :: { Language.Sprite.Syntax.Front.Abs.RType }
 RType
   : FuncArg '=>' RType { Language.Sprite.Syntax.Front.Abs.TypeFun $1 $3 }
-  | BaseType '[' VarIdent '|' Pred ']' { Language.Sprite.Syntax.Front.Abs.TypeRefined $1 $3 $5 }
-  | BaseType '[' '?' ']' { Language.Sprite.Syntax.Front.Abs.TypeRefinedUnknown $1 }
-  | BaseType { Language.Sprite.Syntax.Front.Abs.TypeRefinedSimple $1 }
-  | RType1 { $1 }
+  | BaseType Refinement { Language.Sprite.Syntax.Front.Abs.TypeRefined $1 $2 }
+  | VarIdent TypeDataArgs Refinement { Language.Sprite.Syntax.Front.Abs.TypeData $1 $2 $3 }
+  | '(' RType ')' { $2 }
 
-RType1 :: { Language.Sprite.Syntax.Front.Abs.RType }
-RType1 : RType2 { $1 }
+TypeDataArg :: { Language.Sprite.Syntax.Front.Abs.TypeDataArg }
+TypeDataArg
+  : RType { Language.Sprite.Syntax.Front.Abs.TypeDataArg $1 }
 
-RType2 :: { Language.Sprite.Syntax.Front.Abs.RType }
-RType2 : RType3 { $1 }
+ListTypeDataArg :: { [Language.Sprite.Syntax.Front.Abs.TypeDataArg] }
+ListTypeDataArg
+  : TypeDataArg { (:[]) $1 }
+  | TypeDataArg ',' ListTypeDataArg { (:) $1 $3 }
 
-RType3 :: { Language.Sprite.Syntax.Front.Abs.RType }
-RType3 : '(' RType ')' { $2 }
+TypeDataArgs :: { Language.Sprite.Syntax.Front.Abs.TypeDataArgs }
+TypeDataArgs
+  : '(' ListTypeDataArg ')' { Language.Sprite.Syntax.Front.Abs.NonEmptyTypeDataArgs $2 }
+  | {- empty -} { Language.Sprite.Syntax.Front.Abs.EmptyTypeDataArgs }
 
 DataType :: { Language.Sprite.Syntax.Front.Abs.DataType }
 DataType
@@ -181,7 +201,7 @@ ListDataType
 
 DataTypeConstructor :: { Language.Sprite.Syntax.Front.Abs.DataTypeConstructor }
 DataTypeConstructor
-  : VarIdent DataTypeConstructorArgs DataTypeConstructorPredicate { Language.Sprite.Syntax.Front.Abs.DataTypeConstructor $1 $2 $3 }
+  : ConIdent DataTypeConstructorArgs DataTypeConstructorPredicate { Language.Sprite.Syntax.Front.Abs.DataTypeConstructor $1 $2 $3 }
 
 ListDataTypeConstructor :: { [Language.Sprite.Syntax.Front.Abs.DataTypeConstructor] }
 ListDataTypeConstructor
@@ -258,21 +278,6 @@ BaseType
   : 'int' { Language.Sprite.Syntax.Front.Abs.BaseTypeInt }
   | 'bool' { Language.Sprite.Syntax.Front.Abs.BaseTypeBool }
   | TypeVarId { Language.Sprite.Syntax.Front.Abs.BaseTypeVar $1 }
-  | VarIdent BaseTypeDataArgs { Language.Sprite.Syntax.Front.Abs.BaseTypeData $1 $2 }
-
-BaseTypeDataArgs :: { Language.Sprite.Syntax.Front.Abs.BaseTypeDataArgs }
-BaseTypeDataArgs
-  : '(' ListBaseTypeDataArg ')' { Language.Sprite.Syntax.Front.Abs.NonEmptyBaseTypeDataArgs $2 }
-  | {- empty -} { Language.Sprite.Syntax.Front.Abs.EmptyBaseTypeDataArgs }
-
-BaseTypeDataArg :: { Language.Sprite.Syntax.Front.Abs.BaseTypeDataArg }
-BaseTypeDataArg
-  : RType { Language.Sprite.Syntax.Front.Abs.BaseTypeDataArg $1 }
-
-ListBaseTypeDataArg :: { [Language.Sprite.Syntax.Front.Abs.BaseTypeDataArg] }
-ListBaseTypeDataArg
-  : BaseTypeDataArg { (:[]) $1 }
-  | BaseTypeDataArg ',' ListBaseTypeDataArg { (:) $1 $3 }
 
 TypeVarId :: { Language.Sprite.Syntax.Front.Abs.TypeVarId }
 TypeVarId

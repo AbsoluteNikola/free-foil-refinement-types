@@ -3,6 +3,7 @@ module Language.Sprite.Syntax.Convert.FrontToInner where
 import Language.Sprite.Syntax.Front.Abs qualified as F
 import Language.Sprite.Syntax.Inner.Abs qualified as I
 import Data.List (nub)
+import Data.Functor ((<&>))
 
 data ConvertError
   = DifferentNameForBindingAndAnnotationError
@@ -33,9 +34,20 @@ convert ft = case ft of
         convertedBody
         args
     pure funs
-  F.App funcName args -> do
+  F.ConApp conName args -> do
     let
-      convertedFuncTerm = I.Var $ convertVarId funcName
+      convertedConName = I.Constructor $ convertConId conName
+      args' = case args of
+        F.EmptyConAppArgs -> []
+        F.NonEmptyConAppArgs some -> some
+      apps = foldl
+        (\t arg -> I.App t (convertFuncAppArg arg))
+        convertedConName
+        args'
+    pure apps
+  F.FunApp funName args -> do
+    let
+      convertedFuncTerm = I.Var $ convertVarId funName
       apps = foldl
         (\t arg -> I.App t (convertFuncAppArg arg))
         convertedFuncTerm
@@ -53,9 +65,28 @@ convert ft = case ft of
         F.IntLessOrEqThan -> I.OpExpr l I.LessOrEqOp r
         F.IntGreaterThan -> I.OpExpr l I.GreaterOp r
         F.IntGreaterOrEqThan -> I.OpExpr l I.GreaterOrEqOp r
+  F.Switch arg cases -> do
+    convertedCases <- traverse convertSwitchCase cases
+    pure $
+      I.Switch (I.Var $ convertVarId arg) convertedCases
+
+convertSwitchCase :: F.SwitchCase -> Either ConvertError I.Term
+convertSwitchCase (F.SwitchCase conName frontConArgs term) = do
+  convertedTerm <- convert term
+  let
+    innerConArgs = case frontConArgs of
+      F.SwitchCaseEmptyDataConArgs -> I.PatternNoBinders
+      F.SwitchCaseNonEmptyDataConArgs args -> foldr
+        (\(F.FunArgName argId) b -> I.PatternSomeBinders (convertVarId argId) b)
+        I.PatternNoBinders
+        args
+  pure $ I.CaseAlt (convertVarId conName) innerConArgs (I.ScopedTerm convertedTerm)
 
 convertVarId :: F.VarIdent -> I.VarIdent
 convertVarId (F.VarIdent varId) = I.VarIdent varId
+
+convertConId :: F.ConIdent -> I.ConIdent
+convertConId (F.ConIdent varId) = I.ConIdent varId
 
 convertVarIdToPattern :: F.VarIdent -> I.Pattern
 convertVarIdToPattern (F.VarIdent varId) = I.PatternVar $ I.VarIdent varId
@@ -91,11 +122,10 @@ convertDecl decl = case decl of
 
 convertRType :: F.RType -> I.Term
 convertRType rType = case rType of
-  F.TypeRefined base varId predicate ->
-    I.TypeRefined
-      (convertBaseType base)
-      (convertVarIdToPattern varId)
-      (I.ScopedTerm $ convertPredicate predicate)
+  F.TypeRefined base ref ->
+    let
+      (v, predicate) = convertRefinement ref
+    in I.TypeRefined (convertBaseType base) v predicate
 
   F.TypeFun (F.NamedFuncArg argId argType) retType ->
     I.TypeFun
@@ -107,11 +137,20 @@ convertRType rType = case rType of
       (I.PatternVar $ I.VarIdent "_arg")
       (convertRType argType)
       (I.ScopedTerm $ convertRType retType)
-  F.TypeRefinedUnknown base -> I.TypeRefined
-    (convertBaseType base)
-    (I.PatternVar (I.VarIdent "v"))
-    (I.ScopedTerm I.Unknown)
-  F.TypeRefinedSimple base -> mkSimpleType (convertBaseType base)
+  F.TypeData typId typArgs ref ->
+    let
+      (refVar, refPred) = convertRefinement ref
+      convertedTypArgs = case typArgs of
+        F.NonEmptyTypeDataArgs args -> I.NonEmptyTypeDataArgs $
+          args <&> \(F.TypeDataArg argTyp) -> I.TypeDataArg (convertRType argTyp)
+        F.EmptyTypeDataArgs -> I.EmptyTypeDataArgs
+    in I.TypeData (convertVarId typId) convertedTypArgs refVar refPred
+
+convertRefinement :: F.Refinement -> (I.Pattern, I.ScopedTerm)
+convertRefinement = \case
+  F.KnownRefinement var p -> (convertVarIdToPattern var, I.ScopedTerm $ convertPredicate p)
+  F.UnknownRefinement -> (I.PatternVar $ I.VarIdent "v", I.ScopedTerm I.Unknown)
+  F.SimpleRefinement -> (I.PatternVar $ I.VarIdent "v", I.ScopedTerm $ I.Boolean I.ConstTrue)
 
 convertBaseType :: F.BaseType -> I.Term
 convertBaseType = \case
@@ -140,6 +179,8 @@ convertPredicate predicate = case predicate of
   F.PMultiply l r ->  I.OpExpr (convertPredicate l) I.MultiplyOp (convertPredicate r)
   F.POr l r ->  I.OpExpr (convertPredicate l) I.OrOp (convertPredicate r)
   F.PAnd l r ->  I.OpExpr (convertPredicate l) I.AndOp (convertPredicate r)
+  F.PMeasure measureId args -> I.Measure (convertVarId measureId) $
+    args <&> \(F.FunArgName arg) -> I.Var (convertVarId arg)
 
 mkSimpleType :: I.Term -> I.Term
 mkSimpleType base = I.TypeRefined base (I.PatternVar "v") (I.ScopedTerm $ I.Boolean I.ConstTrue)
@@ -150,9 +191,14 @@ collectFreeVars = nub . map convertVarId . go
     go = \case
       F.TypeFun (F.NamedFuncArg _ argType) retType -> go argType ++ go retType
       F.TypeFun (F.UnNamedFuncArg argType) retType -> go argType ++ go retType
-      F.TypeRefined b _ _ -> fromBase b
-      F.TypeRefinedUnknown b -> fromBase b
-      F.TypeRefinedSimple b -> fromBase b
+      F.TypeRefined b _ -> fromBase b
+      F.TypeData _ typArgs _ -> fromTypeDataArgs typArgs
+
+    fromTypeDataArgs = \case
+      F.EmptyTypeDataArgs -> []
+      F.NonEmptyTypeDataArgs args -> flip concatMap args $
+        \(F.TypeDataArg arg) -> go arg
+
     fromBase = \case
       F.BaseTypeVar (F.TypeVarId v) -> [v]
       _ -> []

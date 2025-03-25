@@ -15,10 +15,14 @@ import qualified Data.String
 import qualified Data.Data    as C (Data, Typeable)
 import qualified GHC.Generics as C (Generic)
 
+data Program = Program [DataType] Term
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
 data Term
     = ConstInt Integer
     | Boolean ConstBool
     | Var VarIdent
+    | Constructor ConIdent
     | If Term Term Term
     | Let Pattern Term ScopedTerm
     | LetRec Term Pattern ScopedTerm ScopedTerm
@@ -26,12 +30,16 @@ data Term
     | App Term Term
     | Ann Term Term
     | OpExpr Term Op Term
+    | Switch Term [Term]
+    | CaseAlt VarIdent Pattern ScopedTerm
     | TLam Pattern ScopedTerm
     | TApp Term Term
     | TypeRefined Term Pattern ScopedTerm
     | TypeFun Pattern Term ScopedTerm
     | TypeForall Pattern ScopedTerm
+    | TypeData VarIdent TypeDataArgs Pattern ScopedTerm
     | HVar VarIdent [Term]
+    | Measure VarIdent [Term]
     | Unknown
     | BaseTypeInt
     | BaseTypeBool
@@ -39,7 +47,17 @@ data Term
     | BaseTypeTempVar VarIdent
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
+data ScopedTerm = ScopedTerm Term
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
 data ConstBool = ConstTrue | ConstFalse
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data TypeDataArgs
+    = NonEmptyTypeDataArgs [TypeDataArg] | EmptyTypeDataArgs
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data TypeDataArg = TypeDataArg Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data Op
@@ -55,12 +73,21 @@ data Op
     | OrOp
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data Pattern = PatternVar VarIdent
+data Pattern
+    = PatternVar VarIdent
+    | PatternNoBinders
+    | PatternSomeBinders VarIdent Pattern
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data ScopedTerm = ScopedTerm Term
+data DataType = DataType VarIdent [DataTypeCon]
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data DataTypeCon = DataTypeCon VarIdent Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 newtype VarIdent = VarIdent String
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic, Data.String.IsString)
+
+newtype ConIdent = ConIdent String
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic, Data.String.IsString)
 

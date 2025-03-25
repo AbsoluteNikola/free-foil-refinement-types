@@ -139,6 +139,8 @@ instance Print Double where
 
 instance Print Language.Sprite.Syntax.Front.Abs.VarIdent where
   prt _ (Language.Sprite.Syntax.Front.Abs.VarIdent i) = doc $ showString i
+instance Print Language.Sprite.Syntax.Front.Abs.ConIdent where
+  prt _ (Language.Sprite.Syntax.Front.Abs.ConIdent i) = doc $ showString i
 instance Print Language.Sprite.Syntax.Front.Abs.Program where
   prt i = \case
     Language.Sprite.Syntax.Front.Abs.Program qualifiers measures datatypes term -> prPrec i 0 (concatD [prt 0 qualifiers, prt 0 measures, prt 0 datatypes, prt 0 term])
@@ -173,7 +175,8 @@ instance Print Language.Sprite.Syntax.Front.Abs.Term where
     Language.Sprite.Syntax.Front.Abs.ConstInt n -> prPrec i 0 (concatD [prt 0 n])
     Language.Sprite.Syntax.Front.Abs.Bool constbool -> prPrec i 0 (concatD [prt 0 constbool])
     Language.Sprite.Syntax.Front.Abs.Var varident -> prPrec i 0 (concatD [prt 0 varident])
-    Language.Sprite.Syntax.Front.Abs.App varident funcappargs -> prPrec i 0 (concatD [prt 0 varident, doc (showString "("), prt 0 funcappargs, doc (showString ")")])
+    Language.Sprite.Syntax.Front.Abs.ConApp conident conappargs -> prPrec i 0 (concatD [prt 0 conident, prt 0 conappargs])
+    Language.Sprite.Syntax.Front.Abs.FunApp varident funcappargs -> prPrec i 0 (concatD [prt 0 varident, doc (showString "("), prt 0 funcappargs, doc (showString ")")])
     Language.Sprite.Syntax.Front.Abs.If funcapparg term1 term2 -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 0 funcapparg, doc (showString ")"), doc (showString "{"), prt 0 term1, doc (showString "}"), doc (showString "else"), doc (showString "{"), prt 0 term2, doc (showString "}")])
     Language.Sprite.Syntax.Front.Abs.Let decl term -> prPrec i 0 (concatD [prt 0 decl, prt 0 term])
     Language.Sprite.Syntax.Front.Abs.Fun funargnames term -> prPrec i 0 (concatD [doc (showString "("), prt 0 funargnames, doc (showString ")"), doc (showString "=>"), doc (showString "{"), prt 0 term, doc (showString "}")])
@@ -184,6 +187,11 @@ instance Print Language.Sprite.Syntax.Front.Abs.ConstBool where
   prt i = \case
     Language.Sprite.Syntax.Front.Abs.ConstTrue -> prPrec i 0 (concatD [doc (showString "true")])
     Language.Sprite.Syntax.Front.Abs.ConstFalse -> prPrec i 0 (concatD [doc (showString "false")])
+
+instance Print Language.Sprite.Syntax.Front.Abs.ConAppArgs where
+  prt i = \case
+    Language.Sprite.Syntax.Front.Abs.EmptyConAppArgs -> prPrec i 0 (concatD [])
+    Language.Sprite.Syntax.Front.Abs.NonEmptyConAppArgs funcappargs -> prPrec i 0 (concatD [doc (showString "("), prt 0 funcappargs, doc (showString ")")])
 
 instance Print Language.Sprite.Syntax.Front.Abs.Annotation where
   prt i = \case
@@ -220,12 +228,31 @@ instance Print Language.Sprite.Syntax.Front.Abs.IntOp where
     Language.Sprite.Syntax.Front.Abs.IntGreaterThan -> prPrec i 0 (concatD [doc (showString ">")])
     Language.Sprite.Syntax.Front.Abs.IntGreaterOrEqThan -> prPrec i 0 (concatD [doc (showString ">=")])
 
+instance Print Language.Sprite.Syntax.Front.Abs.Refinement where
+  prt i = \case
+    Language.Sprite.Syntax.Front.Abs.KnownRefinement varident pred -> prPrec i 0 (concatD [doc (showString "["), prt 0 varident, doc (showString "|"), prt 0 pred, doc (showString "]")])
+    Language.Sprite.Syntax.Front.Abs.UnknownRefinement -> prPrec i 0 (concatD [doc (showString "["), doc (showString "?"), doc (showString "]")])
+    Language.Sprite.Syntax.Front.Abs.SimpleRefinement -> prPrec i 0 (concatD [])
+
 instance Print Language.Sprite.Syntax.Front.Abs.RType where
   prt i = \case
     Language.Sprite.Syntax.Front.Abs.TypeFun funcarg rtype -> prPrec i 0 (concatD [prt 0 funcarg, doc (showString "=>"), prt 0 rtype])
-    Language.Sprite.Syntax.Front.Abs.TypeRefined basetype varident pred -> prPrec i 0 (concatD [prt 0 basetype, doc (showString "["), prt 0 varident, doc (showString "|"), prt 0 pred, doc (showString "]")])
-    Language.Sprite.Syntax.Front.Abs.TypeRefinedUnknown basetype -> prPrec i 0 (concatD [prt 0 basetype, doc (showString "["), doc (showString "?"), doc (showString "]")])
-    Language.Sprite.Syntax.Front.Abs.TypeRefinedSimple basetype -> prPrec i 0 (concatD [prt 0 basetype])
+    Language.Sprite.Syntax.Front.Abs.TypeRefined basetype refinement -> prPrec i 0 (concatD [prt 0 basetype, prt 0 refinement])
+    Language.Sprite.Syntax.Front.Abs.TypeData varident typedataargs refinement -> prPrec i 0 (concatD [prt 0 varident, prt 0 typedataargs, prt 0 refinement])
+
+instance Print Language.Sprite.Syntax.Front.Abs.TypeDataArg where
+  prt i = \case
+    Language.Sprite.Syntax.Front.Abs.TypeDataArg rtype -> prPrec i 0 (concatD [prt 0 rtype])
+
+instance Print [Language.Sprite.Syntax.Front.Abs.TypeDataArg] where
+  prt _ [] = concatD []
+  prt _ [x] = concatD [prt 0 x]
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
+
+instance Print Language.Sprite.Syntax.Front.Abs.TypeDataArgs where
+  prt i = \case
+    Language.Sprite.Syntax.Front.Abs.NonEmptyTypeDataArgs typedataargs -> prPrec i 0 (concatD [doc (showString "("), prt 0 typedataargs, doc (showString ")")])
+    Language.Sprite.Syntax.Front.Abs.EmptyTypeDataArgs -> prPrec i 0 (concatD [])
 
 instance Print Language.Sprite.Syntax.Front.Abs.DataType where
   prt i = \case
@@ -237,7 +264,7 @@ instance Print [Language.Sprite.Syntax.Front.Abs.DataType] where
 
 instance Print Language.Sprite.Syntax.Front.Abs.DataTypeConstructor where
   prt i = \case
-    Language.Sprite.Syntax.Front.Abs.DataTypeConstructor varident datatypeconstructorargs datatypeconstructorpredicate -> prPrec i 0 (concatD [prt 0 varident, prt 0 datatypeconstructorargs, prt 0 datatypeconstructorpredicate])
+    Language.Sprite.Syntax.Front.Abs.DataTypeConstructor conident datatypeconstructorargs datatypeconstructorpredicate -> prPrec i 0 (concatD [prt 0 conident, prt 0 datatypeconstructorargs, prt 0 datatypeconstructorpredicate])
 
 instance Print [Language.Sprite.Syntax.Front.Abs.DataTypeConstructor] where
   prt _ [] = concatD []
@@ -291,21 +318,6 @@ instance Print Language.Sprite.Syntax.Front.Abs.BaseType where
     Language.Sprite.Syntax.Front.Abs.BaseTypeInt -> prPrec i 0 (concatD [doc (showString "int")])
     Language.Sprite.Syntax.Front.Abs.BaseTypeBool -> prPrec i 0 (concatD [doc (showString "bool")])
     Language.Sprite.Syntax.Front.Abs.BaseTypeVar typevarid -> prPrec i 0 (concatD [prt 0 typevarid])
-    Language.Sprite.Syntax.Front.Abs.BaseTypeData varident basetypedataargs -> prPrec i 0 (concatD [prt 0 varident, prt 0 basetypedataargs])
-
-instance Print Language.Sprite.Syntax.Front.Abs.BaseTypeDataArgs where
-  prt i = \case
-    Language.Sprite.Syntax.Front.Abs.NonEmptyBaseTypeDataArgs basetypedataargs -> prPrec i 0 (concatD [doc (showString "("), prt 0 basetypedataargs, doc (showString ")")])
-    Language.Sprite.Syntax.Front.Abs.EmptyBaseTypeDataArgs -> prPrec i 0 (concatD [])
-
-instance Print Language.Sprite.Syntax.Front.Abs.BaseTypeDataArg where
-  prt i = \case
-    Language.Sprite.Syntax.Front.Abs.BaseTypeDataArg rtype -> prPrec i 0 (concatD [prt 0 rtype])
-
-instance Print [Language.Sprite.Syntax.Front.Abs.BaseTypeDataArg] where
-  prt _ [] = concatD []
-  prt _ [x] = concatD [prt 0 x]
-  prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
 
 instance Print Language.Sprite.Syntax.Front.Abs.TypeVarId where
   prt i = \case

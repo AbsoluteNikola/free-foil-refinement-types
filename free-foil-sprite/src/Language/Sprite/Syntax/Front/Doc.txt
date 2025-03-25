@@ -16,8 +16,12 @@ Integer literals //Integer// are nonempty sequences of digits.
 
 
 
+
 VarIdent literals are recognized by the regular expression
-`````letter ('_' | digit | letter)*`````
+`````lower ('_' | digit | letter)*`````
+
+ConIdent literals are recognized by the regular expression
+`````upper ('_' | digit | letter)*`````
 
 
 ===Reserved words and symbols===
@@ -60,6 +64,7 @@ All other symbols are terminals.
   | //Term// | -> | //Integer//
   |  |  **|**  | //ConstBool//
   |  |  **|**  | //VarIdent//
+  |  |  **|**  | //ConIdent// //ConAppArgs//
   |  |  **|**  | //VarIdent// ``(`` //[FuncAppArg]// ``)``
   |  |  **|**  | ``if`` ``(`` //FuncAppArg// ``)`` ``{`` //Term// ``}`` ``else`` ``{`` //Term// ``}``
   |  |  **|**  | //Decl// //Term//
@@ -68,6 +73,8 @@ All other symbols are terminals.
   |  |  **|**  | ``switch`` ``(`` //VarIdent// ``)`` ``{`` //[SwitchCase]// ``}``
   | //ConstBool// | -> | ``true``
   |  |  **|**  | ``false``
+  | //ConAppArgs// | -> | **eps**
+  |  |  **|**  | ``(`` //[FuncAppArg]// ``)``
   | //Annotation// | -> | ``/*@`` ``val`` //VarIdent// ``:`` //RType// ``*/``
   | //Decl// | -> | //Annotation// ``let`` ``rec`` //VarIdent// ``=`` //Term// ``;``
   |  |  **|**  | //Annotation// ``let`` //VarIdent// ``=`` //Term// ``;``
@@ -85,18 +92,22 @@ All other symbols are terminals.
   |  |  **|**  | ``<=``
   |  |  **|**  | ``>``
   |  |  **|**  | ``>=``
+  | //Refinement// | -> | ``[`` //VarIdent// ``|`` //Pred// ``]``
+  |  |  **|**  | ``[`` ``?`` ``]``
+  |  |  **|**  | **eps**
   | //RType// | -> | //FuncArg// ``=>`` //RType//
-  |  |  **|**  | //BaseType// ``[`` //VarIdent// ``|`` //Pred// ``]``
-  |  |  **|**  | //BaseType// ``[`` ``?`` ``]``
-  |  |  **|**  | //BaseType//
-  |  |  **|**  | //RType1//
-  | //RType1// | -> | //RType2//
-  | //RType2// | -> | //RType3//
-  | //RType3// | -> | ``(`` //RType// ``)``
+  |  |  **|**  | //BaseType// //Refinement//
+  |  |  **|**  | //VarIdent// //TypeDataArgs// //Refinement//
+  |  |  **|**  | ``(`` //RType// ``)``
+  | //TypeDataArg// | -> | //RType//
+  | //[TypeDataArg]// | -> | //TypeDataArg//
+  |  |  **|**  | //TypeDataArg// ``,`` //[TypeDataArg]//
+  | //TypeDataArgs// | -> | ``(`` //[TypeDataArg]// ``)``
+  |  |  **|**  | **eps**
   | //DataType// | -> | ``type`` //VarIdent// //DataTypeArgs// ``=`` ``|`` //[DataTypeConstructor]// ``;``
   | //[DataType]// | -> | **eps**
   |  |  **|**  | //DataType// //[DataType]//
-  | //DataTypeConstructor// | -> | //VarIdent// //DataTypeConstructorArgs// //DataTypeConstructorPredicate//
+  | //DataTypeConstructor// | -> | //ConIdent// //DataTypeConstructorArgs// //DataTypeConstructorPredicate//
   | //[DataTypeConstructor]// | -> | //DataTypeConstructor//
   |  |  **|**  | //DataTypeConstructor// ``|`` //[DataTypeConstructor]//
   | //DataTypeConstructorArgs// | -> | ``(`` //[FuncArg]// ``)``
@@ -133,12 +144,6 @@ All other symbols are terminals.
   | //BaseType// | -> | ``int``
   |  |  **|**  | ``bool``
   |  |  **|**  | //TypeVarId//
-  |  |  **|**  | //VarIdent// //BaseTypeDataArgs//
-  | //BaseTypeDataArgs// | -> | ``(`` //[BaseTypeDataArg]// ``)``
-  |  |  **|**  | **eps**
-  | //BaseTypeDataArg// | -> | //RType//
-  | //[BaseTypeDataArg]// | -> | //BaseTypeDataArg//
-  |  |  **|**  | //BaseTypeDataArg// ``,`` //[BaseTypeDataArg]//
   | //TypeVarId// | -> | ``'`` //VarIdent//
   | //[TypeVarId]// | -> | //TypeVarId//
   |  |  **|**  | //TypeVarId// ``,`` //[TypeVarId]//

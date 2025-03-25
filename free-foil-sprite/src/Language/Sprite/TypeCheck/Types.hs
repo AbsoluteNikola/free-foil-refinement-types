@@ -40,6 +40,14 @@ extendTypeToCurrentScope scope typ = do
             scope' = F.extendScope newBinder scope
             newPred = F.substitutePattern scope' (F.sink F.identitySubst) oldVar [F.Var (F.nameOf newBinder)] p
           pure $ TypeRefined b (PatternVar newBinder) newPred
+    TypeData typName typArgs oldVar p ->  F.withFreshBinder scope $ \newBinder ->
+      case (F.assertDistinct newBinder, F.assertExt newBinder) of
+        (F.Distinct, F.Ext) -> do
+          let
+            scope' = F.extendScope newBinder scope
+            newPred = F.substitutePattern scope' (F.sink F.identitySubst) oldVar [F.Var (F.nameOf newBinder)] p
+          typArgs' <- for typArgs (extendTypeToCurrentScope scope)
+          pure $ TypeData typName typArgs' (PatternVar newBinder) newPred
     TypeFun argName argTyp retTyp ->  F.withFreshBinder scope $ \newBinder ->
       case (F.assertDistinct newBinder, F.assertExt newBinder) of
         (F.Distinct, F.Ext) -> do
@@ -66,6 +74,7 @@ mkPredicatesInTypeUnknown scope typ = do
   debugPrintT $ "Extending: " <> showT typ
   case typ of
     TypeRefined b v _ -> pure $ TypeRefined b v Unknown
+    TypeData typName args v _ -> pure $ TypeData typName args v Unknown
     TypeFun argName argTyp retTyp -> case (F.assertDistinct argName, F.assertExt argName) of
         (F.Distinct, F.Ext) -> do
           argTypExtended <- mkPredicatesInTypeUnknown scope argTyp

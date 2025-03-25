@@ -19,11 +19,20 @@ transVarIdent :: Language.Sprite.Syntax.Inner.Abs.VarIdent -> Result
 transVarIdent x = case x of
   Language.Sprite.Syntax.Inner.Abs.VarIdent string -> failure x
 
+transConIdent :: Language.Sprite.Syntax.Inner.Abs.ConIdent -> Result
+transConIdent x = case x of
+  Language.Sprite.Syntax.Inner.Abs.ConIdent string -> failure x
+
+transProgram :: Language.Sprite.Syntax.Inner.Abs.Program -> Result
+transProgram x = case x of
+  Language.Sprite.Syntax.Inner.Abs.Program datatypes term -> failure x
+
 transTerm :: Language.Sprite.Syntax.Inner.Abs.Term -> Result
 transTerm x = case x of
   Language.Sprite.Syntax.Inner.Abs.ConstInt integer -> failure x
   Language.Sprite.Syntax.Inner.Abs.Boolean constbool -> failure x
   Language.Sprite.Syntax.Inner.Abs.Var varident -> failure x
+  Language.Sprite.Syntax.Inner.Abs.Constructor conident -> failure x
   Language.Sprite.Syntax.Inner.Abs.If term1 term2 term3 -> failure x
   Language.Sprite.Syntax.Inner.Abs.Let pattern_ term scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.LetRec term pattern_ scopedterm1 scopedterm2 -> failure x
@@ -31,22 +40,39 @@ transTerm x = case x of
   Language.Sprite.Syntax.Inner.Abs.App term1 term2 -> failure x
   Language.Sprite.Syntax.Inner.Abs.Ann term1 term2 -> failure x
   Language.Sprite.Syntax.Inner.Abs.OpExpr term1 op term2 -> failure x
+  Language.Sprite.Syntax.Inner.Abs.Switch term terms -> failure x
+  Language.Sprite.Syntax.Inner.Abs.CaseAlt varident pattern_ scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.TLam pattern_ scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.TApp term1 term2 -> failure x
   Language.Sprite.Syntax.Inner.Abs.TypeRefined term pattern_ scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.TypeFun pattern_ term scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.TypeForall pattern_ scopedterm -> failure x
+  Language.Sprite.Syntax.Inner.Abs.TypeData varident typedataargs pattern_ scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.HVar varident terms -> failure x
+  Language.Sprite.Syntax.Inner.Abs.Measure varident terms -> failure x
   Language.Sprite.Syntax.Inner.Abs.Unknown -> failure x
   Language.Sprite.Syntax.Inner.Abs.BaseTypeInt -> failure x
   Language.Sprite.Syntax.Inner.Abs.BaseTypeBool -> failure x
   Language.Sprite.Syntax.Inner.Abs.BaseTypeVar term -> failure x
   Language.Sprite.Syntax.Inner.Abs.BaseTypeTempVar varident -> failure x
 
+transScopedTerm :: Language.Sprite.Syntax.Inner.Abs.ScopedTerm -> Result
+transScopedTerm x = case x of
+  Language.Sprite.Syntax.Inner.Abs.ScopedTerm term -> failure x
+
 transConstBool :: Language.Sprite.Syntax.Inner.Abs.ConstBool -> Result
 transConstBool x = case x of
   Language.Sprite.Syntax.Inner.Abs.ConstTrue -> failure x
   Language.Sprite.Syntax.Inner.Abs.ConstFalse -> failure x
+
+transTypeDataArgs :: Language.Sprite.Syntax.Inner.Abs.TypeDataArgs -> Result
+transTypeDataArgs x = case x of
+  Language.Sprite.Syntax.Inner.Abs.NonEmptyTypeDataArgs typedataargs -> failure x
+  Language.Sprite.Syntax.Inner.Abs.EmptyTypeDataArgs -> failure x
+
+transTypeDataArg :: Language.Sprite.Syntax.Inner.Abs.TypeDataArg -> Result
+transTypeDataArg x = case x of
+  Language.Sprite.Syntax.Inner.Abs.TypeDataArg term -> failure x
 
 transOp :: Language.Sprite.Syntax.Inner.Abs.Op -> Result
 transOp x = case x of
@@ -64,7 +90,13 @@ transOp x = case x of
 transPattern :: Language.Sprite.Syntax.Inner.Abs.Pattern -> Result
 transPattern x = case x of
   Language.Sprite.Syntax.Inner.Abs.PatternVar varident -> failure x
+  Language.Sprite.Syntax.Inner.Abs.PatternNoBinders -> failure x
+  Language.Sprite.Syntax.Inner.Abs.PatternSomeBinders varident pattern_ -> failure x
 
-transScopedTerm :: Language.Sprite.Syntax.Inner.Abs.ScopedTerm -> Result
-transScopedTerm x = case x of
-  Language.Sprite.Syntax.Inner.Abs.ScopedTerm term -> failure x
+transDataType :: Language.Sprite.Syntax.Inner.Abs.DataType -> Result
+transDataType x = case x of
+  Language.Sprite.Syntax.Inner.Abs.DataType varident datatypecons -> failure x
+
+transDataTypeCon :: Language.Sprite.Syntax.Inner.Abs.DataTypeCon -> Result
+transDataTypeCon x = case x of
+  Language.Sprite.Syntax.Inner.Abs.DataTypeCon varident term -> failure x

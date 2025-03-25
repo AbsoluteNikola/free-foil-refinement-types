@@ -31,7 +31,8 @@ data Term
     = ConstInt Integer
     | Bool ConstBool
     | Var VarIdent
-    | App VarIdent [FuncAppArg]
+    | ConApp ConIdent ConAppArgs
+    | FunApp VarIdent [FuncAppArg]
     | If FuncAppArg Term Term
     | Let Decl Term
     | Fun [FunArgName] Term
@@ -40,6 +41,9 @@ data Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data ConstBool = ConstTrue | ConstFalse
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data ConAppArgs = EmptyConAppArgs | NonEmptyConAppArgs [FuncAppArg]
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data Annotation = Annotation VarIdent RType
@@ -70,11 +74,23 @@ data IntOp
     | IntGreaterOrEqThan
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
+data Refinement
+    = KnownRefinement VarIdent Pred
+    | UnknownRefinement
+    | SimpleRefinement
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
 data RType
     = TypeFun FuncArg RType
-    | TypeRefined BaseType VarIdent Pred
-    | TypeRefinedUnknown BaseType
-    | TypeRefinedSimple BaseType
+    | TypeRefined BaseType Refinement
+    | TypeData VarIdent TypeDataArgs Refinement
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data TypeDataArg = TypeDataArg RType
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data TypeDataArgs
+    = NonEmptyTypeDataArgs [TypeDataArg] | EmptyTypeDataArgs
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data DataType
@@ -82,7 +98,7 @@ data DataType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data DataTypeConstructor
-    = DataTypeConstructor VarIdent DataTypeConstructorArgs DataTypeConstructorPredicate
+    = DataTypeConstructor ConIdent DataTypeConstructorArgs DataTypeConstructorPredicate
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data DataTypeConstructorArgs
@@ -119,19 +135,7 @@ data Pred
     | PMultiply Pred Pred
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data BaseType
-    = BaseTypeInt
-    | BaseTypeBool
-    | BaseTypeVar TypeVarId
-    | BaseTypeData VarIdent BaseTypeDataArgs
-  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
-
-data BaseTypeDataArgs
-    = NonEmptyBaseTypeDataArgs [BaseTypeDataArg]
-    | EmptyBaseTypeDataArgs
-  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
-
-data BaseTypeDataArg = BaseTypeDataArg RType
+data BaseType = BaseTypeInt | BaseTypeBool | BaseTypeVar TypeVarId
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data TypeVarId = TypeVarId VarIdent
@@ -147,5 +151,8 @@ data FuncAppArg
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 newtype VarIdent = VarIdent String
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic, Data.String.IsString)
+
+newtype ConIdent = ConIdent String
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic, Data.String.IsString)
 

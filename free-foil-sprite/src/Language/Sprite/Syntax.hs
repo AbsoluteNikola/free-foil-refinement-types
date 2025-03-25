@@ -32,11 +32,28 @@ import qualified Control.Monad.Free.Foil
 
 data Pattern o i
     where
-    PatternVar :: (Foil.NameBinder o i0_aMZ4) -> Pattern o i0_aMZ4
+    PatternVar' :: (Foil.NameBinder o i0_aMZ4) -> Pattern o i0_aMZ4
+    PatternNoBinders :: Pattern o o
+    PatternSomeBinders :: (Foil.NameBinder o i0_a11Mm) ->
+                       (Pattern i0_a11Mm i1_a11Mn) ->
+                       Pattern o i1_a11Mn
+
+{- Это хак для того чтоб компилятор не ругался на не полный паттерн матчинг
+Сделано потому что PatternSomeBinders и PatternNoBinders встречаются строго в одном месте, в switch case.
+Пока FrontToInner пишется и руками и контролируется где какой паттерн используется - это безопасно
+-}
+
+pattern PatternVar :: Foil.NameBinder i o -> Pattern i o
+pattern PatternVar binder = (PatternVar' binder)
+
+{-# COMPLETE PatternVar #-}
+
 data TermSig scope term
     where
     ConstIntSig :: Integer -> TermSig scope term
     BooleanSig :: Language.Sprite.Syntax.Inner.Abs.ConstBool ->
+                    TermSig scope term
+    ConstructorSig :: Language.Sprite.Syntax.Inner.Abs.ConIdent ->
                     TermSig scope term
     IfSig :: term -> term -> term -> TermSig scope term
     LetSig :: term -> scope -> TermSig scope term
@@ -48,12 +65,23 @@ data TermSig scope term
                     Language.Sprite.Syntax.Inner.Abs.Op ->
                     term ->
                     TermSig scope term
+    SwitchSig :: term -> [term] -> TermSig scope term
+    CaseAltSig :: Language.Sprite.Syntax.Inner.Abs.VarIdent ->
+                      scope ->
+                      TermSig scope term
     TLamSig :: scope -> TermSig scope term
     TAppSig :: term -> term -> TermSig scope term
     TypeRefinedSig :: term -> scope -> TermSig scope term
     TypeFunSig :: term -> scope -> TermSig scope term
     TypeForallSig :: scope -> TermSig scope term
+    TypeDataSig :: Language.Sprite.Syntax.Inner.Abs.VarIdent ->
+                    [term] ->
+                    scope ->
+                    TermSig scope term
     HVarSig :: Language.Sprite.Syntax.Inner.Abs.VarIdent ->
+                [term] ->
+                TermSig scope term
+    MeasureSig :: Language.Sprite.Syntax.Inner.Abs.VarIdent ->
                 [term] ->
                 TermSig scope term
     UnknownSig :: TermSig scope term
@@ -70,6 +98,10 @@ pattern ConstInt x_aMZ5 = Control.Monad.Free.Foil.Node (ConstIntSig x_aMZ5)
 pattern Boolean ::
             Language.Sprite.Syntax.Inner.Abs.ConstBool -> Term o
 pattern Boolean x_aMZ6 = Control.Monad.Free.Foil.Node (BooleanSig x_aMZ6)
+
+pattern Constructor :: Language.Sprite.Syntax.Inner.Abs.ConIdent -> Term o
+pattern Constructor conId = Control.Monad.Free.Foil.Node (ConstructorSig conId)
+
 pattern If :: Term o -> Term o -> Term o -> Term o
 pattern If cond thenB elseB = Control.Monad.Free.Foil.Node (IfSig cond thenB elseB)
 
@@ -98,6 +130,13 @@ pattern OpExpr ::
             Term o -> Language.Sprite.Syntax.Inner.Abs.Op -> Term o -> Term o
 pattern OpExpr x_aMZo x_aMZp x_aMZq = Control.Monad.Free.Foil.Node (OpExprSig x_aMZo
                                                                                 x_aMZp x_aMZq)
+pattern Switch :: Term o -> [Term o] -> Term o
+pattern Switch x_a11MK x_a11ML = Control.Monad.Free.Foil.Node (SwitchSig x_a11MK
+                                                                          x_a11ML)
+pattern CaseAlt :: Language.Sprite.Syntax.Inner.Abs.VarIdent -> Pattern o i -> Term i -> Term o
+pattern CaseAlt x_a11MM binder_a11MN body_a11MO = Control.Monad.Free.Foil.Node (CaseAltSig x_a11MM
+                                                                                               (Control.Monad.Free.Foil.ScopedAST binder_a11MN
+                                                                                                                                  body_a11MO))
 pattern TLam :: Pattern o i -> Term i -> Term o
 pattern TLam p term = Control.Monad.Free.Foil.Node (TLamSig (Control.Monad.Free.Foil.ScopedAST p term))
 pattern TApp :: Term o -> Term o -> Term o
@@ -117,8 +156,17 @@ pattern TypeFun binder_a961 x_a960 body_a962 = Control.Monad.Free.Foil.Node
 pattern TypeForall :: Pattern o i -> Term i -> Term o
 pattern TypeForall binder_aMZB body_aMZC = Control.Monad.Free.Foil.Node (TypeForallSig (Control.Monad.Free.Foil.ScopedAST binder_aMZB
                                                                                                                             body_aMZC))
+pattern TypeData ::
+              Language.Sprite.Syntax.Inner.Abs.VarIdent
+              -> [Term i] -> Pattern i o -> Term o -> Term i
+pattern TypeData typeId typeArgs refVar refPred = Control.Monad.Free.Foil.Node
+  (TypeDataSig typeId typeArgs
+    (Control.Monad.Free.Foil.ScopedAST refVar refPred))
 pattern HVar ::Language.Sprite.Syntax.Inner.Abs.VarIdent -> [Term o] -> Term o
 pattern HVar x_aMZD x_aMZE = Control.Monad.Free.Foil.Node (HVarSig x_aMZD
+                                                                    x_aMZE)
+pattern Measure ::Language.Sprite.Syntax.Inner.Abs.VarIdent -> [Term o] -> Term o
+pattern Measure x_aMZD x_aMZE = Control.Monad.Free.Foil.Node (MeasureSig x_aMZD
                                                                     x_aMZE)
 pattern Unknown :: Term o
 pattern Unknown = Control.Monad.Free.Foil.Node UnknownSig
@@ -130,7 +178,7 @@ pattern BaseTypeVar :: Term o -> Term o
 pattern BaseTypeVar x_aMZF = Control.Monad.Free.Foil.Node (BaseTypeVarSig x_aMZF)
 pattern BaseTypeTempVar ::Language.Sprite.Syntax.Inner.Abs.VarIdent -> Term o
 pattern BaseTypeTempVar varId = Control.Monad.Free.Foil.Node (BaseTypeTempVarSig varId)
-{-# COMPLETE Control.Monad.Free.Foil.Var, ConstInt, Boolean, If, Let, LetRec, Fun, App, Ann, OpExpr, TLam, TApp, TypeRefined, TypeFun, TypeForall, HVar, BaseTypeInt, BaseTypeBool, BaseTypeVar #-}
+{-# COMPLETE Control.Monad.Free.Foil.Var, Switch, CaseAlt, ConstInt, Boolean, If, Let, LetRec, Fun, App, Ann, OpExpr, TLam, TApp, TypeRefined, TypeFun, TypeForall, TypeData, HVar, BaseTypeInt, BaseTypeBool, BaseTypeVar #-}
 
 
 deriveBifunctor ''TermSig
@@ -138,14 +186,30 @@ deriveBifoldable ''TermSig
 deriveBitraversable ''TermSig
 
 instance Foil.CoSinkable Pattern where
-  coSinkabilityProof rename (PatternVar binder) cont =
+  coSinkabilityProof rename (PatternVar' binder) cont =
     Foil.coSinkabilityProof rename binder $ \rename' binder' ->
-      cont rename' (PatternVar binder')
+      cont rename' (PatternVar' binder')
 
-  withPattern withBinder _id _comp scope (PatternVar binder) cont =
-    withBinder scope binder $ \f' binder' ->
-      cont f' (PatternVar binder')
+  coSinkabilityProof rename PatternNoBinders cont = cont rename PatternNoBinders
 
+  coSinkabilityProof rename (PatternSomeBinders binder binders) cont =
+    Foil.coSinkabilityProof rename binder $ \rename' binder' ->
+      Foil.coSinkabilityProof rename' binders $ \rename'' binders' ->
+        cont rename'' (PatternSomeBinders binder' binders')
+
+  withPattern withBinder unit comp scope binders cont = case binders of
+    PatternVar' binder ->
+      withBinder scope binder $ \f' binder' ->
+        cont f' (PatternVar' binder')
+    PatternNoBinders -> cont unit PatternNoBinders
+    PatternSomeBinders binder moreBinders ->
+        Foil.withPattern withBinder unit comp scope binder $ \f binder' ->
+          let scope' = Foil.extendScopePattern binder' scope
+           in Foil.withPattern withBinder unit comp scope' moreBinders $ \g moreBinders' ->
+                cont (comp f g) (PatternSomeBinders binder' moreBinders')
+
+
+-- mkFreeFoilConversions spriteConfig
 
 fromTermSig ::
   TermSig (Language.Sprite.Syntax.Inner.Abs.Pattern,
@@ -155,6 +219,8 @@ fromTermSig (ConstIntSig x_aavY)
   = Language.Sprite.Syntax.Inner.Abs.ConstInt x_aavY
 fromTermSig (BooleanSig x_aavZ)
   = Language.Sprite.Syntax.Inner.Abs.Boolean x_aavZ
+fromTermSig (ConstructorSig conId)
+ = Language.Sprite.Syntax.Inner.Abs.Constructor conId
 fromTermSig (IfSig x_aaw0 x_aaw1 x_aaw2)
   = Language.Sprite.Syntax.Inner.Abs.If x_aaw0 x_aaw1 x_aaw2
 fromTermSig (LetSig x_abJ3 (binder_abJ4, body_abJ5))
@@ -169,6 +235,11 @@ fromTermSig (AnnSig x_aawf x_aawg)
   = Language.Sprite.Syntax.Inner.Abs.Ann x_aawf x_aawg
 fromTermSig (OpExprSig x_aawh x_aawi x_aawj)
   = Language.Sprite.Syntax.Inner.Abs.OpExpr x_aawh x_aawi x_aawj
+fromTermSig (SwitchSig x_a14NA x_a14NB)
+  = Language.Sprite.Syntax.Inner.Abs.Switch x_a14NA x_a14NB
+fromTermSig (CaseAltSig x_a14NC (binder_a14ND, body_a14NE))
+  = Language.Sprite.Syntax.Inner.Abs.CaseAlt
+      x_a14NC binder_a14ND body_a14NE
 fromTermSig (TLamSig (binder_aawk, body_aawl))
   = Language.Sprite.Syntax.Inner.Abs.TLam binder_aawk body_aawl
 fromTermSig (TAppSig x_aawm x_aawn)
@@ -183,6 +254,8 @@ fromTermSig (TypeForallSig (binder_aawv, body_aaww))
   = Language.Sprite.Syntax.Inner.Abs.TypeForall binder_aawv body_aaww
 fromTermSig (HVarSig x_aawx x_aawy)
   = Language.Sprite.Syntax.Inner.Abs.HVar x_aawx x_aawy
+fromTermSig (MeasureSig x_aawx x_aawy)
+  = Language.Sprite.Syntax.Inner.Abs.Measure x_aawx x_aawy
 fromTermSig BaseTypeIntSig
   = Language.Sprite.Syntax.Inner.Abs.BaseTypeInt
 fromTermSig UnknownSig
@@ -193,13 +266,25 @@ fromTermSig (BaseTypeVarSig x_aawz)
   = Language.Sprite.Syntax.Inner.Abs.BaseTypeVar x_aawz
 fromTermSig (BaseTypeTempVarSig varId)
   = Language.Sprite.Syntax.Inner.Abs.BaseTypeTempVar varId
-
+fromTermSig (TypeDataSig varId typArgs (refVar, refPred))
+  = Language.Sprite.Syntax.Inner.Abs.TypeData varId (toTypArgs typArgs) refVar refPred
+  where
+    toTypArgs [] = Language.Sprite.Syntax.Inner.Abs.EmptyTypeDataArgs
+    toTypArgs xs = Language.Sprite.Syntax.Inner.Abs.NonEmptyTypeDataArgs
+      $ Language.Sprite.Syntax.Inner.Abs.TypeDataArg <$> xs
 
 fromPattern ::
-  Pattern o i -> Language.Sprite.Syntax.Inner.Abs.Pattern
-fromPattern (PatternVar x_abJl)
+      Pattern o i -> Language.Sprite.Syntax.Inner.Abs.Pattern
+fromPattern (PatternVar' x_aceP)
   = Language.Sprite.Syntax.Inner.Abs.PatternVar
-      (intToVarIdent (Foil.nameId (Foil.nameOf x_abJl)))
+      (intToVarIdent (Foil.nameId (Foil.nameOf x_aceP)))
+fromPattern PatternNoBinders
+  = Language.Sprite.Syntax.Inner.Abs.PatternNoBinders
+fromPattern (PatternSomeBinders x_aceQ x_aceR)
+  = Language.Sprite.Syntax.Inner.Abs.PatternSomeBinders
+      (intToVarIdent (Foil.nameId (Foil.nameOf x_aceQ)))
+      (fromPattern x_aceR)
+
 fromTerm :: Term o -> Language.Sprite.Syntax.Inner.Abs.Term
 fromTerm
   = Control.Monad.Free.Foil.convertFromAST
@@ -212,6 +297,8 @@ toTermSig (Language.Sprite.Syntax.Inner.Abs.ConstInt _x_aawC)
   = Right (ConstIntSig _x_aawC)
 toTermSig (Language.Sprite.Syntax.Inner.Abs.Boolean _x_aawE)
   = Right (BooleanSig _x_aawE)
+toTermSig (Language.Sprite.Syntax.Inner.Abs.Constructor conId)
+  = Right (ConstructorSig conId)
 toTermSig (Language.Sprite.Syntax.Inner.Abs.Var _theRawIdent_aawF)
   = Left _theRawIdent_aawF
 toTermSig
@@ -236,6 +323,13 @@ toTermSig
   (Language.Sprite.Syntax.Inner.Abs.OpExpr _x_aax4 _x_aax5 _x_aax6)
   = Right (OpExprSig _x_aax4 _x_aax5 _x_aax6)
 toTermSig
+  (Language.Sprite.Syntax.Inner.Abs.Switch _x_a14Ox _x_a14Oy)
+  = Right (SwitchSig _x_a14Ox _x_a14Oy)
+toTermSig
+  (Language.Sprite.Syntax.Inner.Abs.CaseAlt _x_a14OA binder_a14OB
+                                            body_a14OC)
+  = Right (CaseAltSig _x_a14OA (binder_a14OB, body_a14OC))
+toTermSig
   (Language.Sprite.Syntax.Inner.Abs.TLam binder_aax8 body_aax9)
   = Right (TLamSig (binder_aax8, body_aax9))
 toTermSig (Language.Sprite.Syntax.Inner.Abs.TApp _x_aaxb _x_aaxc)
@@ -253,6 +347,8 @@ toTermSig
   = Right (TypeForallSig (binder_aaxo, body_aaxp))
 toTermSig (Language.Sprite.Syntax.Inner.Abs.HVar _x_aaxr _x_aaxs)
   = Right (HVarSig _x_aaxr _x_aaxs)
+toTermSig (Language.Sprite.Syntax.Inner.Abs.Measure _x_aaxr _x_aaxs)
+  = Right (MeasureSig _x_aaxr _x_aaxs)
 toTermSig Language.Sprite.Syntax.Inner.Abs.Unknown
   = Right UnknownSig
 toTermSig Language.Sprite.Syntax.Inner.Abs.BaseTypeInt
@@ -263,7 +359,13 @@ toTermSig (Language.Sprite.Syntax.Inner.Abs.BaseTypeVar _x_aaxw)
   = Right (BaseTypeVarSig _x_aaxw)
 toTermSig (Language.Sprite.Syntax.Inner.Abs.BaseTypeTempVar varId)
   = Right (BaseTypeTempVarSig varId)
-
+toTermSig
+  (Language.Sprite.Syntax.Inner.Abs.TypeData typId typArgs refVar refPred)
+  = Right (TypeDataSig typId (toTypArgs typArgs) (refVar, refPred))
+  where
+    toTypArgs Language.Sprite.Syntax.Inner.Abs.EmptyTypeDataArgs = []
+    toTypArgs (Language.Sprite.Syntax.Inner.Abs.NonEmptyTypeDataArgs args) = flip map args
+      $ \(Language.Sprite.Syntax.Inner.Abs.TypeDataArg arg) -> arg
 toPattern ::
   forall o r_abJX. (Foil.Distinct o,
                     Ord Language.Sprite.Syntax.Inner.Abs.VarIdent) =>
@@ -277,19 +379,46 @@ toPattern ::
                                 -> r_abJX)
                             -> r_abJX
 toPattern
-  _scope_abJQ
-  _env_abJR
-  (Language.Sprite.Syntax.Inner.Abs.PatternVar _x_abJT)
-  _cont_abJS
+  _scope_acfZ
+  _env_acg0
+  (Language.Sprite.Syntax.Inner.Abs.PatternVar _x_acg2)
+  _cont_acg1
   = Foil.withFresh
-      _scope_abJQ
-      (\ _x'_abJU
+      _scope_acfZ
+      (\ _x'_acg3
           -> let
-              _scope_abJV = Foil.extendScope _x'_abJU _scope_abJQ
-              _env_abJW
+              _scope_acg4 = Foil.extendScope _x'_acg3 _scope_acfZ
+              _env_acg5
                 = Map.insert
-                    _x_abJT (Foil.nameOf _x'_abJU) (fmap Foil.sink _env_abJR)
-            in _cont_abJS (PatternVar _x'_abJU) _env_abJW)
+                    _x_acg2 (Foil.nameOf _x'_acg3) (fmap Foil.sink _env_acg0)
+            in _cont_acg1 (PatternVar _x'_acg3) _env_acg5)
+toPattern
+  _scope_acg6
+  _env_acg7
+  Language.Sprite.Syntax.Inner.Abs.PatternNoBinders
+  _cont_acg8
+  = _cont_acg8 PatternNoBinders _env_acg7
+toPattern
+  _scope_acg9
+  _env_acga
+  (Language.Sprite.Syntax.Inner.Abs.PatternSomeBinders _x_acgc
+                                                        _x_acgg)
+  _cont_acgb
+  = Foil.withFresh
+      _scope_acg9
+      (\ _x'_acgd
+          -> let
+              _scope_acge = Foil.extendScope _x'_acgd _scope_acg9
+              _env_acgf
+                = Map.insert
+                    _x_acgc (Foil.nameOf _x'_acgd) (fmap Foil.sink _env_acga)
+            in
+              toPattern
+                _scope_acge _env_acgf _x_acgg
+                (\ _x'_acgh _env_acgj
+                    -> let _scope_acgi = Foil.extendScopePattern _x'_acgh _scope_acge
+                      in _cont_acgb (PatternSomeBinders _x'_acgd _x'_acgh) _env_acgj))
+
 toTerm ::
   forall o. (Foil.Distinct o,
               Ord Language.Sprite.Syntax.Inner.Abs.VarIdent) =>
@@ -323,5 +452,5 @@ instance IsString (Term Foil.VoidS) where
           Left err -> error err
           Right term -> term
 
-instance Foil.UnifiablePattern Pattern where
- unifyPatterns (PatternVar x) (PatternVar y) = Foil.unifyNameBinders x y
+-- instance Foil.UnifiablePattern Pattern where
+--  unifyPatterns (PatternVar x) (PatternVar y) = Foil.unifyNameBinders x y

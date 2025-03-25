@@ -1,10 +1,14 @@
 
 token VarIdent lower (letter | digit | '_')* ;
+token ConIdent upper (letter | digit | '_')* ;
+
+Program. Program ::= [DataType] Term;
 
 -- expr terms
 ConstInt.     Term ::= Integer ;
 Boolean.      Term ::= ConstBool ;
-Var.          Term ::= VarIdent ;
+Var.          Term ::= VarIdent;
+Constructor.  Term ::= ConIdent;
 If.           Term ::= "if" "(" Term ")" "{" Term "}" "else" "{" Term "}";
 Let.          Term ::= "let" Pattern "=" Term ";" ScopedTerm ;  -- FIXME: requires fix in Template Haskell (mkFreeFoil)
 LetRec.       Term ::= "/*@" Term "*/" "let" "rec" Pattern "=" ScopedTerm ";" ScopedTerm ;  -- FIXME: requires fix in Template Haskell (mkFreeFoil)
@@ -12,22 +16,36 @@ Fun.          Term ::= "(" Pattern ")" "=>" "{" ScopedTerm "}" ;
 App.          Term ::= Term "(" Term ")" ;
 Ann.          Term ::= "/*@" Term "*/" Term; -- FIXME: Problem with TH generations when "/*@" Pattern : Term "*/" Term;
 OpExpr.       Term ::= "(" Term Op Term ")";
+Switch.       Term ::= "switch" "(" Term ")" "{" [Term] "}"; -- should be case alts
+CaseAlt.      Term ::= "|" VarIdent ":" "(" Pattern ")" "=>" ScopedTerm;
+
+ScopedTerm. ScopedTerm ::= Term ;
 
 -- polymorphism
 TLam.         Term ::= "/\\" Pattern ":" ScopedTerm ;
 TApp.         Term ::= Term "t(" Term ")" ;
 
--- type terms, first term should be one of base types
-TypeRefined.         Term ::= Term "[" Pattern "|" ScopedTerm "]" ;
-TypeFun.             Term ::= Pattern ":" Term "=>" ScopedTerm ;
-TypeForall.          Term ::= "∀" Pattern ":" ScopedTerm ;
-
 ConstTrue.      ConstBool ::= "true" ;
 ConstFalse.     ConstBool ::= "false" ;
 
+-- type terms, first term should be one of base types
+TypeRefined.         Term ::= Term "[" Pattern "|" ScopedTerm "]" ;
+-- Term - type, Scope term - return type
+TypeFun.             Term ::= Pattern ":" Term "=>" ScopedTerm ;
+TypeForall.          Term ::= "∀" Pattern ":" ScopedTerm ;
+TypeData.            Term ::= VarIdent TypeDataArgs "[" Pattern "|" ScopedTerm "]" ;
+
+NonEmptyTypeDataArgs. TypeDataArgs ::= "(" [TypeDataArg] ")";
+EmptyTypeDataArgs.    TypeDataArgs ::= ;
+
+TypeDataArg. TypeDataArg ::= Term; -- should be type
+separator nonempty TypeDataArg ",";
+
+
 -- predicate terms
--- Horn Variables managed separately
-HVar.  Term ::= VarIdent "(" [Term] ")" ;
+-- Horn variables and measures managed separately as uniq identifier
+HVar.     Term ::= VarIdent "(" [Term] ")" ;
+Measure.  Term ::= VarIdent "(" [Term] ")" ;
 
 Unknown. Term ::= "?";
 
@@ -42,13 +60,22 @@ MultiplyOp.      Op ::= "*";
 AndOp.           Op ::= "&&";
 OrOp.            Op ::= "||";
 
-PatternVar. Pattern ::= VarIdent ;
-ScopedTerm. ScopedTerm ::= Term ;
+-- maybe remove it and change on haskell Pattern like PatternSome var _
+PatternVar.          Pattern ::= VarIdent ;
+PatternNoBinders.     Pattern ::= ;
+PatternSomeBinders.  Pattern ::= VarIdent Pattern ;
 
 -- base types
 BaseTypeInt.      Term ::= "int" ;
 BaseTypeBool.     Term ::= "bool" ;
 BaseTypeVar.      Term ::= "'" Term; -- should be Var
+
+-- data types
+DataType. DataType ::= "type" VarIdent "=" [DataTypeCon] ";";
+separator DataType "\n";
+
+DataTypeCon. DataTypeCon ::= "|" VarIdent ":" Term; -- term should be type
+separator nonempty DataTypeCon "\n";
 
 -- used only on elaboration phase to infer types.
 -- Should not appear on refinement check phase

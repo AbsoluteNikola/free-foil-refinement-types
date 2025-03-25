@@ -1,5 +1,6 @@
 
-token VarIdent letter (letter | digit | '_')* ;
+token VarIdent lower (letter | digit | '_')* ;
+token ConIdent upper (letter | digit | '_')* ;
 
 -- Program
 
@@ -23,16 +24,21 @@ separator Measure "\n";
 -- expr terms
 ConstInt.     Term ::= Integer ;
 Bool.         Term ::= ConstBool ;
-Var.          Term ::= VarIdent ;
-App.          Term ::= VarIdent "(" [FuncAppArg] ")"; -- Program should be in ANF. See page 14
+Var.          Term ::= VarIdent;
+ConApp.       Term ::= ConIdent ConAppArgs;
+FunApp.       Term ::= VarIdent "(" [FuncAppArg] ")"; -- Program should be in ANF. See page 14
 If.           Term ::= "if" "(" FuncAppArg ")" "{" Term "}" "else" "{" Term "}";
 Let.          Term ::= Decl Term ;
 Fun.          Term ::= "(" [FunArgName] ")" "=>" "{" Term "}" ;
 Op.           Term ::= FuncAppArg IntOp FuncAppArg; -- Program should be in ANF. See page 14
 Switch.       Term ::= "switch" "(" VarIdent ")" "{" [SwitchCase] "}";
 
+
 ConstTrue.    ConstBool ::= "true";
 ConstFalse.   ConstBool ::= "false";
+
+EmptyConAppArgs. ConAppArgs ::= ;
+NonEmptyConAppArgs. ConAppArgs ::= "(" [FuncAppArg] ")" ;
 
 Annotation.          Annotation ::= "/*@ val" VarIdent ":" RType "*/";
 
@@ -56,19 +62,28 @@ IntLessOrEqThan. IntOp ::= "<=";
 IntGreaterThan. IntOp ::= ">";
 IntGreaterOrEqThan. IntOp ::= ">=";
 
--- type terms
--- TODO: rewrite to move type var to base type
-TypeFun.             RType ::= FuncArg "=>" RType ;
-TypeRefined.         RType ::= BaseType "[" VarIdent "|" Pred "]" ;
-TypeRefinedUnknown.  RType ::= BaseType "[" "?" "]" ;
-TypeRefinedSimple.   RType ::= BaseType;
+-- Refinements
 
-coercions RType 3;
+KnownRefinement.   Refinement ::= "[" VarIdent "|" Pred "]";
+UnknownRefinement. Refinement ::= "[" "?" "]";
+SimpleRefinement.  Refinement ::= ;
+
+-- types
+TypeFun.             RType ::= FuncArg "=>" RType ;
+TypeRefined.         RType ::= BaseType Refinement;
+TypeData.            RType ::= VarIdent TypeDataArgs Refinement;
+_.                   RType ::= "(" RType ")";
+
+TypeDataArg. TypeDataArg ::= RType;
+separator nonempty TypeDataArg ",";
+
+NonEmptyTypeDataArgs. TypeDataArgs ::= "(" [TypeDataArg] ")";
+EmptyTypeDataArgs.    TypeDataArgs ::= ;
 
 DataType. DataType ::= "type" VarIdent DataTypeArgs "=" "|" [DataTypeConstructor] ";";
 separator DataType "\n";
 
-DataTypeConstructor. DataTypeConstructor ::= VarIdent DataTypeConstructorArgs DataTypeConstructorPredicate;
+DataTypeConstructor. DataTypeConstructor ::= ConIdent DataTypeConstructorArgs DataTypeConstructorPredicate;
 separator nonempty DataTypeConstructor "|";
 
 NonEmptyDataTypeConstructorArgs. DataTypeConstructorArgs ::= "(" [FuncArg] ")";
@@ -107,13 +122,6 @@ coercions Pred 6 ;
 BaseTypeInt.  BaseType ::= "int" ;
 BaseTypeBool.  BaseType ::= "bool" ;
 BaseTypeVar.  BaseType ::= TypeVarId ;
-BaseTypeData. BaseType ::= VarIdent BaseTypeDataArgs;
-
-NonEmptyBaseTypeDataArgs. BaseTypeDataArgs ::= "(" [BaseTypeDataArg] ")";
-EmptyBaseTypeDataArgs.    BaseTypeDataArgs ::= ;
-
-BaseTypeDataArg. BaseTypeDataArg ::= RType;
-separator nonempty BaseTypeDataArg ",";
 
 TypeVarId. TypeVarId ::= "'" VarIdent;
 separator nonempty TypeVarId ",";
