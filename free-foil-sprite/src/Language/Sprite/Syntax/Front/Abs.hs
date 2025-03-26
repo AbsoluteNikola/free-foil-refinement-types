@@ -55,7 +55,7 @@ data Decl
     | UnAnnotatedDecl VarIdent Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data SwitchCase = SwitchCase VarIdent SwitchCaseDataConArgs Term
+data SwitchCase = SwitchCase ConIdent SwitchCaseDataConArgs Term
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data SwitchCaseDataConArgs

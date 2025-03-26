@@ -8,6 +8,7 @@ import Data.String (fromString)
 import Data.Text (Text)
 import qualified Language.Sprite.Syntax.Inner.Abs as I
 import qualified Language.Fixpoint.Types as F
+import Language.Sprite.TypeCheck.Monad (showT)
 
 
 data Constraint
@@ -19,12 +20,12 @@ data Constraint
 cTrue :: Constraint
 cTrue = CAnd []
 
-baseTypeToSort :: I.Term ->  Maybe T.Sort
+baseTypeToSort :: I.Term -> Either Text T.Sort
 baseTypeToSort = \case
   I.BaseTypeInt -> pure T.intSort
   I.BaseTypeBool -> pure T.boolSort
   I.BaseTypeVar (I.Var (I.VarIdent v))-> pure . T.FObj . F.symbol $ v
-  _ -> Nothing
+  term -> Left $ "baseTypeToSort called on: " <> showT term
 
 constraintsToFHT :: Constraint -> Either InnerToFTR.ConvertError (H.Cstr Text)
 constraintsToFHT = \case
@@ -36,8 +37,8 @@ constraintsToFHT = \case
     p' <- InnerToFTR.convert p
     c' <- constraintsToFHT c
     base' <- case baseTypeToSort base of
-      Just b -> pure b
-      Nothing -> Left $ InnerToFTR.UnknownBaseType base
+      Right b -> pure b
+      Left _ -> Left $ InnerToFTR.UnknownBaseType base
     pure $ H.All
       (H.Bind
         (fromString varId)

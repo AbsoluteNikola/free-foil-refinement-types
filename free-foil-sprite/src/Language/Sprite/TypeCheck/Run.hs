@@ -22,7 +22,7 @@ import qualified Data.Text.IO as TIO
 import qualified Text.PrettyPrint.HughesPJ.Compat as PJ
 import Data.Foldable (for_)
 import Control.Monad.Trans.Except (runExceptT)
-import Data.Bifunctor (first)
+import Data.Bifunctor (first, Bifunctor (second))
 import Control.Monad.Reader (ReaderT(runReaderT))
 import Control.Monad.State (StateT (runStateT))
 import qualified Language.Sprite.TypeCheck.Types as S
@@ -31,23 +31,27 @@ import qualified Language.Sprite.Syntax.Convert.QualifierToFTR as QualifiersToFT
 import qualified Language.Sprite.TypeCheck.Elaboration as Elaboration
 import qualified Language.Sprite.Syntax.Inner.Print as Inner
 import Text.Pretty.Simple (pPrint)
+import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 
 -- TODO: add better errors
 instance F.Loc T.Text where
   srcSpan _ = F.dummySpan
 
 
-runM :: Check.CheckerM a -> IO (Either Text a, Check.CheckerState)
-runM =  flip runStateT Check.defaultCheckerState
-  . flip runReaderT Check.defaultCheckerDebugEnv
+runM :: [(Inner.ConIdent, S.Term 'Foil.VoidS)] -> Check.CheckerM a -> IO (Either Text a, Check.CheckerState)
+runM constructors = flip runStateT Check.defaultCheckerState
+  . flip runReaderT Check.defaultCheckerEnv{Check.dataConstructorsEnv = Map.fromList constructors}
   . runExceptT
   . Check.runCheckerM
 
-vcgen :: [F.Qualifier] -> S.Term Foil.VoidS -> IO (Either Text (H.Query Text))
-vcgen qualifiers term = do
+vcgen ::
+  [F.Qualifier] ->
+  [(Inner.ConIdent, S.Term 'Foil.VoidS)] ->
+  S.Term Foil.VoidS -> IO (Either Text (H.Query Text))
+vcgen qualifiers constructors term = do
   let
     programType = S.anyIntT
-  elaboratedTerm <- runM (Elaboration.check Foil.emptyScope Check.EmptyEnv term programType)
+  elaboratedTerm <- runM constructors (Elaboration.check Foil.emptyScope Check.EmptyEnv term programType)
     >>= \case
       (Left err, _) -> do
         print ("Elaboration errors:" :: Text)
@@ -58,7 +62,7 @@ vcgen qualifiers term = do
   print ("Elaborated term:" :: Text)
   TIO.putStrLn $ Check.showT elaboratedTerm
   (eConstraints, checkerState) <-
-    runM $ Check.check Foil.emptyScope Check.EmptyEnv elaboratedTerm programType
+    runM constructors $ Check.check Foil.emptyScope Check.EmptyEnv elaboratedTerm programType
   let
     mkQuery c = do
       c' <- first Check.showT $ Check.constraintsToFHT c
@@ -89,7 +93,7 @@ dumpQuery f q = do
 
 
 run :: FilePath -> Front.Program -> IO ()
-run filePath (Front.Program rawQualifiers _ _ rawFrontTerm) = do
+run filePath (Front.Program rawQualifiers measures dataTypes rawFrontTerm) = do
   qualifiers <- case traverse (QualifiersToFTR.convertQualifier filePath) rawQualifiers of
     Right qualifiers -> pure qualifiers
     Left err -> do
@@ -100,12 +104,17 @@ run filePath (Front.Program rawQualifiers _ _ rawFrontTerm) = do
     Left errs -> do
       print errs
       exitFailure
-  let scopedTerm =  S.toTerm Foil.emptyScope Map.empty rawInnerTerm
+  let
+    scopedTerm =  S.toTerm Foil.emptyScope Map.empty rawInnerTerm
+    scopedConstructors =
+      map (second (S.toTerm Foil.emptyScope Map.empty))
+      . concatMap FrontToInner.convertDataType
+      $ dataTypes
   putStrLn "Raw inner term"
   putStrLn $ Inner.printTree rawInnerTerm
   putStrLn "Raw scoped term"
   print scopedTerm
-  result <- vcgen qualifiers scopedTerm >>= \case
+  result <- vcgen qualifiers scopedConstructors scopedTerm >>= \case
     Left err -> do
       putStrLn "Type check error: "
       putStrLn (T.unpack err)

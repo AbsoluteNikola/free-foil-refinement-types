@@ -12,6 +12,8 @@ import Data.Maybe (catMaybes)
 import Language.Sprite.TypeCheck.Constraints (baseTypeToSort)
 import Data.Traversable (for)
 import Data.Biapplicative (bimap)
+import qualified Language.Fixpoint.Types.Sorts as FS
+import Data.Text (Text)
 
 constIntT :: Integer -> Term F.VoidS
 constIntT x = F.withFreshBinder F.emptyScope $
@@ -128,11 +130,11 @@ fresh scope env curType = case curType of
       for (envToList env) $ \(name, typ) -> case getBaseType typ of
         Nothing -> pure Nothing
         Just b -> case baseTypeToSort (fromTerm b) of
-          Just sort -> pure $ Just (name, sort)
-          Nothing -> throwError $ "Unknown base: " <> pShowT base
+          Right sort -> pure $ Just (name, sort)
+          Left err -> throwError err
     typeSort <-  case baseTypeToSort (fromTerm base) of
-      Just sort -> pure sort
-      Nothing -> throwError $ "Unknown base: " <> pShowT base
+      Right sort -> pure sort
+      Left err -> throwError err
     newHornVarName <- mkFreshHornVar (typeSort : sorts)
     debugPrintT $ "Horn var name: " <> showT newHornVarName
     debugPrintT $ "Horn var args: " <> showT names
@@ -243,6 +245,14 @@ substTempTypeVar scope tempTypeVar typToSubst subst inType = case inType of
               body' =  substTempTypeVar scope' tempTypeVar (F.sink typToSubst) subst' body
           in F.ScopedAST binder' body'
 
+
+getTypeSort :: Term i -> Either Text FS.Sort
+getTypeSort = \case
+  TypeRefined b _ _ -> baseTypeToSort (fromTerm b)
+  TypeData{} -> undefined
+  TypeForall{} -> undefined
+  TypeFun{} -> undefined
+  term -> Left $ "getTypeSort called on: " <> showT term
 
 getBaseType :: Term i -> Maybe (Term i)
 getBaseType = \case

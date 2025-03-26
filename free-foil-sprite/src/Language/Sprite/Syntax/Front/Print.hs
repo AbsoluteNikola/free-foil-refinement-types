@@ -205,7 +205,7 @@ instance Print Language.Sprite.Syntax.Front.Abs.Decl where
 
 instance Print Language.Sprite.Syntax.Front.Abs.SwitchCase where
   prt i = \case
-    Language.Sprite.Syntax.Front.Abs.SwitchCase varident switchcasedataconargs term -> prPrec i 0 (concatD [doc (showString "|"), prt 0 varident, prt 0 switchcasedataconargs, doc (showString "=>"), prt 0 term])
+    Language.Sprite.Syntax.Front.Abs.SwitchCase conident switchcasedataconargs term -> prPrec i 0 (concatD [doc (showString "|"), prt 0 conident, prt 0 switchcasedataconargs, doc (showString "=>"), prt 0 term])
 
 instance Print [Language.Sprite.Syntax.Front.Abs.SwitchCase] where
   prt _ [] = concatD []

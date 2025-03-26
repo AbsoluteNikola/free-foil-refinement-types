@@ -74,7 +74,7 @@ transDecl x = case x of
 
 transSwitchCase :: Language.Sprite.Syntax.Front.Abs.SwitchCase -> Result
 transSwitchCase x = case x of
-  Language.Sprite.Syntax.Front.Abs.SwitchCase varident switchcasedataconargs term -> failure x
+  Language.Sprite.Syntax.Front.Abs.SwitchCase conident switchcasedataconargs term -> failure x
 
 transSwitchCaseDataConArgs :: Language.Sprite.Syntax.Front.Abs.SwitchCaseDataConArgs -> Result
 transSwitchCaseDataConArgs x = case x of

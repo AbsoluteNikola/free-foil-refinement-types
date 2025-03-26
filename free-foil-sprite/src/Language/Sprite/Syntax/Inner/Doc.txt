@@ -64,7 +64,7 @@ All other symbols are terminals.
   |  |  **|**  | ``/*@`` //Term// ``*/`` //Term//
   |  |  **|**  | ``(`` //Term// //Op// //Term// ``)``
   |  |  **|**  | ``switch`` ``(`` //Term// ``)`` ``{`` //[Term]// ``}``
-  |  |  **|**  | ``|`` //VarIdent// ``:`` ``(`` //Pattern// ``)`` ``=>`` //ScopedTerm//
+  |  |  **|**  | ``|`` //ConIdent// ``:`` ``(`` //Pattern// ``)`` ``=>`` //ScopedTerm//
   |  |  **|**  | ``/\`` //Pattern// ``:`` //ScopedTerm//
   |  |  **|**  | //Term// ``t(`` //Term// ``)``
   |  |  **|**  | //Term// ``[`` //Pattern// ``|`` //ScopedTerm// ``]``

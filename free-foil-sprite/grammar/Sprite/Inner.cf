@@ -17,7 +17,7 @@ App.          Term ::= Term "(" Term ")" ;
 Ann.          Term ::= "/*@" Term "*/" Term; -- FIXME: Problem with TH generations when "/*@" Pattern : Term "*/" Term;
 OpExpr.       Term ::= "(" Term Op Term ")";
 Switch.       Term ::= "switch" "(" Term ")" "{" [Term] "}"; -- should be case alts
-CaseAlt.      Term ::= "|" VarIdent ":" "(" Pattern ")" "=>" ScopedTerm;
+CaseAlt.      Term ::= "|" ConIdent ":" "(" Pattern ")" "=>" ScopedTerm;
 
 ScopedTerm. ScopedTerm ::= Term ;
 

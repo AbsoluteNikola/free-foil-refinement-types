@@ -142,7 +142,7 @@ Decl
 
 SwitchCase :: { Language.Sprite.Syntax.Front.Abs.SwitchCase }
 SwitchCase
-  : '|' VarIdent SwitchCaseDataConArgs '=>' Term { Language.Sprite.Syntax.Front.Abs.SwitchCase $2 $3 $5 }
+  : '|' ConIdent SwitchCaseDataConArgs '=>' Term { Language.Sprite.Syntax.Front.Abs.SwitchCase $2 $3 $5 }
 
 ListSwitchCase :: { [Language.Sprite.Syntax.Front.Abs.SwitchCase] }
 ListSwitchCase

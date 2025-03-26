@@ -38,7 +38,7 @@ Grammar
 	Decl -> Annotation 'let' 'rec' VarIdent '=' Term ';'   (29)
 	Decl -> Annotation 'let' VarIdent '=' Term ';'     (30)
 	Decl -> 'let' VarIdent '=' Term ';'                (31)
-	SwitchCase -> '|' VarIdent SwitchCaseDataConArgs '=>' Term   (32)
+	SwitchCase -> '|' ConIdent SwitchCaseDataConArgs '=>' Term   (32)
 	ListSwitchCase -> SwitchCase                       (33)
 	ListSwitchCase -> SwitchCase ListSwitchCase        (34)
 	SwitchCaseDataConArgs -> '(' ListFunArgName ')'    (35)
@@ -2165,11 +2165,11 @@ State 163
 
 State 164
 
-	SwitchCase -> '|' . VarIdent SwitchCaseDataConArgs '=>' Term    (rule 32)
+	SwitchCase -> '|' . ConIdent SwitchCaseDataConArgs '=>' Term    (rule 32)
 
-	L_VarIdent     shift, and enter state 8
+	L_ConIdent     shift, and enter state 38
 
-	VarIdent       goto state 209
+	ConIdent       goto state 209
 
 State 165
 
@@ -2754,7 +2754,7 @@ State 208
 
 State 209
 
-	SwitchCase -> '|' VarIdent . SwitchCaseDataConArgs '=>' Term    (rule 32)
+	SwitchCase -> '|' ConIdent . SwitchCaseDataConArgs '=>' Term    (rule 32)
 
 	'('            shift, and enter state 214
 	'=>'           reduce using rule 36
@@ -2790,7 +2790,7 @@ State 212
 
 State 213
 
-	SwitchCase -> '|' VarIdent SwitchCaseDataConArgs . '=>' Term    (rule 32)
+	SwitchCase -> '|' ConIdent SwitchCaseDataConArgs . '=>' Term    (rule 32)
 
 	'=>'           shift, and enter state 224
 
@@ -2905,7 +2905,7 @@ State 223
 
 State 224
 
-	SwitchCase -> '|' VarIdent SwitchCaseDataConArgs '=>' . Term    (rule 32)
+	SwitchCase -> '|' ConIdent SwitchCaseDataConArgs '=>' . Term    (rule 32)
 
 	'('            shift, and enter state 31
 	'/*@'          shift, and enter state 32
@@ -2929,7 +2929,7 @@ State 224
 
 State 225
 
-	SwitchCase -> '|' VarIdent SwitchCaseDataConArgs '=>' Term .    (rule 32)
+	SwitchCase -> '|' ConIdent SwitchCaseDataConArgs '=>' Term .    (rule 32)
 
 	'|'            reduce using rule 32
 	'}'            reduce using rule 32

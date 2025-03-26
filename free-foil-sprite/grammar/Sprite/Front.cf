@@ -46,7 +46,7 @@ RecDecl.               Decl ::= Annotation "let" "rec" VarIdent "=" Term ";";
 AnnotatedDecl.         Decl ::= Annotation "let" VarIdent "=" Term ";";
 UnAnnotatedDecl.       Decl ::= "let" VarIdent "=" Term ";";
 
-SwitchCase. SwitchCase ::= "|" VarIdent SwitchCaseDataConArgs "=>" Term;
+SwitchCase. SwitchCase ::= "|" ConIdent SwitchCaseDataConArgs "=>" Term;
 separator nonempty SwitchCase "";
 
 SwitchCaseNonEmptyDataConArgs. SwitchCaseDataConArgs ::= "(" [FunArgName] ")";

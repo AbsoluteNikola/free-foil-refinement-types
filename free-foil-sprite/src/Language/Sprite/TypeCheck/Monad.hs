@@ -20,10 +20,12 @@ import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import qualified Language.Fixpoint.Types.Sorts as FP
 import qualified Language.Fixpoint.Types as FP
 import Data.Bifunctor (bimap)
+import qualified Data.Map.Strict as Map
 
-data CheckerDebugEnv = CheckerDebugEnv
+data CheckerEnv = CheckerEnv
   { currentRule :: Text
   , offset :: Text
+  , dataConstructorsEnv :: Map.Map Inner.ConIdent (Term F.VoidS)
   }
 
 data CheckerState = CheckerState
@@ -31,24 +33,21 @@ data CheckerState = CheckerState
   { hornVarIndex :: Int
   , hornVars :: [H.Var Text]
   -- elaboration env
-  -- Завтрашний я: как будто хранить констреинты не надо, можно сразу в типы делать подстановку и потом ловить ошибки, ну кароч как в спрайте сделано
-  , typeConstraints :: [(Inner.VarIdent, Term F.VoidS)]
   , typeVarIndex :: Int
   }
 
-defaultCheckerDebugEnv :: CheckerDebugEnv
-defaultCheckerDebugEnv = CheckerDebugEnv "" ""
+defaultCheckerEnv :: CheckerEnv
+defaultCheckerEnv = CheckerEnv "" "" Map.empty
 
 defaultCheckerState :: CheckerState
 defaultCheckerState = CheckerState
   { hornVarIndex = 0
   , hornVars = []
-  , typeConstraints = []
   , typeVarIndex = 0
   }
 
-newtype CheckerM a = CheckerM {runCheckerM :: (ExceptT Text (ReaderT CheckerDebugEnv (StateT CheckerState IO))) a }
-  deriving newtype (Functor, Applicative, Monad, MonadError Text, MonadReader CheckerDebugEnv, MonadState CheckerState, MonadIO)
+newtype CheckerM a = CheckerM {runCheckerM :: (ExceptT Text (ReaderT CheckerEnv (StateT CheckerState IO))) a }
+  deriving newtype (Functor, Applicative, Monad, MonadError Text, MonadReader CheckerEnv, MonadState CheckerState, MonadIO)
 
 data Env n where
     EmptyEnv :: Env F.VoidS
@@ -114,7 +113,7 @@ withRule :: Text -> CheckerM a -> CheckerM a
 withRule rule action = do
   denv <- ask
   liftIO . TIO.putStrLn $ denv.offset <> "  " <> rule
-  res <- local (\debugEnv -> CheckerDebugEnv rule (debugEnv.offset <> "  ")) action
+  res <- local (\debugEnv -> debugEnv{offset = debugEnv.offset <> "  "}) action
   liftIO . TIO.putStrLn $ denv.offset <> "  " <> rule <> " done"
   pure res
 

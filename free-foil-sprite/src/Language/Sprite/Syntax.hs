@@ -66,7 +66,7 @@ data TermSig scope term
                     term ->
                     TermSig scope term
     SwitchSig :: term -> [term] -> TermSig scope term
-    CaseAltSig :: Language.Sprite.Syntax.Inner.Abs.VarIdent ->
+    CaseAltSig :: Language.Sprite.Syntax.Inner.Abs.ConIdent ->
                       scope ->
                       TermSig scope term
     TLamSig :: scope -> TermSig scope term
@@ -133,7 +133,7 @@ pattern OpExpr x_aMZo x_aMZp x_aMZq = Control.Monad.Free.Foil.Node (OpExprSig x_
 pattern Switch :: Term o -> [Term o] -> Term o
 pattern Switch x_a11MK x_a11ML = Control.Monad.Free.Foil.Node (SwitchSig x_a11MK
                                                                           x_a11ML)
-pattern CaseAlt :: Language.Sprite.Syntax.Inner.Abs.VarIdent -> Pattern o i -> Term i -> Term o
+pattern CaseAlt :: Language.Sprite.Syntax.Inner.Abs.ConIdent -> Pattern o i -> Term i -> Term o
 pattern CaseAlt x_a11MM binder_a11MN body_a11MO = Control.Monad.Free.Foil.Node (CaseAltSig x_a11MM
                                                                                                (Control.Monad.Free.Foil.ScopedAST binder_a11MN
                                                                                                                                   body_a11MO))

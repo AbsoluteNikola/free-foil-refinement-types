@@ -31,7 +31,7 @@ data Term
     | Ann Term Term
     | OpExpr Term Op Term
     | Switch Term [Term]
-    | CaseAlt VarIdent Pattern ScopedTerm
+    | CaseAlt ConIdent Pattern ScopedTerm
     | TLam Pattern ScopedTerm
     | TApp Term Term
     | TypeRefined Term Pattern ScopedTerm

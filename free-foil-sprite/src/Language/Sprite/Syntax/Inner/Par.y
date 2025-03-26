@@ -122,7 +122,7 @@ Term
   | '/*@' Term '*/' Term { Language.Sprite.Syntax.Inner.Abs.Ann $2 $4 }
   | '(' Term Op Term ')' { Language.Sprite.Syntax.Inner.Abs.OpExpr $2 $3 $4 }
   | 'switch' '(' Term ')' '{' ListTerm '}' { Language.Sprite.Syntax.Inner.Abs.Switch $3 $6 }
-  | '|' VarIdent ':' '(' Pattern ')' '=>' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.CaseAlt $2 $5 $8 }
+  | '|' ConIdent ':' '(' Pattern ')' '=>' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.CaseAlt $2 $5 $8 }
   | '/\\' Pattern ':' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.TLam $2 $4 }
   | Term 't(' Term ')' { Language.Sprite.Syntax.Inner.Abs.TApp $1 $3 }
   | Term '[' Pattern '|' ScopedTerm ']' { Language.Sprite.Syntax.Inner.Abs.TypeRefined $1 $3 $5 }
