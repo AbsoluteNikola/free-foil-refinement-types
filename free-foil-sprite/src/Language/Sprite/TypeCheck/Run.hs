@@ -9,6 +9,7 @@ import Language.Sprite.TypeCheck.Monad qualified as Check
 import Language.Sprite.Syntax qualified as S
 import System.Exit (exitFailure)
 import qualified Data.Map as Map
+import qualified Data.HashMap.Strict as HashMap
 import qualified Control.Monad.Foil as Foil
 import Data.Text (Text)
 import qualified Language.Fixpoint.Horn.Types as H
@@ -32,6 +33,10 @@ import qualified Language.Sprite.TypeCheck.Elaboration as Elaboration
 import qualified Language.Sprite.Syntax.Inner.Print as Inner
 import Text.Pretty.Simple (pPrint)
 import qualified Language.Sprite.Syntax.Inner.Abs as Inner
+import qualified Language.Fixpoint.Types.Names as FST
+import qualified Language.Fixpoint.Types.Sorts as FST
+import qualified Language.Sprite.TypeCheck.Types as Types
+import Debug.Pretty.Simple (pTraceShowM)
 
 -- TODO: add better errors
 instance F.Loc T.Text where
@@ -47,8 +52,9 @@ runM constructors = flip runStateT Check.defaultCheckerState
 vcgen ::
   [F.Qualifier] ->
   [(Inner.ConIdent, S.Term 'Foil.VoidS)] ->
+  [(F.Symbol, F.Sort)] ->
   S.Term Foil.VoidS -> IO (Either Text (H.Query Text))
-vcgen qualifiers constructors term = do
+vcgen qualifiers constructors measures term = do
   let
     programType = S.anyIntT
   elaboratedTerm <- runM constructors (Elaboration.check Foil.emptyScope Check.EmptyEnv term programType)
@@ -66,7 +72,7 @@ vcgen qualifiers constructors term = do
   let
     mkQuery c = do
       c' <- first Check.showT $ Check.constraintsToFHT c
-      pure $ H.Query qualifiers checkerState.hornVars c' mempty mempty mempty mempty mempty mempty mempty
+      pure $ H.Query qualifiers checkerState.hornVars c' (HashMap.fromList measures) mempty mempty mempty mempty mempty mempty
   pPrint eConstraints
   pure $ eConstraints >>= mkQuery
 
@@ -91,11 +97,26 @@ dumpQuery f q = do
   writeFile smtFile (PJ.render . F.toHornSMT $ q)
   putStrLn "END: Horn VC"
 
+convertMeasure :: Front.Measure -> Either Text (FST.Symbol, FST.Sort)
+convertMeasure (Front.Measure fMeasureName fMeasureType) = do
+  let
+    measureName = case FrontToInner.convertVarId fMeasureName of
+      (Inner.VarIdent name) -> FST.symbol name
+    scopedTyp = S.toTerm Foil.emptyScope Map.empty
+      . FrontToInner.mkForAll $ FrontToInner.convertRType fMeasureType
+  typSort <- Types.getTypeSort scopedTyp
+  pure (FST.symbol measureName, typSort)
+
 
 run :: FilePath -> Front.Program -> IO ()
-run filePath (Front.Program rawQualifiers measures dataTypes rawFrontTerm) = do
+run filePath (Front.Program rawQualifiers rawMeasures dataTypes rawFrontTerm) = do
   qualifiers <- case traverse (QualifiersToFTR.convertQualifier filePath) rawQualifiers of
     Right qualifiers -> pure qualifiers
+    Left err -> do
+      print err
+      exitFailure
+  measures <- case traverse convertMeasure rawMeasures of
+    Right measures -> pure measures
     Left err -> do
       print err
       exitFailure
@@ -105,7 +126,7 @@ run filePath (Front.Program rawQualifiers measures dataTypes rawFrontTerm) = do
       print errs
       exitFailure
   let
-    scopedTerm =  S.toTerm Foil.emptyScope Map.empty rawInnerTerm
+    scopedTerm = S.toTerm Foil.emptyScope Map.empty rawInnerTerm
     scopedConstructors =
       map (second (S.toTerm Foil.emptyScope Map.empty))
       . concatMap FrontToInner.convertDataType
@@ -114,7 +135,7 @@ run filePath (Front.Program rawQualifiers measures dataTypes rawFrontTerm) = do
   putStrLn $ Inner.printTree rawInnerTerm
   putStrLn "Raw scoped term"
   print scopedTerm
-  result <- vcgen qualifiers scopedConstructors scopedTerm >>= \case
+  result <- vcgen qualifiers scopedConstructors measures scopedTerm >>= \case
     Left err -> do
       putStrLn "Type check error: "
       putStrLn (T.unpack err)

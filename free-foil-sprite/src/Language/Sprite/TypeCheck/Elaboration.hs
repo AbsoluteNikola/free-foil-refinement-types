@@ -283,9 +283,6 @@ synths scope env currentTerm = case currentTerm of
 
   _ -> throwError $ "unimplemented case: " <> showT currentTerm
 
-getNameBinderFromPattern :: Pattern i o -> F.NameBinder i o
-getNameBinderFromPattern (PatternVar binder) = binder
-
 mkTAppIfNecessary ::
   (F.DExt F.VoidS i) =>
   F.Scope i ->

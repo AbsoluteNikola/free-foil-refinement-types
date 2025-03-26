@@ -4,7 +4,7 @@ import qualified Language.Sprite.Syntax.Front.Abs as F
 import qualified Language.Sprite.Syntax.Convert.FrontToInner as F
 import qualified Language.Sprite.Syntax.Convert.InnerToFTR as I
 import Data.Functor ((<&>))
-import qualified Language.Fixpoint.Types.Names as F
+import qualified Language.Fixpoint.Types.Names as FST
 
 convertQualifier :: FilePath -> F.Qualifier -> Either I.ConvertError T.Qualifier
 convertQualifier filePath (F.Qualifier (F.VarIdent name) args p) = do
@@ -26,4 +26,4 @@ baseTypeToSort :: F.BaseType ->  T.Sort
 baseTypeToSort = \case
   F.BaseTypeInt -> T.intSort
   F.BaseTypeBool -> T.boolSort
-  F.BaseTypeVar (F.TypeVarId (F.VarIdent v)) -> T.FObj . F.symbol $ v
+  F.BaseTypeVar (F.TypeVarId (F.VarIdent v)) -> T.FObj . FST.symbol $ v

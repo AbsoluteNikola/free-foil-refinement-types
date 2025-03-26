@@ -374,11 +374,3 @@ synths scope env currentTerm = case currentTerm of
     typ <- extendTypeToCurrentScope scope $ F.sink $ boolWithT b
     pure (cTrue, typ)
   _ -> throwError $ "unimplemented case:\n" <> pShowT currentTerm
-
-getNameBinderFromPattern :: Pattern i o -> F.NameBinder i o
-getNameBinderFromPattern (PatternVar binder) = binder
-
-getRawVarIdFromPattern :: Pattern i o -> Inner.VarIdent
-getRawVarIdFromPattern varPat = case fromPattern varPat of
-  Inner.PatternVar v -> v
-  _ -> error "getRawVarIdFromPattern should be called on PatternVar"

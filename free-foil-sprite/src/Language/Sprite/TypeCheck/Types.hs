@@ -12,7 +12,7 @@ import Data.Maybe (catMaybes)
 import Language.Sprite.TypeCheck.Constraints (baseTypeToSort)
 import Data.Traversable (for)
 import Data.Biapplicative (bimap)
-import qualified Language.Fixpoint.Types.Sorts as FS
+import qualified Language.Fixpoint.Types as FTS
 import Data.Text (Text)
 
 constIntT :: Integer -> Term F.VoidS
@@ -246,12 +246,29 @@ substTempTypeVar scope tempTypeVar typToSubst subst inType = case inType of
           in F.ScopedAST binder' body'
 
 
-getTypeSort :: Term i -> Either Text FS.Sort
+getTypeSort :: Term i -> Either Text FTS.Sort
 getTypeSort = \case
   TypeRefined b _ _ -> baseTypeToSort (fromTerm b)
-  TypeData{} -> undefined
-  TypeForall{} -> undefined
-  TypeFun{} -> undefined
+  TypeData (Inner.VarIdent typName) typArgs _ _ -> do
+    argsSorts <- traverse getTypeSort typArgs
+    pure $ FTS.fAppTC
+      (FTS.symbolFTycon . FTS.dummyLoc  . FTS.symbol $ typName)
+      argsSorts
+  TypeFun _ argTyp retTyp -> do
+    argSort <- getTypeSort argTyp
+    retSort <- getTypeSort retTyp
+    pure $ FTS.FFunc argSort retSort
+  TypeForall typVarPat typeUnderForAll -> do
+    typeUnderForAllSort <- getTypeSort typeUnderForAll
+    typVarRawId <- case fromPattern typVarPat of
+      (Inner.PatternVar (Inner.VarIdent typVarRawId)) -> Right $ FTS.symbol typVarRawId
+      pat -> Left $ "Unknown pattern in forall: " <> showT pat
+    let
+      -- Тут используется хак, что внутреннее представление Foil это Int
+      -- и каждый биндер уникальный. Поэтому мы его и используется в fixpoint sort
+      typVarIndex = F.nameId . F.nameOf $ getNameBinderFromPattern typVarPat
+      subst = FTS.mkSortSubst [(typVarRawId, FTS.FVar typVarIndex)]
+    pure $ FTS.FAbs typVarIndex (FTS.sortSubst subst typeUnderForAllSort)
   term -> Left $ "getTypeSort called on: " <> showT term
 
 getBaseType :: Term i -> Maybe (Term i)
