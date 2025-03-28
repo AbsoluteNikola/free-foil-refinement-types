@@ -26,6 +26,12 @@ convertTerm = \case
     l' <- convertTerm l
     r' <- convertTerm r
     pure $ op_ op l' r'
+  I.Measure (I.VarIdent measureName) args -> do
+    args' <- for args convertTerm
+    pure $ foldl
+      T.EApp
+      (T.EVar $ T.symbol measureName)
+      args'
   term -> Left $  UnsupportedTerm term
   where
     op_ = \case

@@ -81,6 +81,35 @@ subtype scope
       returnTypesConstraints <- buildImplicationFromType implMsg scope' rightFunArgPat (F.sink rightFunArgT) returnTypesSubtypingConstraints
       pure $ CAnd [argSubtypingConstrains, returnTypesConstraints]
 
+{-
+G,v:p |- q[w:=v]     G |- si <: ti
+-----------------------------------------
+G |- (C s1...)[v|p] <: (C t1...)[w|q]
+-}
+subtype scope
+  lt@(TypeData typeNameL typeArgsL typVarL _typPredL)
+  (TypeData typeNameR typeArgsR typVarR typPredR)
+  | typeNameL == typeNameR
+  , length typeArgsL == length typeArgsR = do
+    (CAnd -> argsConstraints) <- traverse (\(s1, s2) -> subtype scope s1 s2) (zip typeArgsL typeArgsR)
+    case (F.assertDistinct typVarL, F.assertExt typVarL) of
+      (F.Distinct, F.Ext) -> do
+        implMsg <- mkSolverErrorMessage $ "type data subtype error: (v::t) => q[w := v]. Where v="
+          <> showT typVarL
+          <> ", w=" <> showT typVarL
+        predMsg <- mkSolverErrorMessage $ "type data subtype error: q[w := v]. Where w="
+          <> showT typVarR <> " and v=" <> showT typVarL
+        let
+          scope' = F.extendScopePattern typVarL scope
+          subst = F.addRename
+            (F.sink F.identitySubst)
+            (getNameBinderFromPattern typVarR)
+            (F.nameOf $ getNameBinderFromPattern typVarL)
+          rightPredicate' = F.substitute scope' subst typPredR
+          conclusionPred = CPred (fromTerm rightPredicate') predMsg
+        implPred <- buildImplicationFromType implMsg scope' typVarL (F.sink lt) conclusionPred
+        pure $ CAnd [argsConstraints, implPred]
+
 subtype _ lt rt = throwError $
   "can't subtype:\n"
   <> "left type: " <> showT lt <> "\n"
