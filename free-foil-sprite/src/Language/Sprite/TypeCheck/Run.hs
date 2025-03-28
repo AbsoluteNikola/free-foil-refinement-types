@@ -35,7 +35,6 @@ import Text.Pretty.Simple (pPrint)
 import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import qualified Language.Fixpoint.Types.Names as FST
 import qualified Language.Fixpoint.Types.Sorts as FST
-import qualified Language.Sprite.TypeCheck.Types as Types
 
 -- TODO: add better errors
 instance F.Loc T.Text where
@@ -56,7 +55,7 @@ vcgen ::
 vcgen qualifiers constructors measures term = do
   let
     programType = S.anyIntT
-  elaboratedTerm <- runM constructors (Elaboration.check Foil.emptyScope Check.EmptyEnv term programType)
+  (elaboratedTerm, _) <- runM constructors (Elaboration.check Foil.emptyScope Check.EmptyEnv term programType)
     >>= \case
       (Left err, _) -> do
         print ("Elaboration errors:" :: Text)

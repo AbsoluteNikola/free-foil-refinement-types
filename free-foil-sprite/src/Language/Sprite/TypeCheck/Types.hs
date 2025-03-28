@@ -9,10 +9,11 @@ import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import Language.Sprite.TypeCheck.Monad
 import Control.Monad.Error.Class (MonadError(throwError))
 import Data.Maybe (catMaybes)
-import Language.Sprite.TypeCheck.Constraints (baseTypeToSort, sortPred, getTypeSort)
+import Language.Sprite.TypeCheck.Constraints (sortPred, getTypeSort)
 import Data.Traversable (for)
 import Data.Biapplicative (bimap)
 import qualified Language.Fixpoint.Types.Sorts as FTS
+import Data.Bifoldable (bifoldr)
 
 constIntT :: Integer -> Term F.VoidS
 constIntT x = F.withFreshBinder F.emptyScope $
@@ -216,8 +217,20 @@ envSorts scope env = do
             Just (sort, _) -> pure $ Just (name, sort)
   pure $ catMaybes namesAndSorts
 
-freshR :: F.Scope i -> Term o1 -> (Pattern i o, Term o)
-freshR scope p = undefined
+containsVar ::
+  F.Distinct i =>
+  F.Name i ->
+  Term i ->
+  Bool
+containsVar neededVarName inType = f inType False
+  where
+    f term res = case term of
+      F.Var name -> res || name == neededVarName
+      F.Node node -> res || bifoldr fScoped f False node
+    fScoped (F.ScopedAST binder body) res =
+      case (F.assertDistinct binder, F.assertExt binder) of
+        (F.Distinct, F.Ext) -> res || containsVar(F.sink neededVarName) body
+
 
 -- | Тоже самое что и Foil.substitute, только правильно подставляет type var (она вложена в base typ)
 -- Поэтому в переданная подстановка должна содержать например [a -> int[v|true]] и тогда на выходе будет 'a[v|v < 0] -> int[v|true]
