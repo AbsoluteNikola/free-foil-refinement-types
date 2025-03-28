@@ -10,4 +10,4 @@ let singleton = (x) => {
   let t = Nil;
   Cons(x, t)
 };
-singleton(1)
+0

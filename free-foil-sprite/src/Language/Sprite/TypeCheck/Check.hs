@@ -249,23 +249,6 @@ check scope env currentTerm currentType = case currentTerm of
     subtypingConstraints <- subtype scope termType extendedCurrentType
     pure $ CAnd [synthsConstraints, subtypingConstraints]
 
-buildImplicationFromType :: (F.DExt i o) => Text -> F.Scope o -> Pattern i o -> Term o -> Constraint -> CheckerM Constraint
-buildImplicationFromType msg scope argVarPat@(PatternVar argVarId) typ constraint = case typ of
-  TypeRefined base (PatternVar typVarId) p -> do
-    let
-      subst = F.addRename (F.sink F.identitySubst) typVarId (F.nameOf argVarId)
-      p' = F.substitute scope subst p
-      argVarIdRaw = getRawVarIdFromPattern argVarPat
-      Inner.VarIdent argVarIdRawName = argVarIdRaw
-
-    debugPrintT $ "Implication: " <> "varId = " <> showT argVarIdRawName <> ", term = " <> showT p'
-    pure $ CImplication argVarIdRaw (fromTerm base) (fromTerm p') constraint msg
-  _ -> pure constraint
-  -- otherTerm -> throwError $
-  --   "can't buildImplicationFromType\n"
-  --   <> "context message: " <> msg <> "\n"
-  --   <> "term: " <> showT otherTerm
-
 synths ::
   (F.DExt F.VoidS i) =>
   F.Scope i ->
@@ -287,6 +270,11 @@ synths scope env currentTerm = case currentTerm of
     debugPrintT $ "lookup: " <> showT currentTerm
     debugPrintT $ "typ: " <> showT typWithSelf
     pure (cTrue, typWithSelf)
+
+  Constructor conName -> withRule "[Syn-Constructor]" $ do
+    typ <- lookupConstructor conName
+    typExtended <- extendTypeToCurrentScope scope (F.sink typ)
+    pure (cTrue, typExtended)
 
   {- [Syn-Con]
    -----------------

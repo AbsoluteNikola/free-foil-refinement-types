@@ -8,6 +8,7 @@ import Control.Monad.Except (MonadError (throwError))
 import Language.Sprite.TypeCheck.Predicates
 import Language.Sprite.TypeCheck.Types
 import Language.Sprite.TypeCheck.Monad
+import Control.Monad (foldM)
 
 {-
 В процессе вывода типов имеют значение только BaseTypes, предикаты будут проверяться и выводиться в
@@ -30,20 +31,20 @@ unify ::
   -- | (term with substituted temp type variables, result type )
   CheckerM (Term i , Term i)
 unify scope (TypeRefined (BaseTypeTempVar varId) _ _) t term = do
-  debugPrintT "Unify 1!"
   t' <- mkPredicatesInTypeUnknown scope t
   let substitutedTerm = substTempTypeVar scope varId t' F.identitySubst term
   pure (substitutedTerm, t)
+
 unify scope t (TypeRefined (BaseTypeTempVar varId) _ _) term = withRule "[Unify]" $ do
   t' <- mkPredicatesInTypeUnknown scope t
   debugPrintT $ "VarId: " <> showT varId
   debugPrintT $ "Change on: " <> showT t'
-  debugPrintT $ "Was: " <> showT term
   let substitutedTerm = substTempTypeVar scope varId t' F.identitySubst term
-  debugPrintT $ "Became: " <> showT substitutedTerm
   pure (substitutedTerm, t)
+
 unify _scope t1@(TypeRefined b1 _ _) _t2@(TypeRefined b2 _ _) term
   | baseTypeEq b1 b2 = pure (term, t1)
+
 unify scope (TypeFun v1 argTyp1 retTyp1) (TypeFun v2 argTyp2 retTyp2) term = do
   (term', argTyp) <- unify scope argTyp1 argTyp2 term
   case (F.assertDistinct v2, F.assertExt v2) of
@@ -71,6 +72,18 @@ unify scope (TypeFun v1 argTyp1 retTyp1) (TypeFun v2 argTyp2 retTyp2) term = do
       debugPrintT $ "Unify fun var:" <> showT v1
       debugPrintT $ "Unify term:" <> showT term'
       pure (unifiedTermInNeededScope, TypeFun v2 argTyp retType)
+
+unify scope
+  (TypeData lTypName lTypArgs lPredVar lPred)
+  (TypeData rTypName rTypArgs _ _)
+  termToUnify
+  | lTypName == rTypName = do
+  let
+    go (term, args) (lArg, rArg) = do
+      (term', arg') <- unify scope lArg rArg term
+      pure (term', args ++ [arg'])
+  (term', args') <- foldM go (termToUnify, []) (zip lTypArgs rTypArgs)
+  pure (term', TypeData lTypName args' lPredVar lPred)
 
 unify _ t1 t2 _ = throwError $
   "Can't unify:\n"
@@ -206,6 +219,9 @@ synths scope env currentTerm = case currentTerm of
     debugPrintT $ "Type: " <> showT typ
     mkTAppIfNecessary scope currentTerm typ
 
+  Constructor conName ->  withRule "[Syn-Constructor]" $ do
+    typ <- lookupConstructor conName >>= extendTypeToCurrentScope scope . F.sink
+    mkTAppIfNecessary scope currentTerm typ
 
   {- [Syn-Con]
    -----------------
@@ -295,7 +311,7 @@ mkTAppIfNecessary scope term typ = case typ of
   TypeForall (PatternVar typVarBinder) typUnderForall -> do
     case (F.assertDistinct typVarBinder, F.assertExt typVarBinder) of
       (F.Distinct, F.Ext) -> do
-        (F.sink -> newTempTypVar) <- mkFreshTempTypVar
+        newTempTypVar <- mkFreshTempTypVar >>= extendTypeToCurrentScope scope . F.sink
         let
           resultTypeSubst = F.addSubst F.identitySubst typVarBinder newTempTypVar
           F.UnsafeName rawTypVarBinder = F.nameOf typVarBinder

@@ -36,7 +36,6 @@ import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import qualified Language.Fixpoint.Types.Names as FST
 import qualified Language.Fixpoint.Types.Sorts as FST
 import qualified Language.Sprite.TypeCheck.Types as Types
-import Debug.Pretty.Simple (pTraceShowM)
 
 -- TODO: add better errors
 instance F.Loc T.Text where
@@ -104,9 +103,8 @@ convertMeasure (Front.Measure fMeasureName fMeasureType) = do
       (Inner.VarIdent name) -> FST.symbol name
     scopedTyp = S.toTerm Foil.emptyScope Map.empty
       . FrontToInner.mkForAll $ FrontToInner.convertRType fMeasureType
-  typSort <- Types.getTypeSort scopedTyp
+  typSort <- Check.getTypeSort scopedTyp
   pure (FST.symbol measureName, typSort)
-
 
 run :: FilePath -> Front.Program -> IO ()
 run filePath (Front.Program rawQualifiers rawMeasures dataTypes rawFrontTerm) = do

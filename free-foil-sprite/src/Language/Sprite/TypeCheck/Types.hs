@@ -9,11 +9,10 @@ import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import Language.Sprite.TypeCheck.Monad
 import Control.Monad.Error.Class (MonadError(throwError))
 import Data.Maybe (catMaybes)
-import Language.Sprite.TypeCheck.Constraints (baseTypeToSort)
+import Language.Sprite.TypeCheck.Constraints (baseTypeToSort, sortPred, getTypeSort)
 import Data.Traversable (for)
 import Data.Biapplicative (bimap)
-import qualified Language.Fixpoint.Types as FTS
-import Data.Text (Text)
+import qualified Language.Fixpoint.Types.Sorts as FTS
 
 constIntT :: Integer -> Term F.VoidS
 constIntT x = F.withFreshBinder F.emptyScope $
@@ -33,7 +32,6 @@ boolWithT b = F.withFreshBinder F.emptyScope $ \binder ->
 
 extendTypeToCurrentScope :: F.Distinct i => F.Scope i -> Term i -> CheckerM (Term i)
 extendTypeToCurrentScope scope typ = do
-  debugPrintT $ "Extending: " <> showT typ
   case typ of
     TypeRefined b oldVar p -> F.withFreshBinder scope $ \newBinder ->
       case (F.assertDistinct newBinder, F.assertExt newBinder) of
@@ -73,7 +71,6 @@ extendTypeToCurrentScope scope typ = do
 
 mkPredicatesInTypeUnknown :: F.Distinct i => F.Scope i -> Term i -> CheckerM (Term i)
 mkPredicatesInTypeUnknown scope typ = do
-  debugPrintT $ "Extending: " <> showT typ
   case typ of
     TypeRefined b v _ -> pure $ TypeRefined b v Unknown
     TypeData typName args v _ -> pure $ TypeData typName args v Unknown
@@ -125,34 +122,39 @@ fresh scope env curType = case curType of
     v = fresh binder
     ...x = arguments from env
   -}
-  TypeRefined base _ Unknown -> do
-    (catMaybes -> unzip -> (names, sorts)) <-
-      for (envToList env) $ \(name, typ) -> case getBaseType typ of
-        Nothing -> pure Nothing
-        Just b -> case baseTypeToSort (fromTerm b) of
-          Right sort -> pure $ Just (name, sort)
-          Left err -> throwError err
-    typeSort <-  case baseTypeToSort (fromTerm base) of
+  TypeRefined base pat@(PatternVar patVar) refPred -> do
+    namesAndSorts <- envSorts scope env
+    typeSort <-  case getTypeSort curType of
       Right sort -> pure sort
       Left err -> throwError err
-    newHornVarName <- mkFreshHornVar (typeSort : sorts)
-    debugPrintT $ "Horn var name: " <> showT newHornVarName
-    debugPrintT $ "Horn var args: " <> showT names
-    debugPrintT $ "Horn var sorts: " <> showT sorts
-    F.withFreshBinder scope $ \freshBinder ->
-      case (F.assertDistinct freshBinder, F.assertExt freshBinder) of
-        (F.Distinct, F.Ext) -> pure $
+    case (F.assertDistinct pat, F.assertExt pat) of
+      (F.Distinct, F.Ext) -> do
+        refPred' <- case refPred of
+          Unknown -> mkHornVarPred patVar typeSort namesAndSorts
+          _ -> pure refPred
+        pure $
           TypeRefined
             base
-            (PatternVar freshBinder) -- v
-            -- k(v,...x)
-            (HVar newHornVarName $ F.Var (F.nameOf freshBinder) : (F.Var . F.sink <$> names ))
+            (PatternVar patVar) -- v
+            refPred'
 
-
-  {-
-  fresh(G, b[v|p]) = b[v|p]
-  -}
-  t@TypeRefined{} -> pure t
+  TypeData typName typArgs pat@(PatternVar patVar) refPred -> do
+    namesAndSorts <- envSorts scope env
+    typeSort <-  case getTypeSort curType of
+      Right sort -> pure sort
+      Left err -> throwError err
+    typArgs' <- for typArgs (fresh scope env)
+    case (F.assertDistinct pat, F.assertExt pat) of
+      (F.Distinct, F.Ext) -> do
+        refPred' <- case refPred of
+          Unknown -> mkHornVarPred patVar typeSort namesAndSorts
+          _ -> pure refPred
+        pure $
+          TypeData
+            typName
+            typArgs'
+            (PatternVar patVar) -- v
+            refPred'
 
   {-
   fresh(G, x:s -> t) = x:s' -> t'
@@ -182,6 +184,40 @@ fresh scope env curType = case curType of
 
   otherTerm -> throwError $
     "fresh should be called only on type, not term:\n" <> showT otherTerm
+
+mkHornVarPred ::
+  ( F.DExt i o) =>
+  F.NameBinder i o ->
+  FTS.Sort ->
+  [(F.Name i, FTS.Sort)] ->
+  CheckerM (Term o)
+mkHornVarPred freshBinder typeSort (unzip -> (names, sorts)) = do
+  newHornVarName <- mkFreshHornVar (typeSort : sorts)
+  debugPrintT $ "Horn var name: " <> showT newHornVarName
+  debugPrintT $ "Horn var args: " <> showT names
+  debugPrintT $ "Horn var sorts: " <> showT sorts
+  let
+    hornVarPred = HVar newHornVarName
+      $ F.Var (F.nameOf freshBinder) : (F.Var . F.sink <$> names )
+  pure hornVarPred
+
+
+
+envSorts :: F.Distinct i => F.Scope i -> Env i -> CheckerM [(F.Name i, FTS.Sort)]
+envSorts scope env = do
+  namesAndSorts <- for (envToList env) $ \(name, typ) -> do
+    -- По скольку нас здесь биндер не интересует можно взять свежий
+    F.withFreshBinder scope $ \binder -> do
+      let pat = PatternVar binder
+      case (F.assertDistinct pat, F.assertExt pat) of
+        (F.Distinct, F.Ext) ->
+          sortPred (F.extendScope binder scope) pat (F.sink typ) >>= \case
+            Nothing -> pure Nothing
+            Just (sort, _) -> pure $ Just (name, sort)
+  pure $ catMaybes namesAndSorts
+
+freshR :: F.Scope i -> Term o1 -> (Pattern i o, Term o)
+freshR scope p = undefined
 
 -- | Тоже самое что и Foil.substitute, только правильно подставляет type var (она вложена в base typ)
 -- Поэтому в переданная подстановка должна содержать например [a -> int[v|true]] и тогда на выходе будет 'a[v|v < 0] -> int[v|true]
@@ -244,32 +280,6 @@ substTempTypeVar scope tempTypeVar typToSubst subst inType = case inType of
               scope' = F.extendScopePattern binder' scope
               body' =  substTempTypeVar scope' tempTypeVar (F.sink typToSubst) subst' body
           in F.ScopedAST binder' body'
-
-
-getTypeSort :: Term i -> Either Text FTS.Sort
-getTypeSort = \case
-  TypeRefined b _ _ -> baseTypeToSort (fromTerm b)
-  TypeData (Inner.VarIdent typName) typArgs _ _ -> do
-    argsSorts <- traverse getTypeSort typArgs
-    pure $ FTS.fAppTC
-      (FTS.symbolFTycon . FTS.dummyLoc  . FTS.symbol $ typName)
-      argsSorts
-  TypeFun _ argTyp retTyp -> do
-    argSort <- getTypeSort argTyp
-    retSort <- getTypeSort retTyp
-    pure $ FTS.FFunc argSort retSort
-  TypeForall typVarPat typeUnderForAll -> do
-    typeUnderForAllSort <- getTypeSort typeUnderForAll
-    typVarRawId <- case fromPattern typVarPat of
-      (Inner.PatternVar (Inner.VarIdent typVarRawId)) -> Right $ FTS.symbol typVarRawId
-      pat -> Left $ "Unknown pattern in forall: " <> showT pat
-    let
-      -- Тут используется хак, что внутреннее представление Foil это Int
-      -- и каждый биндер уникальный. Поэтому мы его и используется в fixpoint sort
-      typVarIndex = F.nameId . F.nameOf $ getNameBinderFromPattern typVarPat
-      subst = FTS.mkSortSubst [(typVarRawId, FTS.FVar typVarIndex)]
-    pure $ FTS.FAbs typVarIndex (FTS.sortSubst subst typeUnderForAllSort)
-  term -> Left $ "getTypeSort called on: " <> showT term
 
 getBaseType :: Term i -> Maybe (Term i)
 getBaseType = \case

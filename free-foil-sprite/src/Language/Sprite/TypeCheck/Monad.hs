@@ -6,8 +6,8 @@ import Data.Text (Text)
 import Control.Monad.Trans.Except (ExceptT)
 import Control.Monad.Trans.Reader (ReaderT)
 import Language.Sprite.Syntax
-import Control.Monad.Except (MonadError)
-import Control.Monad.Reader.Class (MonadReader (ask), local)
+import Control.Monad.Except (MonadError (throwError))
+import Control.Monad.Reader.Class (MonadReader (ask), local, asks)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import qualified Data.Text.Lazy as TL
 import Text.Pretty.Simple (pShow, pShowNoColor)
@@ -84,6 +84,13 @@ lookupEnv env varId = case env of
         case F.unsinkName binder varId of
           Nothing -> error $ "impossible case. If we didn't found var in bigger scoped map. It should be in smaller scope " <> show varId
           Just varId' -> F.sink $ lookupEnv env' varId'
+
+lookupConstructor :: Inner.ConIdent -> CheckerM (Term F.VoidS)
+lookupConstructor conName = do
+  constructors <- asks (.dataConstructorsEnv)
+  case Map.lookup conName constructors of
+    Just typ -> pure typ
+    Nothing -> throwError $ "Unknown constructor: " <> showT conName
 
 envToList :: Env o -> [(F.Name o, Term o)]
 envToList env = case env of

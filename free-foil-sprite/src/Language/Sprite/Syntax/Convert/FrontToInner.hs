@@ -186,10 +186,9 @@ convertDataType :: F.DataType -> [(I.ConIdent, I.Term)]
 convertDataType (F.DataType typName typArgs typConstructors) =
     map (mkCon typName typArgs) typConstructors
 
--- TODO: collect free vars
 mkCon :: F.VarIdent -> F.DataTypeArgs -> F.DataTypeConstructor -> (I.ConIdent, I.Term)
 mkCon typName typArgs (F.DataTypeConstructor conName conArgs mPred) =
-  (convertConId conName, conType)
+  (convertConId conName, mkForAll conType)
   where
     args = case conArgs of
       F.EmptyDataTypeConstructorArgs -> []
