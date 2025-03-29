@@ -2,6 +2,7 @@
 {-# HLINT ignore "Use newtype instead of data" #-}
 module Language.Sprite.TypeCheck.Monad where
 import qualified Control.Monad.Foil as F
+import qualified Control.Monad.Foil.Internal as F
 import Data.Text (Text)
 import Control.Monad.Trans.Except (ExceptT)
 import Control.Monad.Trans.Reader (ReaderT)
@@ -59,21 +60,6 @@ withExtendedEnv env binder typ action = do
   let env' = NonEmptyEnv env binder typ
   action env'
 
-withExtendedEnv' :: (F.Distinct i, F.DExt i o) => Env i -> F.NameBinderList i o -> Term i -> (Env o -> CheckerM a) -> CheckerM a
-withExtendedEnv' env binders typ action =
-  case binders of
-    F.NameBinderListEmpty -> action env
-    F.NameBinderListCons binder otherBinders -> do
-      case (F.assertDistinct binder, F.assertExt binder) of
-        (F.Distinct, F.Ext) -> case (F.assertDistinct otherBinders, F.assertExt otherBinders) of
-          (F.Distinct, F.Ext) -> do
-            env' <- withExtendedEnv env binder typ pure
-            withExtendedEnv'
-              env'
-              otherBinders
-              (F.sink typ)
-              action
-
 lookupEnv :: Env o -> F.Name o -> Term o
 lookupEnv env varId = case env of
   EmptyEnv -> error $ "impossible case, no var in env: " <> show varId
@@ -84,6 +70,9 @@ lookupEnv env varId = case env of
         case F.unsinkName binder varId of
           Nothing -> error $ "impossible case. If we didn't found var in bigger scoped map. It should be in smaller scope " <> show varId
           Just varId' -> F.sink $ lookupEnv env' varId'
+
+changeVarTypeInEnv :: F.Distinct o => Env o -> F.Name o -> Term o -> Env o
+changeVarTypeInEnv env varId = NonEmptyEnv env (F.UnsafeNameBinder varId)
 
 lookupConstructor :: Inner.ConIdent -> CheckerM (Term F.VoidS)
 lookupConstructor conName = do

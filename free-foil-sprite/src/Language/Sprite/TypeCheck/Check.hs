@@ -20,6 +20,7 @@ import Data.Traversable (for)
 import Data.Bifunctor (bimap)
 import qualified Data.List as List
 import Control.Monad (foldM)
+import Data.Foldable (foldrM)
 
 mkSolverErrorMessage :: Text -> CheckerM Text
 mkSolverErrorMessage baseMsg = do
@@ -279,7 +280,7 @@ check scope env currentTerm currentType = case currentTerm of
           (F.Distinct, F.Ext) -> do
             conType <- lookupConstructor conName >>= extendTypeToCurrentScope scope . F.sink
             constructorFunction <- ctor scope varTyp conType
-            (newEnv, _) <- unapply scope env newVarsPat constructorFunction
+            (newEnv, ctorType) <- unapply scope env newVarsPat constructorFunction
             let
               scope' = F.extendScopePattern newVarsPat scope
               varsAddedInCasePatternMatch = List.deleteFirstsBy
@@ -287,9 +288,17 @@ check scope env currentTerm currentType = case currentTerm of
                 (envToList newEnv)
                 (bimap F.sink F.sink <$> envToList env)
               msg = "Error in switch case in branch with "  <> showT conNameRaw
+
+            -- В теории можно было бы расширить scope еще одним биндером, переименовать
+            -- все вхождения varName на новый биндер и новый биндер добавить в env c усиленным типом,
+            -- но я пошел простым путем. Просто перезатер varName в env. В smt это будет shadowing varName
+            -- Решение принято осознанное
+            strengthenVarType <- meet scope' (F.sink varTyp) ctorType
+            let envWithStrengthenVar = changeVarTypeInEnv newEnv (F.sink varName) strengthenVarType
+            debugPrintT $ "strengthenVarType: " <> showT varName <> showT strengthenVarType
             caseConstraint <- check
               (F.extendScopePattern newVarsPat scope)
-              newEnv
+              envWithStrengthenVar
               caseTerm
               (F.sink currentType)
             implConstraints <- foldM
@@ -297,7 +306,7 @@ check scope env currentTerm currentType = case currentTerm of
                 buildImplicationFromType' msg scope' addedVarName addedVarType c
               )
               caseConstraint
-              varsAddedInCasePatternMatch
+              ((F.sink varName, strengthenVarType) : varsAddedInCasePatternMatch)
             pure implConstraints
       otherTerm -> throwError $ "switch case not CaseAlt: " <> showT otherTerm
     pure $ CAnd caseConstraints

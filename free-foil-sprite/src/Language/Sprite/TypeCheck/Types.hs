@@ -112,6 +112,11 @@ singletonT varName typ = case typ of
       (F.Distinct, F.Ext) -> TypeRefined base (PatternVar typVar)
         (OpExpr predicate Inner.AndOp
           (OpExpr (F.Var (F.sink varName)) Inner.EqOp (F.Var (F.nameOf typVar))))
+  TypeData typeName typeArgs (PatternVar typVar) predicate ->
+    case (F.assertDistinct typVar, F.assertExt typVar) of
+      (F.Distinct, F.Ext) -> TypeData typeName typeArgs (PatternVar typVar)
+        (OpExpr predicate Inner.AndOp
+          (OpExpr (F.Var (F.sink varName)) Inner.EqOp (F.Var (F.nameOf typVar))))
   _ -> typ
 
 {- See 5.4, Figure 5.4, page 34 -}
@@ -201,8 +206,6 @@ mkHornVarPred freshBinder typeSort (unzip -> (names, sorts)) = do
     hornVarPred = HVar newHornVarName
       $ F.Var (F.nameOf freshBinder) : (F.Var . F.sink <$> names )
   pure hornVarPred
-
-
 
 envSorts :: F.Distinct i => F.Scope i -> Env i -> CheckerM [(F.Name i, FTS.Sort)]
 envSorts scope env = do
