@@ -71,7 +71,6 @@ vcgen qualifiers constructors measures term = do
     mkQuery c = do
       c' <- first Check.showT $ Check.constraintsToFHT c
       pure $ H.Query qualifiers checkerState.hornVars c' (HashMap.fromList measures) mempty mempty mempty mempty mempty mempty
-  pPrint eConstraints
   pure $ eConstraints >>= mkQuery
 
 config :: FC.Config

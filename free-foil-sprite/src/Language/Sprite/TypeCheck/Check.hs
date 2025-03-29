@@ -1,4 +1,6 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Redundant pure" #-}
 
 module Language.Sprite.TypeCheck.Check where
 import Control.Monad.Foil qualified as F
@@ -14,6 +16,10 @@ import Language.Sprite.TypeCheck.Predicates
 import Language.Sprite.TypeCheck.Types
 import qualified Data.Unique as Unique
 import Language.Sprite.TypeCheck.Monad
+import Data.Traversable (for)
+import Data.Bifunctor (bimap)
+import qualified Data.List as List
+import Control.Monad (foldM)
 
 mkSolverErrorMessage :: Text -> CheckerM Text
 mkSolverErrorMessage baseMsg = do
@@ -263,6 +269,40 @@ check scope env currentTerm currentType = case currentTerm of
               check scope' env' body' typUnderForall
       _ -> throwError $ "TLam with type without forall: " <> showT currentType
 
+  Switch (F.Var varName) cases -> do
+    varTyp <- extendTypeToCurrentScope scope $ lookupEnv env varName
+
+    debugPrintT $ "switch var type" <> showT varTyp
+    caseConstraints <- for cases $ \case
+      CaseAlt conName@(Inner.ConIdent conNameRaw) newVarsPat caseTerm ->
+        case (F.assertDistinct newVarsPat, F.assertExt newVarsPat) of
+          (F.Distinct, F.Ext) -> do
+            conType <- lookupConstructor conName >>= extendTypeToCurrentScope scope . F.sink
+            constructorFunction <- ctor scope varTyp conType
+            (newEnv, _) <- unapply scope env newVarsPat constructorFunction
+            let
+              scope' = F.extendScopePattern newVarsPat scope
+              varsAddedInCasePatternMatch = List.deleteFirstsBy
+                (\(n1, _) (n2, _) -> n1 == n2)
+                (envToList newEnv)
+                (bimap F.sink F.sink <$> envToList env)
+              msg = "Error in switch case in branch with "  <> showT conNameRaw
+            caseConstraint <- check
+              (F.extendScopePattern newVarsPat scope)
+              newEnv
+              caseTerm
+              (F.sink currentType)
+            implConstraints <- foldM
+              (\c (addedVarName, addedVarType) ->
+                buildImplicationFromType' msg scope' addedVarName addedVarType c
+              )
+              caseConstraint
+              varsAddedInCasePatternMatch
+            pure implConstraints
+      otherTerm -> throwError $ "switch case not CaseAlt: " <> showT otherTerm
+    pure $ CAnd caseConstraints
+
+
   {- [Chk-Syn]
   G |- e ==> s        G |- s <: t
   ----------------------------------[Chk-Syn]
@@ -390,4 +430,5 @@ synths scope env currentTerm = case currentTerm of
   Boolean b -> do
     typ <- extendTypeToCurrentScope scope $ F.sink $ boolWithT b
     pure (cTrue, typ)
-  _ -> throwError $ "unimplemented case:\n" <> pShowT currentTerm
+
+  _ -> throwError $ "unimplemented case:\n" <> showT currentTerm

@@ -207,14 +207,9 @@ mkHornVarPred freshBinder typeSort (unzip -> (names, sorts)) = do
 envSorts :: F.Distinct i => F.Scope i -> Env i -> CheckerM [(F.Name i, FTS.Sort)]
 envSorts scope env = do
   namesAndSorts <- for (envToList env) $ \(name, typ) -> do
-    -- По скольку нас здесь биндер не интересует можно взять свежий
-    F.withFreshBinder scope $ \binder -> do
-      let pat = PatternVar binder
-      case (F.assertDistinct pat, F.assertExt pat) of
-        (F.Distinct, F.Ext) ->
-          sortPred (F.extendScope binder scope) pat (F.sink typ) >>= \case
-            Nothing -> pure Nothing
-            Just (sort, _) -> pure $ Just (name, sort)
+    sortPred scope name typ >>= \case
+        Nothing -> pure Nothing
+        Just (sort, _) -> pure $ Just (name, sort)
   pure $ catMaybes namesAndSorts
 
 containsVar ::
@@ -229,7 +224,7 @@ containsVar neededVarName inType = f inType False
       F.Node node -> res || bifoldr fScoped f False node
     fScoped (F.ScopedAST binder body) res =
       case (F.assertDistinct binder, F.assertExt binder) of
-        (F.Distinct, F.Ext) -> res || containsVar(F.sink neededVarName) body
+        (F.Distinct, F.Ext) -> res || containsVar (F.sink neededVarName) body
 
 
 -- | Тоже самое что и Foil.substitute, только правильно подставляет type var (она вложена в base typ)
@@ -294,14 +289,92 @@ substTempTypeVar scope tempTypeVar typToSubst subst inType = case inType of
               body' =  substTempTypeVar scope' tempTypeVar (F.sink typToSubst) subst' body
           in F.ScopedAST binder' body'
 
-getBaseType :: Term i -> Maybe (Term i)
-getBaseType = \case
-  TypeRefined base _ _ -> Just base
-  _ -> Nothing
-
 baseTypeEq :: Term i -> Term i -> Bool
 baseTypeEq BaseTypeBool BaseTypeBool = True
 baseTypeEq BaseTypeInt BaseTypeInt = True
 baseTypeEq (BaseTypeVar (F.Var v1)) (BaseTypeVar (F.Var v2)) = v1 == v2
 baseTypeEq (BaseTypeTempVar v1) (BaseTypeTempVar v2) = v1 == v2
 baseTypeEq _ _ = False
+
+-- see figure 7.7
+unapply :: F.Distinct i => F.Scope i -> Env i -> Pattern i o -> Term i -> CheckerM (Env o, Term o)
+unapply _ _ pat@(PatternVar'{}) _ = throwError
+  $ "Invalid pattern for unapply: " <> showT pat
+unapply _ env PatternNoBinders typ = pure (env, typ) -- TODO: add meet
+unapply scope env
+  (PatternSomeBinders newBinder otherPattern)
+  (TypeFun funArgId argTyp retType) = case (F.assertDistinct newBinder, F.assertExt newBinder) of
+    (F.Distinct, F.Ext) -> do
+      let
+        scope' = F.extendScopePattern newBinder scope
+        retTypeSubst =
+          F.addRename
+            (F.sink F.identitySubst)
+            (getNameBinderFromPattern funArgId)
+            (F.nameOf newBinder)
+        retTypeSubstituted = F.substitute scope' retTypeSubst retType
+      withExtendedEnv env newBinder argTyp $ \env' ->
+        unapply scope' env' otherPattern retTypeSubstituted
+
+unapply _ _ pat typ = throwError
+  $ "Can't unapply pattern " <> showT pat
+  <> " with type " <> showT typ
+
+ctor :: F.Distinct i => F.Scope i -> Term i -> Term i -> CheckerM (Term i)
+ctor scope switchVarType conType = do
+  switchVarConTypArgs <- case switchVarType of
+    TypeData _ typArgs _ _ -> pure typArgs
+    _ -> throwError $ "Constructor type not TypeData: " <> showT conType
+  -- constructor function
+  debugPrintT $ "switchVarConTypArgs: " <> showT switchVarConTypArgs
+  debugPrintT $ "conType: " <> showT conType
+  ctorGo scope switchVarConTypArgs conType
+
+ctorGo :: F.Distinct i => F.Scope i -> [Term i] -> Term i -> CheckerM (Term i)
+ctorGo _ [] t = pure t
+-- ctorGo _ [] t = throwError $ "ctorGo, result type not TypeData: " <> showT t
+ctorGo scope (typArg:typeArgs) conType = case conType of
+  TypeForall (PatternVar typVarBinder) typeUnderForAll -> do
+    let
+      typeUnderForAllSubst = F.addSubst F.identitySubst typVarBinder typArg
+      F.UnsafeName rawTypVarBinder = F.nameOf typVarBinder
+      typeUnderForAllSubstituted = substTypeVar scope typeUnderForAllSubst rawTypVarBinder typeUnderForAll
+    ctorGo scope typeArgs typeUnderForAllSubstituted
+  t -> throwError $ "ctorGo, can't apply type argument to: " <> showT t
+
+meet :: (F.Distinct o) => F.Scope o -> Term o -> Term o -> CheckerM (Term o)
+meet scope (TypeRefined baseL varPatL refL) (TypeRefined baseR varPatR refR)
+  | baseTypeEq baseL baseR =
+    case (F.assertDistinct varPatL, F.assertExt varPatL) of
+      (F.Distinct, F.Ext) -> do
+        let
+          scope' = F.extendScopePattern varPatL scope
+          refSubst =
+              F.addRename
+                (F.sink F.identitySubst)
+                (getNameBinderFromPattern varPatR)
+                (F.nameOf $ getNameBinderFromPattern varPatL)
+          refRSubstituted = F.substitute scope' refSubst refR
+        pure $ TypeRefined baseL varPatL
+          (OpExpr refL Inner.AndOp refRSubstituted)
+
+meet scope
+  (TypeData typeNameL typeArgsL varPatL refL)
+  (TypeData typeNameR _ varPatR refR)
+  | typeNameL == typeNameR =
+    case (F.assertDistinct varPatL, F.assertExt varPatL) of
+      (F.Distinct, F.Ext) -> do
+        let
+          scope' = F.extendScopePattern varPatL scope
+          refSubst =
+              F.addRename
+                (F.sink F.identitySubst)
+                (getNameBinderFromPattern varPatR)
+                (F.nameOf $ getNameBinderFromPattern varPatL)
+          refRSubstituted = F.substitute scope' refSubst refR
+        pure $ TypeData typeNameL typeArgsL varPatL
+          (OpExpr refL Inner.AndOp refRSubstituted)
+
+meet _ t1 t2 = throwError $ "Can't meet\n"
+  <> "left type: " <> showT t1
+  <> "\nright type: " <> showT t2

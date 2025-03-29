@@ -12,6 +12,7 @@ import Control.Monad (foldM)
 import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import Data.Maybe (mapMaybe)
 import Unsafe.Coerce (unsafeCoerce)
+import Data.Traversable (for)
 
 type TempTypeVarUnification i = [(Inner.VarIdent, Term i)]
 
@@ -85,7 +86,17 @@ unify _ t1 t2 = throwError $
   <> "left type: " <> showT t1
   <> "\nright type: " <> showT t2
 
-unsinkTypeVarsMapping :: F.DExt i o => F.NameBinder i o -> [(Inner.VarIdent, Term o)] -> [(Inner.VarIdent, Term i)]
+unsinkTypeVarsMappingPattern :: (F.Distinct i, F.Distinct o) => Pattern i o -> [(Inner.VarIdent, Term o)] -> [(Inner.VarIdent, Term i)]
+unsinkTypeVarsMappingPattern (PatternVar' binder) typVarsMapping =
+  unsinkTypeVarsMapping binder typVarsMapping
+unsinkTypeVarsMappingPattern PatternNoBinders typVarsMapping = typVarsMapping
+unsinkTypeVarsMappingPattern (PatternSomeBinders binder otherPattern) typVarsMapping =
+  case F.assertDistinct binder of
+    F.Distinct ->
+      unsinkTypeVarsMapping binder $
+          unsinkTypeVarsMappingPattern otherPattern typVarsMapping
+
+unsinkTypeVarsMapping :: F.Distinct o => F.NameBinder i o -> [(Inner.VarIdent, Term o)] -> [(Inner.VarIdent, Term i)]
 unsinkTypeVarsMapping typVar typVarsMapping = flip mapMaybe typVarsMapping $
   \(tempTypVarId, typ) ->
     if containsVar (F.nameOf typVar) typ
@@ -134,7 +145,7 @@ check scope env currentTerm currentType = case currentTerm of
             debugPrintT $ "Type fun arg type: " <> showT argType
             -- В терме теперь новое имя потому что мы y переименовали в x
             let
-              finalTypeVarsMapping = unsinkTypeVarsMapping typeFunArgIdBinder typeVarsMapping
+              finalTypeVarsMapping = unsinkTypeVarsMappingPattern typeFunArgIdPat typeVarsMapping
               elaboratedBody' =  applyTypeVarsMapping scope' elaboratedBody typeVarsMapping
             pure $ (Fun typeFunArgIdPat elaboratedBody', finalTypeVarsMapping)
       _ -> throwError $ "Function type should be Function, not: " <> showT extendedCurrentType
@@ -159,7 +170,7 @@ check scope env currentTerm currentType = case currentTerm of
             elaboratedBody' = applyTypeVarsMapping scope' elaboratedBody typeVarsMapping2
             finalTypeVarsMapping
               = typeVarsMapping1
-              ++ unsinkTypeVarsMapping (getNameBinderFromPattern newVarPat) typeVarsMapping2
+              ++ unsinkTypeVarsMappingPattern newVarPat typeVarsMapping2
             letTerm = applyTypeVarsMapping scope
               (Let newVarPat newVar' elaboratedBody')
               finalTypeVarsMapping
@@ -199,8 +210,8 @@ check scope env currentTerm currentType = case currentTerm of
           pure  (applyTypeVarsMapping scope' body' typeVarsMapping2, typeVarsMapping2)
         let
           finalTypeVarsMapping
-            = unsinkTypeVarsMapping (getNameBinderFromPattern newVarPat1) typeVarsMapping1
-            ++ unsinkTypeVarsMapping (getNameBinderFromPattern newVarPat2) typeVarsMapping2
+            = unsinkTypeVarsMappingPattern newVarPat1 typeVarsMapping1
+            ++ unsinkTypeVarsMappingPattern newVarPat2 typeVarsMapping2
           letRecTerm = applyTypeVarsMapping scope
             (LetRec newVarType newVarPat1 newVarPat2 newVarValue' body')
             finalTypeVarsMapping
@@ -222,6 +233,26 @@ check scope env currentTerm currentType = case currentTerm of
       thenTerm'' = applyTypeVarsMapping scope thenTerm' finalTypeVarsMapping
       elseTerm'' = applyTypeVarsMapping scope elseTerm' finalTypeVarsMapping
     pure $ (If cond'' thenTerm'' elseTerm'', finalTypeVarsMapping)
+
+  Switch (F.Var varName) cases -> do
+    varTyp <- extendTypeToCurrentScope scope $ lookupEnv env varName
+
+    debugPrintT $ "switch var type" <> showT varTyp
+    (unzip -> (elaboratedCases, typeVarsMapping)) <- for cases $ \case
+      CaseAlt conName newVarsPat caseTerm ->
+        case (F.assertDistinct newVarsPat, F.assertExt newVarsPat) of
+          (F.Distinct, F.Ext) -> do
+            conType <- lookupConstructor conName >>= extendTypeToCurrentScope scope . F.sink
+            constructorFunction <- ctor scope varTyp conType
+            (newEnv, _) <- unapply scope env newVarsPat constructorFunction
+            (elaboratedCaseTerm, typeVarsMapping) <- check
+              (F.extendScopePattern newVarsPat scope)
+              newEnv
+              caseTerm
+              (F.sink currentType)
+            pure (CaseAlt conName newVarsPat elaboratedCaseTerm, unsinkTypeVarsMappingPattern newVarsPat typeVarsMapping)
+      otherTerm -> throwError $ "switch case not CaseAlt: " <> showT otherTerm
+    pure (Switch (F.Var varName) elaboratedCases, concat typeVarsMapping)
 
   {- [Chk-Syn]
   G |- e ==> s        G |- s <: t
@@ -390,7 +421,7 @@ mkTLamIfNecessary scope env term typ = case typ of
         (term', typeVarsMapping)  <- withExtendedEnv env (getNameBinderFromPattern typVar) (F.sink anyIntT) $ \env' ->
           mkTLamIfNecessary scope' env' (F.sink term) typUnderForall
         let term'' = applyTypeVarsMapping scope' term' typeVarsMapping
-        pure (TLam typVar term'', unsinkTypeVarsMapping (getNameBinderFromPattern typVar) typeVarsMapping)
+        pure (TLam typVar term'', unsinkTypeVarsMappingPattern typVar typeVarsMapping)
   {-
   Есть некоторый нюанс в том что если мы спускаем term i вниз через sink i1 -> i2 -> i3.
   И в этих скоупах добавляются новые биндеры, то у изначально терма i со своими биндерами i1 -> i2 -> i3,

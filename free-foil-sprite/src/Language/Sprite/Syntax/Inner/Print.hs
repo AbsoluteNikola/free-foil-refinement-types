@@ -159,7 +159,7 @@ instance Print Language.Sprite.Syntax.Inner.Abs.Term where
     Language.Sprite.Syntax.Inner.Abs.Ann term1 term2 -> prPrec i 0 (concatD [doc (showString "/*@"), prt 0 term1, doc (showString "*/"), prt 0 term2])
     Language.Sprite.Syntax.Inner.Abs.OpExpr term1 op term2 -> prPrec i 0 (concatD [doc (showString "("), prt 0 term1, prt 0 op, prt 0 term2, doc (showString ")")])
     Language.Sprite.Syntax.Inner.Abs.Switch term terms -> prPrec i 0 (concatD [doc (showString "switch"), doc (showString "("), prt 0 term, doc (showString ")"), doc (showString "{"), prt 0 terms, doc (showString "}")])
-    Language.Sprite.Syntax.Inner.Abs.CaseAlt conident pattern_ scopedterm -> prPrec i 0 (concatD [doc (showString "|"), prt 0 conident, doc (showString ":"), doc (showString "("), prt 0 pattern_, doc (showString ")"), doc (showString "=>"), prt 0 scopedterm])
+    Language.Sprite.Syntax.Inner.Abs.CaseAlt conident pattern_ scopedterm -> prPrec i 0 (concatD [doc (showString "|"), prt 0 conident, doc (showString "("), prt 0 pattern_, doc (showString ")"), doc (showString "=>"), prt 0 scopedterm])
     Language.Sprite.Syntax.Inner.Abs.TLam pattern_ scopedterm -> prPrec i 0 (concatD [doc (showString "/\\"), prt 0 pattern_, doc (showString ":"), prt 0 scopedterm])
     Language.Sprite.Syntax.Inner.Abs.TApp term1 term2 -> prPrec i 0 (concatD [prt 0 term1, doc (showString "t("), prt 0 term2, doc (showString ")")])
     Language.Sprite.Syntax.Inner.Abs.TypeRefined term pattern_ scopedterm -> prPrec i 0 (concatD [prt 0 term, doc (showString "["), prt 0 pattern_, doc (showString "|"), prt 0 scopedterm, doc (showString "]")])

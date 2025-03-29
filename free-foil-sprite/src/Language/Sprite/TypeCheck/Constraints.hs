@@ -10,6 +10,7 @@ import qualified Language.Sprite.Syntax.Inner.Abs as I
 import qualified Language.Fixpoint.Types as FT
 import Language.Sprite.TypeCheck.Monad (showT, CheckerM, debugPrintT, getRawVarIdFromPattern, getNameBinderFromPattern)
 import qualified Control.Monad.Foil as F
+import qualified Control.Monad.Foil.Internal as F
 import Language.Sprite.Syntax
 import qualified Control.Monad.Free.Foil as F
 import qualified Language.Fixpoint.Types.Sorts as FTS
@@ -32,30 +33,27 @@ baseTypeToSort = \case
   I.BaseTypeVar (I.Var (I.VarIdent v))-> pure . T.FObj . FT.symbol $ v
   term -> Left $ "baseTypeToSort called on: " <> showT term
 
-buildImplicationFromType :: (F.DExt i o) => Text -> F.Scope o -> Pattern i o -> Term o -> Constraint -> CheckerM Constraint
+buildImplicationFromType :: F.Distinct o => Text -> F.Scope o -> Pattern i o -> Term o -> Constraint -> CheckerM Constraint
 buildImplicationFromType msg scope argVarPat typ constraint =
-  sortPred scope argVarPat typ >>= \case
+  sortPred scope (F.nameOf $ getNameBinderFromPattern argVarPat) typ >>= \case
     Just (typSort, p) -> do
       let argVarIdRaw = getRawVarIdFromPattern argVarPat
       pure $ CImplication argVarIdRaw typSort (fromTerm p) constraint msg
     Nothing -> pure constraint
-  -- case typ of
-  -- TypeRefined base (PatternVar typVarId) p -> do
-  --   let
-  --     subst = F.addRename (F.sink F.identitySubst) typVarId (F.nameOf argVarId)
-  --     p' = F.substitute scope subst p
-  --     argVarIdRaw = getRawVarIdFromPattern argVarPat
-  --     Inner.VarIdent argVarIdRawName = argVarIdRaw
 
-  --   debugPrintT $ "Implication: " <> "varId = " <> showT argVarIdRawName <> ", term = " <> showT p'
-  --   pure $ CImplication argVarIdRaw (fromTerm base) (fromTerm p') constraint msg
-  -- _ -> pure constraint
+buildImplicationFromType' :: F.Distinct o => Text -> F.Scope o -> F.Name o -> Term o -> Constraint -> CheckerM Constraint
+buildImplicationFromType' msg scope argVarId typ constraint =
+  sortPred scope argVarId typ >>= \case
+    Just (typSort, p) -> do
+      let argVarIdRaw = getRawVarIdFromPattern (PatternVar $ F.UnsafeNameBinder argVarId)
+      pure $ CImplication argVarIdRaw typSort (fromTerm p) constraint msg
+    Nothing -> pure constraint
 
-sortPred :: F.DExt i o => F.Scope o -> Pattern i o -> Term o -> CheckerM (Maybe (FTS.Sort, Term o))
-sortPred scope (PatternVar argVarId) typ = case typ of
+sortPred :: F.Distinct o => F.Scope o -> F.Name o -> Term o -> CheckerM (Maybe (FTS.Sort, Term o))
+sortPred scope argVarId typ = case typ of
   TypeRefined _ (PatternVar typVarId) p -> do
     let
-      subst = F.addRename (F.sink F.identitySubst) typVarId (F.nameOf argVarId)
+      subst = F.addRename (F.sink F.identitySubst) typVarId argVarId
       p' = F.substitute scope subst p
     typSort <- case getTypeSort typ of
       Right sort -> pure sort
@@ -63,7 +61,7 @@ sortPred scope (PatternVar argVarId) typ = case typ of
     pure $ Just (typSort, p')
   TypeData _ _ (PatternVar typVarId) p -> do
     let
-      subst = F.addRename (F.sink F.identitySubst) typVarId (F.nameOf argVarId)
+      subst = F.addRename (F.sink F.identitySubst) typVarId argVarId
       p' = F.substitute scope subst p
     typSort <- case getTypeSort typ of
       Right sort -> pure sort
