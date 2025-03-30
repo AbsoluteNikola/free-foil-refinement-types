@@ -141,6 +141,8 @@ instance Print Language.Sprite.Syntax.Inner.Abs.VarIdent where
   prt _ (Language.Sprite.Syntax.Inner.Abs.VarIdent i) = doc $ showString i
 instance Print Language.Sprite.Syntax.Inner.Abs.ConIdent where
   prt _ (Language.Sprite.Syntax.Inner.Abs.ConIdent i) = doc $ showString i
+instance Print Language.Sprite.Syntax.Inner.Abs.MeasureIdent where
+  prt _ (Language.Sprite.Syntax.Inner.Abs.MeasureIdent i) = doc $ showString i
 instance Print Language.Sprite.Syntax.Inner.Abs.Program where
   prt i = \case
     Language.Sprite.Syntax.Inner.Abs.Program datatypes term -> prPrec i 0 (concatD [prt 0 datatypes, prt 0 term])
@@ -167,7 +169,7 @@ instance Print Language.Sprite.Syntax.Inner.Abs.Term where
     Language.Sprite.Syntax.Inner.Abs.TypeForall pattern_ scopedterm -> prPrec i 0 (concatD [doc (showString "\8704"), prt 0 pattern_, doc (showString ":"), prt 0 scopedterm])
     Language.Sprite.Syntax.Inner.Abs.TypeData varident typedataargs pattern_ scopedterm -> prPrec i 0 (concatD [prt 0 varident, prt 0 typedataargs, doc (showString "["), prt 0 pattern_, doc (showString "|"), prt 0 scopedterm, doc (showString "]")])
     Language.Sprite.Syntax.Inner.Abs.HVar varident terms -> prPrec i 0 (concatD [prt 0 varident, doc (showString "("), prt 0 terms, doc (showString ")")])
-    Language.Sprite.Syntax.Inner.Abs.Measure varident terms -> prPrec i 0 (concatD [prt 0 varident, doc (showString "("), prt 0 terms, doc (showString ")")])
+    Language.Sprite.Syntax.Inner.Abs.Measure measureident terms -> prPrec i 0 (concatD [prt 0 measureident, doc (showString "("), prt 0 terms, doc (showString ")")])
     Language.Sprite.Syntax.Inner.Abs.Unknown -> prPrec i 0 (concatD [doc (showString "?")])
     Language.Sprite.Syntax.Inner.Abs.BaseTypeInt -> prPrec i 0 (concatD [doc (showString "int")])
     Language.Sprite.Syntax.Inner.Abs.BaseTypeBool -> prPrec i 0 (concatD [doc (showString "bool")])

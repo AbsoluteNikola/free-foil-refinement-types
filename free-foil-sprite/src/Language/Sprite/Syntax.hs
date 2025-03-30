@@ -81,7 +81,7 @@ data TermSig scope term
     HVarSig :: Language.Sprite.Syntax.Inner.Abs.VarIdent ->
                 [term] ->
                 TermSig scope term
-    MeasureSig :: Language.Sprite.Syntax.Inner.Abs.VarIdent ->
+    MeasureSig :: Language.Sprite.Syntax.Inner.Abs.MeasureIdent ->
                 [term] ->
                 TermSig scope term
     UnknownSig :: TermSig scope term
@@ -165,7 +165,7 @@ pattern TypeData typeId typeArgs refVar refPred = Control.Monad.Free.Foil.Node
 pattern HVar ::Language.Sprite.Syntax.Inner.Abs.VarIdent -> [Term o] -> Term o
 pattern HVar x_aMZD x_aMZE = Control.Monad.Free.Foil.Node (HVarSig x_aMZD
                                                                     x_aMZE)
-pattern Measure ::Language.Sprite.Syntax.Inner.Abs.VarIdent -> [Term o] -> Term o
+pattern Measure ::Language.Sprite.Syntax.Inner.Abs.MeasureIdent -> [Term o] -> Term o
 pattern Measure x_aMZD x_aMZE = Control.Monad.Free.Foil.Node (MeasureSig x_aMZD
                                                                     x_aMZE)
 pattern Unknown :: Term o

@@ -1831,8 +1831,8 @@ alex_accept = Data.Array.listArray (0 :: Int, 21)
 alex_actions = Data.Array.array (0 :: Int, 11)
   [ (10,alex_action_2)
   , (9,alex_action_3)
-  , (8,alex_action_4)
-  , (7,alex_action_5)
+  , (8,alex_action_5)
+  , (7,alex_action_6)
   , (6,alex_action_1)
   , (5,alex_action_1)
   , (4,alex_action_1)
@@ -1845,8 +1845,9 @@ alex_actions = Data.Array.array (0 :: Int, 11)
 alex_action_1 = tok (eitherResIdent TV)
 alex_action_2 = tok (eitherResIdent T_VarIdent)
 alex_action_3 = tok (eitherResIdent T_ConIdent)
-alex_action_4 = tok (eitherResIdent TV)
-alex_action_5 = tok TI
+alex_action_4 = tok (eitherResIdent T_MeasureIdent)
+alex_action_5 = tok (eitherResIdent TV)
+alex_action_6 = tok TI
 
 #define ALEX_NOPRED 1
 -- -----------------------------------------------------------------------------
@@ -2075,7 +2076,7 @@ alexRightContext IBOX(sc) user__ _ _ input__ =
         -- match when checking the right context, just
         -- the first match will do.
 #endif
-{-# LINE 58 "Lex.x" #-}
+{-# LINE 62 "Lex.x" #-}
 -- | Create a token with position.
 tok :: (String -> Tok) -> (Posn -> String -> Token)
 tok f p = PT p . f
@@ -2090,6 +2091,7 @@ data Tok
   | TC !String                    -- ^ Character literal.
   | T_VarIdent !String
   | T_ConIdent !String
+  | T_MeasureIdent !String
   deriving (Eq, Show, Ord)
 
 -- | Smart constructor for 'Tok' for the sake of backwards compatibility.
@@ -2154,6 +2156,7 @@ tokenText t = case t of
   Err _         -> "#error"
   PT _ (T_VarIdent s) -> s
   PT _ (T_ConIdent s) -> s
+  PT _ (T_MeasureIdent s) -> s
 
 -- | Convert a token to a string.
 prToken :: Token -> String

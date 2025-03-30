@@ -31,7 +31,6 @@ import qualified Language.Fixpoint.Horn.Types as F
 import qualified Language.Sprite.Syntax.Convert.QualifierToFTR as QualifiersToFTR
 import qualified Language.Sprite.TypeCheck.Elaboration as Elaboration
 import qualified Language.Sprite.Syntax.Inner.Print as Inner
-import Text.Pretty.Simple (pPrint)
 import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import qualified Language.Fixpoint.Types.Names as FST
 import qualified Language.Fixpoint.Types.Sorts as FST
@@ -46,6 +45,9 @@ runM constructors = flip runStateT Check.defaultCheckerState
   . flip runReaderT Check.defaultCheckerEnv{Check.dataConstructorsEnv = Map.fromList constructors}
   . runExceptT
   . Check.runCheckerM
+
+envWithPrelude :: Check.Env o
+envWithPrelude = undefined
 
 vcgen ::
   [F.Qualifier] ->
@@ -97,8 +99,8 @@ dumpQuery f q = do
 convertMeasure :: Front.Measure -> Either Text (FST.Symbol, FST.Sort)
 convertMeasure (Front.Measure fMeasureName fMeasureType) = do
   let
-    measureName = case FrontToInner.convertVarId fMeasureName of
-      (Inner.VarIdent name) -> FST.symbol name
+    measureName = case FrontToInner.convertMeasureIdent fMeasureName of
+      (Inner.MeasureIdent name) -> FST.symbol name
     scopedTyp = S.toTerm Foil.emptyScope Map.empty
       . FrontToInner.mkForAll $ FrontToInner.convertRType fMeasureType
   typSort <- Check.getTypeSort scopedTyp

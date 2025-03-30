@@ -1,7 +1,6 @@
 module Language.Sprite.TypeCheck.Temp where
 import Language.Sprite.Syntax.Inner.Abs
 import Language.Sprite.Syntax qualified as S
-import Control.Monad.Free.Foil qualified as F
 import Control.Monad.Foil qualified as F
 import qualified Data.Map as Map
 

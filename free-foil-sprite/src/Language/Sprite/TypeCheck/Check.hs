@@ -20,7 +20,6 @@ import Data.Traversable (for)
 import Data.Bifunctor (bimap)
 import qualified Data.List as List
 import Control.Monad (foldM)
-import Data.Foldable (foldrM)
 
 mkSolverErrorMessage :: Text -> CheckerM Text
 mkSolverErrorMessage baseMsg = do

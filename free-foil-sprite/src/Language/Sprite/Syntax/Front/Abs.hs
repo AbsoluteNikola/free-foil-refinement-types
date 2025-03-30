@@ -24,7 +24,11 @@ data Qualifier = Qualifier VarIdent [QualifierArg] Pred
 data QualifierArg = QualifierArg VarIdent BaseType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data Measure = Measure VarIdent RType
+data Measure = Measure MeasureIdent RType
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data MeasureIdent
+    = MeasureIdAsVar VarIdent | MeasureIdAsCon ConIdent
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data Term
@@ -122,7 +126,7 @@ data Pred
     = PVar VarIdent
     | PBool ConstBool
     | PInt Integer
-    | PMeasure VarIdent [FunArgName]
+    | PMeasure MeasureIdent [MeasureArg]
     | POr Pred Pred
     | PAnd Pred Pred
     | PEq Pred Pred
@@ -133,6 +137,9 @@ data Pred
     | PPlus Pred Pred
     | PMinus Pred Pred
     | PMultiply Pred Pred
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
+
+data MeasureArg = MeasureArg Pred
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data BaseType = BaseTypeInt | BaseTypeBool | BaseTypeVar TypeVarId

@@ -1,6 +1,7 @@
 
 token VarIdent lower (letter | digit | '_')* ;
 token ConIdent upper (letter | digit | '_')* ;
+token MeasureIdent letter (letter | digit | '_')* ;
 
 Program. Program ::= [DataType] Term;
 
@@ -45,7 +46,7 @@ separator nonempty TypeDataArg ",";
 -- predicate terms
 -- Horn variables and measures managed separately as uniq identifier
 HVar.     Term ::= VarIdent "(" [Term] ")" ;
-Measure.  Term ::= VarIdent "(" [Term] ")" ;
+Measure.  Term ::= MeasureIdent "(" [Term] ")" ;
 
 Unknown. Term ::= "?";
 

@@ -8,7 +8,7 @@ import Data.String (fromString)
 import Data.Text (Text)
 import qualified Language.Sprite.Syntax.Inner.Abs as I
 import qualified Language.Fixpoint.Types as FT
-import Language.Sprite.TypeCheck.Monad (showT, CheckerM, debugPrintT, getRawVarIdFromPattern, getNameBinderFromPattern)
+import Language.Sprite.TypeCheck.Monad (showT, CheckerM, getRawVarIdFromPattern, getNameBinderFromPattern)
 import qualified Control.Monad.Foil as F
 import qualified Control.Monad.Foil.Internal as F
 import Language.Sprite.Syntax

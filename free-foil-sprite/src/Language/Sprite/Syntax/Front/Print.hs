@@ -164,11 +164,16 @@ instance Print [Language.Sprite.Syntax.Front.Abs.QualifierArg] where
 
 instance Print Language.Sprite.Syntax.Front.Abs.Measure where
   prt i = \case
-    Language.Sprite.Syntax.Front.Abs.Measure varident rtype -> prPrec i 0 (concatD [doc (showString "/*M"), prt 0 varident, doc (showString ":"), prt 0 rtype, doc (showString "*/")])
+    Language.Sprite.Syntax.Front.Abs.Measure measureident rtype -> prPrec i 0 (concatD [doc (showString "/*M"), prt 0 measureident, doc (showString ":"), prt 0 rtype, doc (showString "*/")])
 
 instance Print [Language.Sprite.Syntax.Front.Abs.Measure] where
   prt _ [] = concatD []
   prt _ (x:xs) = concatD [prt 0 x, doc (showString "\n"), prt 0 xs]
+
+instance Print Language.Sprite.Syntax.Front.Abs.MeasureIdent where
+  prt i = \case
+    Language.Sprite.Syntax.Front.Abs.MeasureIdAsVar varident -> prPrec i 0 (concatD [prt 0 varident])
+    Language.Sprite.Syntax.Front.Abs.MeasureIdAsCon conident -> prPrec i 0 (concatD [prt 0 conident])
 
 instance Print Language.Sprite.Syntax.Front.Abs.Term where
   prt i = \case
@@ -301,7 +306,7 @@ instance Print Language.Sprite.Syntax.Front.Abs.Pred where
     Language.Sprite.Syntax.Front.Abs.PVar varident -> prPrec i 6 (concatD [prt 0 varident])
     Language.Sprite.Syntax.Front.Abs.PBool constbool -> prPrec i 6 (concatD [prt 0 constbool])
     Language.Sprite.Syntax.Front.Abs.PInt n -> prPrec i 6 (concatD [prt 0 n])
-    Language.Sprite.Syntax.Front.Abs.PMeasure varident funargnames -> prPrec i 6 (concatD [prt 0 varident, doc (showString "("), prt 0 funargnames, doc (showString ")")])
+    Language.Sprite.Syntax.Front.Abs.PMeasure measureident measureargs -> prPrec i 6 (concatD [prt 0 measureident, doc (showString "("), prt 0 measureargs, doc (showString ")")])
     Language.Sprite.Syntax.Front.Abs.POr pred1 pred2 -> prPrec i 1 (concatD [prt 1 pred1, doc (showString "||"), prt 2 pred2])
     Language.Sprite.Syntax.Front.Abs.PAnd pred1 pred2 -> prPrec i 2 (concatD [prt 2 pred1, doc (showString "&&"), prt 3 pred2])
     Language.Sprite.Syntax.Front.Abs.PEq pred1 pred2 -> prPrec i 3 (concatD [prt 3 pred1, doc (showString "=="), prt 4 pred2])
@@ -312,6 +317,15 @@ instance Print Language.Sprite.Syntax.Front.Abs.Pred where
     Language.Sprite.Syntax.Front.Abs.PPlus pred1 pred2 -> prPrec i 5 (concatD [prt 5 pred1, doc (showString "+"), prt 6 pred2])
     Language.Sprite.Syntax.Front.Abs.PMinus pred1 pred2 -> prPrec i 5 (concatD [prt 5 pred1, doc (showString "-"), prt 6 pred2])
     Language.Sprite.Syntax.Front.Abs.PMultiply pred1 pred2 -> prPrec i 5 (concatD [prt 5 pred1, doc (showString "*"), prt 6 pred2])
+
+instance Print Language.Sprite.Syntax.Front.Abs.MeasureArg where
+  prt i = \case
+    Language.Sprite.Syntax.Front.Abs.MeasureArg pred -> prPrec i 0 (concatD [prt 0 pred])
+
+instance Print [Language.Sprite.Syntax.Front.Abs.MeasureArg] where
+  prt _ [] = concatD []
+  prt _ [x] = concatD [prt 0 x]
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
 
 instance Print Language.Sprite.Syntax.Front.Abs.BaseType where
   prt i = \case

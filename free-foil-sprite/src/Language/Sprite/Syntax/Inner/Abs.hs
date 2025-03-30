@@ -39,7 +39,7 @@ data Term
     | TypeForall Pattern ScopedTerm
     | TypeData VarIdent TypeDataArgs Pattern ScopedTerm
     | HVar VarIdent [Term]
-    | Measure VarIdent [Term]
+    | Measure MeasureIdent [Term]
     | Unknown
     | BaseTypeInt
     | BaseTypeBool
@@ -89,5 +89,8 @@ newtype VarIdent = VarIdent String
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic, Data.String.IsString)
 
 newtype ConIdent = ConIdent String
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic, Data.String.IsString)
+
+newtype MeasureIdent = MeasureIdent String
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic, Data.String.IsString)
 

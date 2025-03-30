@@ -23,6 +23,10 @@ transConIdent :: Language.Sprite.Syntax.Inner.Abs.ConIdent -> Result
 transConIdent x = case x of
   Language.Sprite.Syntax.Inner.Abs.ConIdent string -> failure x
 
+transMeasureIdent :: Language.Sprite.Syntax.Inner.Abs.MeasureIdent -> Result
+transMeasureIdent x = case x of
+  Language.Sprite.Syntax.Inner.Abs.MeasureIdent string -> failure x
+
 transProgram :: Language.Sprite.Syntax.Inner.Abs.Program -> Result
 transProgram x = case x of
   Language.Sprite.Syntax.Inner.Abs.Program datatypes term -> failure x
@@ -49,7 +53,7 @@ transTerm x = case x of
   Language.Sprite.Syntax.Inner.Abs.TypeForall pattern_ scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.TypeData varident typedataargs pattern_ scopedterm -> failure x
   Language.Sprite.Syntax.Inner.Abs.HVar varident terms -> failure x
-  Language.Sprite.Syntax.Inner.Abs.Measure varident terms -> failure x
+  Language.Sprite.Syntax.Inner.Abs.Measure measureident terms -> failure x
   Language.Sprite.Syntax.Inner.Abs.Unknown -> failure x
   Language.Sprite.Syntax.Inner.Abs.BaseTypeInt -> failure x
   Language.Sprite.Syntax.Inner.Abs.BaseTypeBool -> failure x

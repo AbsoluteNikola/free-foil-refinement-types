@@ -58,9 +58,11 @@ All other symbols are terminals.
   | //QualifierArg// | -> | //VarIdent// ``:`` //BaseType//
   | //[QualifierArg]// | -> | //QualifierArg//
   |  |  **|**  | //QualifierArg// ``,`` //[QualifierArg]//
-  | //Measure// | -> | ``/*M`` //VarIdent// ``:`` //RType// ``*/``
+  | //Measure// | -> | ``/*M`` //MeasureIdent// ``:`` //RType// ``*/``
   | //[Measure]// | -> | **eps**
   |  |  **|**  | //Measure// //[Measure]//
+  | //MeasureIdent// | -> | //VarIdent//
+  |  |  **|**  | //ConIdent//
   | //Term// | -> | //Integer//
   |  |  **|**  | //ConstBool//
   |  |  **|**  | //VarIdent//
@@ -123,7 +125,7 @@ All other symbols are terminals.
   | //Pred6// | -> | //VarIdent//
   |  |  **|**  | //ConstBool//
   |  |  **|**  | //Integer//
-  |  |  **|**  | //VarIdent// ``(`` //[FunArgName]// ``)``
+  |  |  **|**  | //MeasureIdent// ``(`` //[MeasureArg]// ``)``
   |  |  **|**  | ``(`` //Pred// ``)``
   | //Pred1// | -> | //Pred1// ``||`` //Pred2//
   |  |  **|**  | //Pred2//
@@ -141,6 +143,9 @@ All other symbols are terminals.
   |  |  **|**  | //Pred5// ``*`` //Pred6//
   |  |  **|**  | //Pred6//
   | //Pred// | -> | //Pred1//
+  | //MeasureArg// | -> | //Pred//
+  | //[MeasureArg]// | -> | //MeasureArg//
+  |  |  **|**  | //MeasureArg// ``,`` //[MeasureArg]//
   | //BaseType// | -> | ``int``
   |  |  **|**  | ``bool``
   |  |  **|**  | //TypeVarId//

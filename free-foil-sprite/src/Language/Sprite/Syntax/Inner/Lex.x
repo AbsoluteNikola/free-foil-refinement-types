@@ -47,6 +47,10 @@ $s (\_ | ($d | $l)) *
 $c (\_ | ($d | $l)) *
     { tok (eitherResIdent T_ConIdent) }
 
+-- token MeasureIdent
+$l (\_ | ($d | $l)) *
+    { tok (eitherResIdent T_MeasureIdent) }
+
 -- Keywords and Ident
 $l $i*
     { tok (eitherResIdent TV) }
@@ -70,6 +74,7 @@ data Tok
   | TC !String                    -- ^ Character literal.
   | T_VarIdent !String
   | T_ConIdent !String
+  | T_MeasureIdent !String
   deriving (Eq, Show, Ord)
 
 -- | Smart constructor for 'Tok' for the sake of backwards compatibility.
@@ -134,6 +139,7 @@ tokenText t = case t of
   Err _         -> "#error"
   PT _ (T_VarIdent s) -> s
   PT _ (T_ConIdent s) -> s
+  PT _ (T_MeasureIdent s) -> s
 
 -- | Convert a token to a string.
 prToken :: Token -> String

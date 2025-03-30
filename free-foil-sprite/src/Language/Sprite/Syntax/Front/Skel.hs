@@ -37,7 +37,12 @@ transQualifierArg x = case x of
 
 transMeasure :: Language.Sprite.Syntax.Front.Abs.Measure -> Result
 transMeasure x = case x of
-  Language.Sprite.Syntax.Front.Abs.Measure varident rtype -> failure x
+  Language.Sprite.Syntax.Front.Abs.Measure measureident rtype -> failure x
+
+transMeasureIdent :: Language.Sprite.Syntax.Front.Abs.MeasureIdent -> Result
+transMeasureIdent x = case x of
+  Language.Sprite.Syntax.Front.Abs.MeasureIdAsVar varident -> failure x
+  Language.Sprite.Syntax.Front.Abs.MeasureIdAsCon conident -> failure x
 
 transTerm :: Language.Sprite.Syntax.Front.Abs.Term -> Result
 transTerm x = case x of
@@ -146,7 +151,7 @@ transPred x = case x of
   Language.Sprite.Syntax.Front.Abs.PVar varident -> failure x
   Language.Sprite.Syntax.Front.Abs.PBool constbool -> failure x
   Language.Sprite.Syntax.Front.Abs.PInt integer -> failure x
-  Language.Sprite.Syntax.Front.Abs.PMeasure varident funargnames -> failure x
+  Language.Sprite.Syntax.Front.Abs.PMeasure measureident measureargs -> failure x
   Language.Sprite.Syntax.Front.Abs.POr pred1 pred2 -> failure x
   Language.Sprite.Syntax.Front.Abs.PAnd pred1 pred2 -> failure x
   Language.Sprite.Syntax.Front.Abs.PEq pred1 pred2 -> failure x
@@ -157,6 +162,10 @@ transPred x = case x of
   Language.Sprite.Syntax.Front.Abs.PPlus pred1 pred2 -> failure x
   Language.Sprite.Syntax.Front.Abs.PMinus pred1 pred2 -> failure x
   Language.Sprite.Syntax.Front.Abs.PMultiply pred1 pred2 -> failure x
+
+transMeasureArg :: Language.Sprite.Syntax.Front.Abs.MeasureArg -> Result
+transMeasureArg x = case x of
+  Language.Sprite.Syntax.Front.Abs.MeasureArg pred -> failure x
 
 transBaseType :: Language.Sprite.Syntax.Front.Abs.BaseType -> Result
 transBaseType x = case x of

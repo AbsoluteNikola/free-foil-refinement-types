@@ -101,11 +101,16 @@ ListQualifierArg
 
 Measure :: { Language.Sprite.Syntax.Front.Abs.Measure }
 Measure
-  : '/*M' VarIdent ':' RType '*/' { Language.Sprite.Syntax.Front.Abs.Measure $2 $4 }
+  : '/*M' MeasureIdent ':' RType '*/' { Language.Sprite.Syntax.Front.Abs.Measure $2 $4 }
 
 ListMeasure :: { [Language.Sprite.Syntax.Front.Abs.Measure] }
 ListMeasure
   : {- empty -} { [] } | Measure ListMeasure { (:) $1 $2 }
+
+MeasureIdent :: { Language.Sprite.Syntax.Front.Abs.MeasureIdent }
+MeasureIdent
+  : VarIdent { Language.Sprite.Syntax.Front.Abs.MeasureIdAsVar $1 }
+  | ConIdent { Language.Sprite.Syntax.Front.Abs.MeasureIdAsCon $1 }
 
 Term :: { Language.Sprite.Syntax.Front.Abs.Term }
 Term
@@ -237,7 +242,7 @@ Pred6
   : VarIdent { Language.Sprite.Syntax.Front.Abs.PVar $1 }
   | ConstBool { Language.Sprite.Syntax.Front.Abs.PBool $1 }
   | Integer { Language.Sprite.Syntax.Front.Abs.PInt $1 }
-  | VarIdent '(' ListFunArgName ')' { Language.Sprite.Syntax.Front.Abs.PMeasure $1 $3 }
+  | MeasureIdent '(' ListMeasureArg ')' { Language.Sprite.Syntax.Front.Abs.PMeasure $1 $3 }
   | '(' Pred ')' { $2 }
 
 Pred1 :: { Language.Sprite.Syntax.Front.Abs.Pred }
@@ -272,6 +277,15 @@ Pred5
 
 Pred :: { Language.Sprite.Syntax.Front.Abs.Pred }
 Pred : Pred1 { $1 }
+
+MeasureArg :: { Language.Sprite.Syntax.Front.Abs.MeasureArg }
+MeasureArg
+  : Pred { Language.Sprite.Syntax.Front.Abs.MeasureArg $1 }
+
+ListMeasureArg :: { [Language.Sprite.Syntax.Front.Abs.MeasureArg] }
+ListMeasureArg
+  : MeasureArg { (:[]) $1 }
+  | MeasureArg ',' ListMeasureArg { (:) $1 $3 }
 
 BaseType :: { Language.Sprite.Syntax.Front.Abs.BaseType }
 BaseType

@@ -17,11 +17,15 @@ Integer literals //Integer// are nonempty sequences of digits.
 
 
 
+
 VarIdent literals are recognized by the regular expression
 `````lower ('_' | digit | letter)*`````
 
 ConIdent literals are recognized by the regular expression
 `````upper ('_' | digit | letter)*`````
+
+MeasureIdent literals are recognized by the regular expression
+`````letter ('_' | digit | letter)*`````
 
 
 ===Reserved words and symbols===
@@ -72,7 +76,7 @@ All other symbols are terminals.
   |  |  **|**  | ``∀`` //Pattern// ``:`` //ScopedTerm//
   |  |  **|**  | //VarIdent// //TypeDataArgs// ``[`` //Pattern// ``|`` //ScopedTerm// ``]``
   |  |  **|**  | //VarIdent// ``(`` //[Term]// ``)``
-  |  |  **|**  | //VarIdent// ``(`` //[Term]// ``)``
+  |  |  **|**  | //MeasureIdent// ``(`` //[Term]// ``)``
   |  |  **|**  | ``?``
   |  |  **|**  | ``int``
   |  |  **|**  | ``bool``

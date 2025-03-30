@@ -88,6 +88,10 @@ convertVarId (F.VarIdent varId) = I.VarIdent varId
 convertConId :: F.ConIdent -> I.ConIdent
 convertConId (F.ConIdent varId) = I.ConIdent varId
 
+convertMeasureIdent :: F.MeasureIdent -> I.MeasureIdent
+convertMeasureIdent (F.MeasureIdAsVar (F.VarIdent varId)) = I.MeasureIdent varId
+convertMeasureIdent (F.MeasureIdAsCon (F.ConIdent varId)) = I.MeasureIdent varId
+
 convertVarIdToPattern :: F.VarIdent -> I.Pattern
 convertVarIdToPattern (F.VarIdent varId) = I.PatternVar $ I.VarIdent varId
 
@@ -179,8 +183,8 @@ convertPredicate predicate = case predicate of
   F.PMultiply l r ->  I.OpExpr (convertPredicate l) I.MultiplyOp (convertPredicate r)
   F.POr l r ->  I.OpExpr (convertPredicate l) I.OrOp (convertPredicate r)
   F.PAnd l r ->  I.OpExpr (convertPredicate l) I.AndOp (convertPredicate r)
-  F.PMeasure measureId args -> I.Measure (convertVarId measureId) $
-    args <&> \(F.FunArgName arg) -> I.Var (convertVarId arg)
+  F.PMeasure measureId args -> I.Measure (convertMeasureIdent measureId) $
+    args <&> \(F.MeasureArg p) -> convertPredicate p
 
 convertDataType :: F.DataType -> [(I.ConIdent, I.Term)]
 convertDataType (F.DataType typName typArgs typConstructors) =

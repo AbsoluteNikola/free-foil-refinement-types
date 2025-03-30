@@ -21,6 +21,9 @@ separator nonempty QualifierArg "," ;
 Measure. Measure ::= "/*M" VarIdent ":" RType "*/";
 separator Measure "\n";
 
+MeasureIdAsVar. MeasureIdent ::= VarIdent ;
+MeasureIdAsCon. MeasureIdent ::= ConIdent ;
+
 -- expr terms
 ConstInt.     Term ::= Integer ;
 Bool.         Term ::= ConstBool ;
@@ -105,7 +108,7 @@ separator nonempty FuncArg ",";
 PVar.               Pred6 ::= VarIdent;
 PBool.              Pred6 ::= ConstBool ;
 PInt.               Pred6 ::= Integer ;
-PMeasure.           Pred6 ::= VarIdent "(" [FunArgName] ")";
+PMeasure.           Pred6 ::= MeasureIdent "(" [MeasureArg] ")";
 POr.                Pred1 ::= Pred1 "||" Pred2;
 PAnd.               Pred2 ::= Pred2 "&&" Pred3;
 PEq.                Pred3 ::= Pred3 "==" Pred4 ;
@@ -116,8 +119,10 @@ PGreaterOrEqThan.   Pred4 ::= Pred4 ">=" Pred5 ;
 PPlus.              Pred5 ::= Pred5 "+" Pred6 ;
 PMinus.             Pred5 ::= Pred5 "-" Pred6 ;
 PMultiply.          Pred5 ::= Pred5 "*" Pred6 ;
-
 coercions Pred 6 ;
+
+MeasureArg. MeasureArg ::= Pred;
+separator nonempty MeasureArg ",";
 
 BaseTypeInt.  BaseType ::= "int" ;
 BaseTypeBool.  BaseType ::= "bool" ;
