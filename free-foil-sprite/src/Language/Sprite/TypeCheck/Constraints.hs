@@ -94,6 +94,7 @@ getTypeSort = \case
     pure $ FTS.FAbs typVarIndex (FTS.sortSubst subst typeUnderForAllSort)
   term -> Left $ "getTypeSort called on: " <> showT term
 
+-- В фреймворк
 constraintsToFHT :: Constraint -> Either InnerToFTR.ConvertError (H.Cstr Text)
 constraintsToFHT = \case
   CPred p msg -> do

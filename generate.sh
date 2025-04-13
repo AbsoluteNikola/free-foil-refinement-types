@@ -17,4 +17,15 @@ cd "../Inner"
 alex Lex.x
 happy --ghc Par.y
 
+cd ../../../../../..
+
+cd free-foil-refinements
+
+bnfc --haskell -d -p Language.Refinements --generic -o src/ grammar/Predicates.cf
+
+echo "use alex and happy for predicates"
+cd src/Language/Refinements/Predicates
+alex Lex.x
+happy --ghc Par.y
+
 echo "finish generation"

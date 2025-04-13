@@ -58,7 +58,7 @@ All other symbols are terminals.
   | //QualifierArg// | -> | //VarIdent// ``:`` //BaseType//
   | //[QualifierArg]// | -> | //QualifierArg//
   |  |  **|**  | //QualifierArg// ``,`` //[QualifierArg]//
-  | //Measure// | -> | ``/*M`` //MeasureIdent// ``:`` //RType// ``*/``
+  | //Measure// | -> | ``/*M`` //VarIdent// ``:`` //RType// ``*/``
   | //[Measure]// | -> | **eps**
   |  |  **|**  | //Measure// //[Measure]//
   | //MeasureIdent// | -> | //VarIdent//

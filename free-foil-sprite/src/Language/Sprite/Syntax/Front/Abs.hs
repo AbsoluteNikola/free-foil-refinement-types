@@ -24,7 +24,7 @@ data Qualifier = Qualifier VarIdent [QualifierArg] Pred
 data QualifierArg = QualifierArg VarIdent BaseType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data Measure = Measure MeasureIdent RType
+data Measure = Measure VarIdent RType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data MeasureIdent

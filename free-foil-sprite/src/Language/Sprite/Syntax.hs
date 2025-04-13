@@ -10,6 +10,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 module Language.Sprite.Syntax where
 
 import Data.String (IsString(..))
@@ -24,6 +25,9 @@ import Language.Sprite.FreeFoilConfig
 import qualified Language.Sprite.Syntax.Inner.Abs
 import qualified GHC.Generics
 import qualified Control.Monad.Free.Foil
+import qualified Language.Refinements.Constraint as Refinements
+import qualified Language.Refinements.TypeSignature as Refinements
+import qualified Control.Monad.Free.Foil as F
 
 -- There is issue with generating patterns and instances for AST nodes with Pattern and multiple Terms/Scoped terms.
 -- Code below just copy paste of generated code via TH and some fixes (marked as FIXED HERE). I hope I will find some time to fix it in free-foil
@@ -452,5 +456,44 @@ instance IsString (Term Foil.VoidS) where
           Left err -> error err
           Right term -> term
 
--- instance Foil.UnifiablePattern Pattern where
---  unifyPatterns (PatternVar x) (PatternVar y) = Foil.unifyNameBinders x y
+instance Refinements.IsType TermSig Pattern where
+  withPred (TypeRefined base (PatternVar v) p) f = case (Foil.assertDistinct v, Foil.assertExt v) of
+    (Foil.Distinct, Foil.Ext) -> case f $ Refinements.WithPred v p of
+      Refinements.WithPred v' p' -> TypeRefined base (PatternVar v') p'
+  withPred (TypeData name args (PatternVar v) p) f = case (Foil.assertDistinct v, Foil.assertExt v) of
+    (Foil.Distinct, Foil.Ext) ->
+      case f $ Refinements.WithPred v p of
+      Refinements.WithPred v' p' -> TypeData name args (PatternVar v') p'
+  withPred t _ = t
+
+  toTypeSignature (TypeRefined BaseTypeInt _ _) = Refinements.IntType
+  toTypeSignature (TypeRefined BaseTypeBool _ _) = Refinements.BoolType
+  toTypeSignature (TypeRefined (F.Var v) _ _) = Refinements.VarType (varToPredId v )
+  toTypeSignature
+    (TypeRefined (BaseTypeTempVar v) _ _)
+    = Refinements.VarType (Refinements.Id $ getRawVarId v)
+  toTypeSignature (TypeData name args _ _) = Refinements.DataType name' args'
+    where
+      name' = Refinements.Id $ getRawVarId name
+      args' = map (Refinements.DataTypeArg . Refinements.toTypeSignature) args
+  toTypeSignature (TypeFun _ argT retT) = Refinements.FunType
+    (Refinements.toTypeSignature argT)
+    (Refinements.toTypeSignature retT)
+  toTypeSignature t = error $ "Unknown type: " <> show t
+
+getRawVarId :: Language.Sprite.Syntax.Inner.Abs.VarIdent -> String
+getRawVarId (Language.Sprite.Syntax.Inner.Abs.VarIdent v) = v
+
+varToPredId :: Foil.Name o -> Refinements.Id
+varToPredId name =
+  let (Language.Sprite.Syntax.Inner.Abs.VarIdent v) = intToVarIdent . Foil.nameId $ name
+  in Refinements.Id v
+
+instance Refinements.IsPred TermSig Pattern where
+  isUnknown Unknown = True
+  isUnknown _ = False
+
+  mkAnd l r= OpExpr l Language.Sprite.Syntax.Inner.Abs.AndOp r
+  mkEq l r= OpExpr l Language.Sprite.Syntax.Inner.Abs.EqOp r
+
+  toPredicate = undefined -- TODO

@@ -99,8 +99,8 @@ dumpQuery f q = do
 convertMeasure :: Front.Measure -> Either Text (FST.Symbol, FST.Sort)
 convertMeasure (Front.Measure fMeasureName fMeasureType) = do
   let
-    measureName = case FrontToInner.convertMeasureIdent fMeasureName of
-      (Inner.MeasureIdent name) -> FST.symbol name
+    measureName = case FrontToInner.convertVarId fMeasureName of
+      (Inner.VarIdent name) -> FST.symbol name
     scopedTyp = S.toTerm Foil.emptyScope Map.empty
       . FrontToInner.mkForAll $ FrontToInner.convertRType fMeasureType
   typSort <- Check.getTypeSort scopedTyp

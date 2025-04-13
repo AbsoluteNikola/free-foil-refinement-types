@@ -119,6 +119,7 @@ singletonT varName typ = case typ of
           (OpExpr (F.Var (F.sink varName)) Inner.EqOp (F.Var (F.nameOf typVar))))
   _ -> typ
 
+-- В фреймворк
 {- See 5.4, Figure 5.4, page 34 -}
 fresh ::F.Distinct i => F.Scope i -> Env i -> Term i -> CheckerM (Term i)
 fresh scope env curType = case curType of

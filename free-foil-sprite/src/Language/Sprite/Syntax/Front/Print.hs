@@ -164,7 +164,7 @@ instance Print [Language.Sprite.Syntax.Front.Abs.QualifierArg] where
 
 instance Print Language.Sprite.Syntax.Front.Abs.Measure where
   prt i = \case
-    Language.Sprite.Syntax.Front.Abs.Measure measureident rtype -> prPrec i 0 (concatD [doc (showString "/*M"), prt 0 measureident, doc (showString ":"), prt 0 rtype, doc (showString "*/")])
+    Language.Sprite.Syntax.Front.Abs.Measure varident rtype -> prPrec i 0 (concatD [doc (showString "/*M"), prt 0 varident, doc (showString ":"), prt 0 rtype, doc (showString "*/")])
 
 instance Print [Language.Sprite.Syntax.Front.Abs.Measure] where
   prt _ [] = concatD []

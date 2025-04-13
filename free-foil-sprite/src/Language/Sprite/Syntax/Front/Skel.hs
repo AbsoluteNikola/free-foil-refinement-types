@@ -37,7 +37,7 @@ transQualifierArg x = case x of
 
 transMeasure :: Language.Sprite.Syntax.Front.Abs.Measure -> Result
 transMeasure x = case x of
-  Language.Sprite.Syntax.Front.Abs.Measure measureident rtype -> failure x
+  Language.Sprite.Syntax.Front.Abs.Measure varident rtype -> failure x
 
 transMeasureIdent :: Language.Sprite.Syntax.Front.Abs.MeasureIdent -> Result
 transMeasureIdent x = case x of

@@ -7,7 +7,6 @@ import qualified Language.Fixpoint.Types.Names as T
 import qualified Language.Fixpoint.Horn.Types as H
 import Data.Traversable (for)
 import qualified Language.Fixpoint.Types as T
-import qualified Data.Text as T
 
 -- TODO: pretty printer
 data ConvertError

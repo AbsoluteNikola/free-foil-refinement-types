@@ -17,7 +17,7 @@ Grammar
 	QualifierArg -> VarIdent ':' BaseType              (8)
 	ListQualifierArg -> QualifierArg                   (9)
 	ListQualifierArg -> QualifierArg ',' ListQualifierArg   (10)
-	Measure -> '/*M' MeasureIdent ':' RType '*/'       (11)
+	Measure -> '/*M' VarIdent ':' RType '*/'           (11)
 	ListMeasure ->                                     (12)
 	ListMeasure -> Measure ListMeasure                 (13)
 	MeasureIdent -> VarIdent                           (14)
@@ -337,7 +337,7 @@ State 7
 
 	Qualifier -> '/*Q' VarIdent . '(' ListQualifierArg ')' ':' '(' Pred ')' '*/'    (rule 5)
 
-	'('            shift, and enter state 21
+	'('            shift, and enter state 18
 
 
 State 8
@@ -387,7 +387,7 @@ State 9
 	L_ConIdent     reduce using rule 12
 
 	Measure        goto state 9
-	ListMeasure    goto state 20
+	ListMeasure    goto state 17
 
 State 10
 
@@ -400,24 +400,21 @@ State 10
 	'let'          reduce using rule 60
 	'switch'       reduce using rule 60
 	'true'         reduce using rule 60
-	'type'         shift, and enter state 19
+	'type'         shift, and enter state 16
 	L_integ        reduce using rule 60
 	L_VarIdent     reduce using rule 60
 	L_ConIdent     reduce using rule 60
 
-	DataType       goto state 17
-	ListDataType   goto state 18
+	DataType       goto state 14
+	ListDataType   goto state 15
 
 State 11
 
-	Measure -> '/*M' . MeasureIdent ':' RType '*/'      (rule 11)
+	Measure -> '/*M' . VarIdent ':' RType '*/'          (rule 11)
 
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
 
 	VarIdent       goto state 13
-	ConIdent       goto state 14
-	MeasureIdent   goto state 15
 
 State 12
 
@@ -439,40 +436,12 @@ State 12
 
 State 13
 
-	MeasureIdent -> VarIdent .                          (rule 14)
+	Measure -> '/*M' VarIdent . ':' RType '*/'          (rule 11)
 
-	':'            reduce using rule 14
+	':'            shift, and enter state 40
 
 
 State 14
-
-	MeasureIdent -> ConIdent .                          (rule 15)
-
-	'('            reduce using rule 15
-	':'            reduce using rule 15
-
-
-State 15
-
-	Measure -> '/*M' MeasureIdent . ':' RType '*/'      (rule 11)
-
-	':'            shift, and enter state 42
-
-
-State 16
-
-	ConIdent -> L_ConIdent .                            (rule 3)
-
-	'('            reduce using rule 3
-	':'            reduce using rule 3
-	';'            reduce using rule 3
-	'=>'           reduce using rule 3
-	'|'            reduce using rule 3
-	'}'            reduce using rule 3
-	%eof           reduce using rule 3
-
-
-State 17
 
 	ListDataType -> DataType . ListDataType             (rule 61)
 
@@ -483,47 +452,47 @@ State 17
 	'let'          reduce using rule 60
 	'switch'       reduce using rule 60
 	'true'         reduce using rule 60
-	'type'         shift, and enter state 19
+	'type'         shift, and enter state 16
 	L_integ        reduce using rule 60
 	L_VarIdent     reduce using rule 60
 	L_ConIdent     reduce using rule 60
 
-	DataType       goto state 17
-	ListDataType   goto state 41
+	DataType       goto state 14
+	ListDataType   goto state 39
 
-State 18
+State 15
 
 	Program -> ListQualifier ListMeasure ListDataType . Term    (rule 4)
 
-	'('            shift, and enter state 34
-	'/*@'          shift, and enter state 35
-	'false'        shift, and enter state 36
-	'if'           shift, and enter state 37
-	'let'          shift, and enter state 38
-	'switch'       shift, and enter state 39
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 31
+	'/*@'          shift, and enter state 32
+	'false'        shift, and enter state 33
+	'if'           shift, and enter state 34
+	'let'          shift, and enter state 35
+	'switch'       shift, and enter state 36
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 26
-	VarIdent       goto state 27
-	ConIdent       goto state 28
-	Term           goto state 29
-	ConstBool      goto state 30
-	Annotation     goto state 31
-	Decl           goto state 32
-	FuncAppArg     goto state 33
+	Integer        goto state 23
+	VarIdent       goto state 24
+	ConIdent       goto state 25
+	Term           goto state 26
+	ConstBool      goto state 27
+	Annotation     goto state 28
+	Decl           goto state 29
+	FuncAppArg     goto state 30
 
-State 19
+State 16
 
 	DataType -> 'type' . VarIdent DataTypeArgs '=' '|' ListDataTypeConstructor ';'    (rule 59)
 
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 25
+	VarIdent       goto state 22
 
-State 20
+State 17
 
 	ListMeasure -> Measure ListMeasure .                (rule 13)
 
@@ -540,49 +509,49 @@ State 20
 	L_ConIdent     reduce using rule 13
 
 
-State 21
+State 18
 
 	Qualifier -> '/*Q' VarIdent '(' . ListQualifierArg ')' ':' '(' Pred ')' '*/'    (rule 5)
 
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 22
-	QualifierArg   goto state 23
-	ListQualifierArggoto state 24
+	VarIdent       goto state 19
+	QualifierArg   goto state 20
+	ListQualifierArggoto state 21
 
-State 22
+State 19
 
 	QualifierArg -> VarIdent . ':' BaseType             (rule 8)
 
-	':'            shift, and enter state 78
+	':'            shift, and enter state 76
 
 
-State 23
+State 20
 
 	ListQualifierArg -> QualifierArg .                  (rule 9)
 	ListQualifierArg -> QualifierArg . ',' ListQualifierArg    (rule 10)
 
 	')'            reduce using rule 9
-	','            shift, and enter state 77
+	','            shift, and enter state 75
 
 
-State 24
+State 21
 
 	Qualifier -> '/*Q' VarIdent '(' ListQualifierArg . ')' ':' '(' Pred ')' '*/'    (rule 5)
 
-	')'            shift, and enter state 76
+	')'            shift, and enter state 74
 
 
-State 25
+State 22
 
 	DataType -> 'type' VarIdent . DataTypeArgs '=' '|' ListDataTypeConstructor ';'    (rule 59)
 
-	'('            shift, and enter state 75
+	'('            shift, and enter state 73
 	'='            reduce using rule 70
 
-	DataTypeArgs   goto state 74
+	DataTypeArgs   goto state 72
 
-State 26
+State 23
 
 	Term -> Integer .                                   (rule 16)
 	FuncAppArg -> Integer .                             (rule 109)
@@ -601,13 +570,13 @@ State 26
 	%eof           reduce using rule 16
 
 
-State 27
+State 24
 
 	Term -> VarIdent .                                  (rule 18)
 	Term -> VarIdent . '(' ListFuncAppArg ')'           (rule 20)
 	FuncAppArg -> VarIdent .                            (rule 110)
 
-	'('            shift, and enter state 73
+	'('            shift, and enter state 71
 	'*'            reduce using rule 110
 	'+'            reduce using rule 110
 	'-'            reduce using rule 110
@@ -622,26 +591,26 @@ State 27
 	%eof           reduce using rule 18
 
 
-State 28
+State 25
 
 	Term -> ConIdent . ConAppArgs                       (rule 19)
 
-	'('            shift, and enter state 72
+	'('            shift, and enter state 70
 	';'            reduce using rule 28
 	'|'            reduce using rule 28
 	'}'            reduce using rule 28
 	%eof           reduce using rule 28
 
-	ConAppArgs     goto state 71
+	ConAppArgs     goto state 69
 
-State 29
+State 26
 
 	Program -> ListQualifier ListMeasure ListDataType Term .    (rule 4)
 
 	%eof           reduce using rule 4
 
 
-State 30
+State 27
 
 	Term -> ConstBool .                                 (rule 17)
 	FuncAppArg -> ConstBool .                           (rule 108)
@@ -660,71 +629,71 @@ State 30
 	%eof           reduce using rule 17
 
 
-State 31
+State 28
 
 	Decl -> Annotation . 'let' 'rec' VarIdent '=' Term ';'    (rule 31)
 	Decl -> Annotation . 'let' VarIdent '=' Term ';'    (rule 32)
 
-	'let'          shift, and enter state 70
+	'let'          shift, and enter state 68
 
 
-State 32
+State 29
 
 	Term -> Decl . Term                                 (rule 22)
 
-	'('            shift, and enter state 34
-	'/*@'          shift, and enter state 35
-	'false'        shift, and enter state 36
-	'if'           shift, and enter state 37
-	'let'          shift, and enter state 38
-	'switch'       shift, and enter state 39
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 31
+	'/*@'          shift, and enter state 32
+	'false'        shift, and enter state 33
+	'if'           shift, and enter state 34
+	'let'          shift, and enter state 35
+	'switch'       shift, and enter state 36
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 26
-	VarIdent       goto state 27
-	ConIdent       goto state 28
-	Term           goto state 69
-	ConstBool      goto state 30
-	Annotation     goto state 31
-	Decl           goto state 32
-	FuncAppArg     goto state 33
+	Integer        goto state 23
+	VarIdent       goto state 24
+	ConIdent       goto state 25
+	Term           goto state 67
+	ConstBool      goto state 27
+	Annotation     goto state 28
+	Decl           goto state 29
+	FuncAppArg     goto state 30
 
-State 33
+State 30
 
 	Term -> FuncAppArg . IntOp FuncAppArg               (rule 24)
 
-	'*'            shift, and enter state 61
-	'+'            shift, and enter state 62
-	'-'            shift, and enter state 63
-	'<'            shift, and enter state 64
-	'<='           shift, and enter state 65
-	'=='           shift, and enter state 66
-	'>'            shift, and enter state 67
-	'>='           shift, and enter state 68
+	'*'            shift, and enter state 59
+	'+'            shift, and enter state 60
+	'-'            shift, and enter state 61
+	'<'            shift, and enter state 62
+	'<='           shift, and enter state 63
+	'=='           shift, and enter state 64
+	'>'            shift, and enter state 65
+	'>='           shift, and enter state 66
 
-	IntOp          goto state 60
+	IntOp          goto state 58
 
-State 34
+State 31
 
 	Term -> '(' . ListFunArgName ')' '=>' '{' Term '}'    (rule 23)
 
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 57
-	FunArgName     goto state 58
-	ListFunArgName goto state 59
+	VarIdent       goto state 55
+	FunArgName     goto state 56
+	ListFunArgName goto state 57
 
-State 35
+State 32
 
 	Annotation -> '/*@' . 'val' VarIdent ':' RType '*/'    (rule 30)
 
-	'val'          shift, and enter state 56
+	'val'          shift, and enter state 54
 
 
-State 36
+State 33
 
 	ConstBool -> 'false' .                              (rule 27)
 
@@ -747,29 +716,29 @@ State 36
 	%eof           reduce using rule 27
 
 
-State 37
+State 34
 
 	Term -> 'if' . '(' FuncAppArg ')' '{' Term '}' 'else' '{' Term '}'    (rule 21)
 
-	'('            shift, and enter state 55
+	'('            shift, and enter state 53
 
 
-State 38
+State 35
 
 	Decl -> 'let' . VarIdent '=' Term ';'               (rule 33)
 
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 54
+	VarIdent       goto state 52
 
-State 39
+State 36
 
 	Term -> 'switch' . '(' VarIdent ')' '{' ListSwitchCase '}'    (rule 25)
 
-	'('            shift, and enter state 53
+	'('            shift, and enter state 51
 
 
-State 40
+State 37
 
 	ConstBool -> 'true' .                               (rule 26)
 
@@ -792,7 +761,19 @@ State 40
 	%eof           reduce using rule 26
 
 
-State 41
+State 38
+
+	ConIdent -> L_ConIdent .                            (rule 3)
+
+	'('            reduce using rule 3
+	';'            reduce using rule 3
+	'=>'           reduce using rule 3
+	'|'            reduce using rule 3
+	'}'            reduce using rule 3
+	%eof           reduce using rule 3
+
+
+State 39
 
 	ListDataType -> DataType ListDataType .             (rule 61)
 
@@ -808,53 +789,53 @@ State 41
 	L_ConIdent     reduce using rule 61
 
 
-State 42
+State 40
 
-	Measure -> '/*M' MeasureIdent ':' . RType '*/'      (rule 11)
+	Measure -> '/*M' VarIdent ':' . RType '*/'          (rule 11)
 
-	'\''           shift, and enter state 48
-	'('            shift, and enter state 49
-	'_'            shift, and enter state 50
-	'bool'         shift, and enter state 51
-	'int'          shift, and enter state 52
+	'\''           shift, and enter state 46
+	'('            shift, and enter state 47
+	'_'            shift, and enter state 48
+	'bool'         shift, and enter state 49
+	'int'          shift, and enter state 50
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 43
-	RType          goto state 44
-	FuncArg        goto state 45
-	BaseType       goto state 46
-	TypeVarId      goto state 47
+	VarIdent       goto state 41
+	RType          goto state 42
+	FuncArg        goto state 43
+	BaseType       goto state 44
+	TypeVarId      goto state 45
 
-State 43
+State 41
 
 	RType -> VarIdent . TypeDataArgs Refinement         (rule 52)
 	FuncArg -> VarIdent . ':' RType                     (rule 71)
 
-	'('            shift, and enter state 108
+	'('            shift, and enter state 106
 	')'            reduce using rule 58
 	'*/'           reduce using rule 58
 	','            reduce using rule 58
-	':'            shift, and enter state 109
+	':'            shift, and enter state 107
 	'=>'           reduce using rule 58
 	'['            reduce using rule 58
 
-	TypeDataArgs   goto state 107
+	TypeDataArgs   goto state 105
 
-State 44
+State 42
 
-	Measure -> '/*M' MeasureIdent ':' RType . '*/'      (rule 11)
+	Measure -> '/*M' VarIdent ':' RType . '*/'          (rule 11)
 
-	'*/'           shift, and enter state 106
+	'*/'           shift, and enter state 104
 
 
-State 45
+State 43
 
 	RType -> FuncArg . '=>' RType                       (rule 50)
 
-	'=>'           shift, and enter state 105
+	'=>'           shift, and enter state 103
 
 
-State 46
+State 44
 
 	RType -> BaseType . Refinement                      (rule 51)
 
@@ -862,11 +843,11 @@ State 46
 	'*/'           reduce using rule 49
 	','            reduce using rule 49
 	'=>'           reduce using rule 49
-	'['            shift, and enter state 104
+	'['            shift, and enter state 102
 
-	Refinement     goto state 103
+	Refinement     goto state 101
 
-State 47
+State 45
 
 	BaseType -> TypeVarId .                             (rule 101)
 
@@ -877,39 +858,39 @@ State 47
 	'['            reduce using rule 101
 
 
-State 48
+State 46
 
 	TypeVarId -> '\'' . VarIdent                        (rule 102)
 
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 102
+	VarIdent       goto state 100
 
-State 49
+State 47
 
 	RType -> '(' . RType ')'                            (rule 53)
 
-	'\''           shift, and enter state 48
-	'('            shift, and enter state 49
-	'_'            shift, and enter state 50
-	'bool'         shift, and enter state 51
-	'int'          shift, and enter state 52
+	'\''           shift, and enter state 46
+	'('            shift, and enter state 47
+	'_'            shift, and enter state 48
+	'bool'         shift, and enter state 49
+	'int'          shift, and enter state 50
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 43
-	RType          goto state 101
-	FuncArg        goto state 45
-	BaseType       goto state 46
-	TypeVarId      goto state 47
+	VarIdent       goto state 41
+	RType          goto state 99
+	FuncArg        goto state 43
+	BaseType       goto state 44
+	TypeVarId      goto state 45
 
-State 50
+State 48
 
 	FuncArg -> '_' . ':' RType                          (rule 72)
 
-	':'            shift, and enter state 100
+	':'            shift, and enter state 98
 
 
-State 51
+State 49
 
 	BaseType -> 'bool' .                                (rule 100)
 
@@ -920,7 +901,7 @@ State 51
 	'['            reduce using rule 100
 
 
-State 52
+State 50
 
 	BaseType -> 'int' .                                 (rule 99)
 
@@ -931,44 +912,44 @@ State 52
 	'['            reduce using rule 99
 
 
-State 53
+State 51
 
 	Term -> 'switch' '(' . VarIdent ')' '{' ListSwitchCase '}'    (rule 25)
 
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 99
+	VarIdent       goto state 97
 
-State 54
+State 52
 
 	Decl -> 'let' VarIdent . '=' Term ';'               (rule 33)
 
-	'='            shift, and enter state 98
+	'='            shift, and enter state 96
 
 
-State 55
+State 53
 
 	Term -> 'if' '(' . FuncAppArg ')' '{' Term '}' 'else' '{' Term '}'    (rule 21)
 
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
 
-	Integer        goto state 85
-	VarIdent       goto state 86
-	ConstBool      goto state 87
-	FuncAppArg     goto state 97
+	Integer        goto state 83
+	VarIdent       goto state 84
+	ConstBool      goto state 85
+	FuncAppArg     goto state 95
 
-State 56
+State 54
 
 	Annotation -> '/*@' 'val' . VarIdent ':' RType '*/'    (rule 30)
 
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 96
+	VarIdent       goto state 94
 
-State 57
+State 55
 
 	FunArgName -> VarIdent .                            (rule 105)
 
@@ -976,37 +957,37 @@ State 57
 	','            reduce using rule 105
 
 
-State 58
+State 56
 
 	ListFunArgName -> FunArgName .                      (rule 106)
 	ListFunArgName -> FunArgName . ',' ListFunArgName    (rule 107)
 
 	')'            reduce using rule 106
-	','            shift, and enter state 95
+	','            shift, and enter state 93
 
 
-State 59
+State 57
 
 	Term -> '(' ListFunArgName . ')' '=>' '{' Term '}'    (rule 23)
 
-	')'            shift, and enter state 94
+	')'            shift, and enter state 92
 
 
-State 60
+State 58
 
 	Term -> FuncAppArg IntOp . FuncAppArg               (rule 24)
 
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
 
-	Integer        goto state 85
-	VarIdent       goto state 86
-	ConstBool      goto state 87
-	FuncAppArg     goto state 93
+	Integer        goto state 83
+	VarIdent       goto state 84
+	ConstBool      goto state 85
+	FuncAppArg     goto state 91
 
-State 61
+State 59
 
 	IntOp -> '*' .                                      (rule 41)
 
@@ -1016,7 +997,7 @@ State 61
 	L_VarIdent     reduce using rule 41
 
 
-State 62
+State 60
 
 	IntOp -> '+' .                                      (rule 39)
 
@@ -1026,7 +1007,7 @@ State 62
 	L_VarIdent     reduce using rule 39
 
 
-State 63
+State 61
 
 	IntOp -> '-' .                                      (rule 40)
 
@@ -1036,7 +1017,7 @@ State 63
 	L_VarIdent     reduce using rule 40
 
 
-State 64
+State 62
 
 	IntOp -> '<' .                                      (rule 43)
 
@@ -1046,7 +1027,7 @@ State 64
 	L_VarIdent     reduce using rule 43
 
 
-State 65
+State 63
 
 	IntOp -> '<=' .                                     (rule 44)
 
@@ -1056,7 +1037,7 @@ State 65
 	L_VarIdent     reduce using rule 44
 
 
-State 66
+State 64
 
 	IntOp -> '==' .                                     (rule 42)
 
@@ -1066,7 +1047,7 @@ State 66
 	L_VarIdent     reduce using rule 42
 
 
-State 67
+State 65
 
 	IntOp -> '>' .                                      (rule 45)
 
@@ -1076,7 +1057,7 @@ State 67
 	L_VarIdent     reduce using rule 45
 
 
-State 68
+State 66
 
 	IntOp -> '>=' .                                     (rule 46)
 
@@ -1086,7 +1067,7 @@ State 68
 	L_VarIdent     reduce using rule 46
 
 
-State 69
+State 67
 
 	Term -> Decl Term .                                 (rule 22)
 
@@ -1096,17 +1077,17 @@ State 69
 	%eof           reduce using rule 22
 
 
-State 70
+State 68
 
 	Decl -> Annotation 'let' . 'rec' VarIdent '=' Term ';'    (rule 31)
 	Decl -> Annotation 'let' . VarIdent '=' Term ';'    (rule 32)
 
-	'rec'          shift, and enter state 92
+	'rec'          shift, and enter state 90
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 91
+	VarIdent       goto state 89
 
-State 71
+State 69
 
 	Term -> ConIdent ConAppArgs .                       (rule 19)
 
@@ -1116,81 +1097,81 @@ State 71
 	%eof           reduce using rule 19
 
 
-State 72
+State 70
 
 	ConAppArgs -> '(' . ListFuncAppArg ')'              (rule 29)
 
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
 
-	Integer        goto state 85
-	VarIdent       goto state 86
-	ConstBool      goto state 87
-	FuncAppArg     goto state 88
-	ListFuncAppArg goto state 90
+	Integer        goto state 83
+	VarIdent       goto state 84
+	ConstBool      goto state 85
+	FuncAppArg     goto state 86
+	ListFuncAppArg goto state 88
 
-State 73
+State 71
 
 	Term -> VarIdent '(' . ListFuncAppArg ')'           (rule 20)
 
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
 
-	Integer        goto state 85
-	VarIdent       goto state 86
-	ConstBool      goto state 87
-	FuncAppArg     goto state 88
-	ListFuncAppArg goto state 89
+	Integer        goto state 83
+	VarIdent       goto state 84
+	ConstBool      goto state 85
+	FuncAppArg     goto state 86
+	ListFuncAppArg goto state 87
 
-State 74
+State 72
 
 	DataType -> 'type' VarIdent DataTypeArgs . '=' '|' ListDataTypeConstructor ';'    (rule 59)
 
-	'='            shift, and enter state 84
+	'='            shift, and enter state 82
 
 
-State 75
+State 73
 
 	DataTypeArgs -> '(' . ListTypeVarId ')'             (rule 69)
 
-	'\''           shift, and enter state 48
+	'\''           shift, and enter state 46
 
-	TypeVarId      goto state 82
-	ListTypeVarId  goto state 83
+	TypeVarId      goto state 80
+	ListTypeVarId  goto state 81
 
-State 76
+State 74
 
 	Qualifier -> '/*Q' VarIdent '(' ListQualifierArg ')' . ':' '(' Pred ')' '*/'    (rule 5)
 
-	':'            shift, and enter state 81
+	':'            shift, and enter state 79
 
 
-State 77
+State 75
 
 	ListQualifierArg -> QualifierArg ',' . ListQualifierArg    (rule 10)
 
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 22
-	QualifierArg   goto state 23
-	ListQualifierArggoto state 80
+	VarIdent       goto state 19
+	QualifierArg   goto state 20
+	ListQualifierArggoto state 78
 
-State 78
+State 76
 
 	QualifierArg -> VarIdent ':' . BaseType             (rule 8)
 
-	'\''           shift, and enter state 48
-	'bool'         shift, and enter state 51
-	'int'          shift, and enter state 52
+	'\''           shift, and enter state 46
+	'bool'         shift, and enter state 49
+	'int'          shift, and enter state 50
 
-	BaseType       goto state 79
-	TypeVarId      goto state 47
+	BaseType       goto state 77
+	TypeVarId      goto state 45
 
-State 79
+State 77
 
 	QualifierArg -> VarIdent ':' BaseType .             (rule 8)
 
@@ -1198,44 +1179,44 @@ State 79
 	','            reduce using rule 8
 
 
-State 80
+State 78
 
 	ListQualifierArg -> QualifierArg ',' ListQualifierArg .    (rule 10)
 
 	')'            reduce using rule 10
 
 
-State 81
+State 79
 
 	Qualifier -> '/*Q' VarIdent '(' ListQualifierArg ')' ':' . '(' Pred ')' '*/'    (rule 5)
 
-	'('            shift, and enter state 134
+	'('            shift, and enter state 132
 
 
-State 82
+State 80
 
 	ListTypeVarId -> TypeVarId .                        (rule 103)
 	ListTypeVarId -> TypeVarId . ',' ListTypeVarId      (rule 104)
 
 	')'            reduce using rule 103
-	','            shift, and enter state 133
+	','            shift, and enter state 131
 
 
-State 83
+State 81
 
 	DataTypeArgs -> '(' ListTypeVarId . ')'             (rule 69)
 
-	')'            shift, and enter state 132
+	')'            shift, and enter state 130
 
 
-State 84
+State 82
 
 	DataType -> 'type' VarIdent DataTypeArgs '=' . '|' ListDataTypeConstructor ';'    (rule 59)
 
-	'|'            shift, and enter state 131
+	'|'            shift, and enter state 129
 
 
-State 85
+State 83
 
 	FuncAppArg -> Integer .                             (rule 109)
 
@@ -1247,7 +1228,7 @@ State 85
 	%eof           reduce using rule 109
 
 
-State 86
+State 84
 
 	FuncAppArg -> VarIdent .                            (rule 110)
 
@@ -1259,7 +1240,7 @@ State 86
 	%eof           reduce using rule 110
 
 
-State 87
+State 85
 
 	FuncAppArg -> ConstBool .                           (rule 108)
 
@@ -1271,45 +1252,45 @@ State 87
 	%eof           reduce using rule 108
 
 
-State 88
+State 86
 
 	ListFuncAppArg -> FuncAppArg .                      (rule 111)
 	ListFuncAppArg -> FuncAppArg . ',' ListFuncAppArg    (rule 112)
 
 	')'            reduce using rule 111
-	','            shift, and enter state 130
+	','            shift, and enter state 128
+
+
+State 87
+
+	Term -> VarIdent '(' ListFuncAppArg . ')'           (rule 20)
+
+	')'            shift, and enter state 127
+
+
+State 88
+
+	ConAppArgs -> '(' ListFuncAppArg . ')'              (rule 29)
+
+	')'            shift, and enter state 126
 
 
 State 89
 
-	Term -> VarIdent '(' ListFuncAppArg . ')'           (rule 20)
+	Decl -> Annotation 'let' VarIdent . '=' Term ';'    (rule 32)
 
-	')'            shift, and enter state 129
+	'='            shift, and enter state 125
 
 
 State 90
-
-	ConAppArgs -> '(' ListFuncAppArg . ')'              (rule 29)
-
-	')'            shift, and enter state 128
-
-
-State 91
-
-	Decl -> Annotation 'let' VarIdent . '=' Term ';'    (rule 32)
-
-	'='            shift, and enter state 127
-
-
-State 92
 
 	Decl -> Annotation 'let' 'rec' . VarIdent '=' Term ';'    (rule 31)
 
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 126
+	VarIdent       goto state 124
 
-State 93
+State 91
 
 	Term -> FuncAppArg IntOp FuncAppArg .               (rule 24)
 
@@ -1319,93 +1300,93 @@ State 93
 	%eof           reduce using rule 24
 
 
-State 94
+State 92
 
 	Term -> '(' ListFunArgName ')' . '=>' '{' Term '}'    (rule 23)
 
-	'=>'           shift, and enter state 125
+	'=>'           shift, and enter state 123
 
 
-State 95
+State 93
 
 	ListFunArgName -> FunArgName ',' . ListFunArgName    (rule 107)
 
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 57
-	FunArgName     goto state 58
-	ListFunArgName goto state 124
+	VarIdent       goto state 55
+	FunArgName     goto state 56
+	ListFunArgName goto state 122
 
-State 96
+State 94
 
 	Annotation -> '/*@' 'val' VarIdent . ':' RType '*/'    (rule 30)
 
-	':'            shift, and enter state 123
+	':'            shift, and enter state 121
 
 
-State 97
+State 95
 
 	Term -> 'if' '(' FuncAppArg . ')' '{' Term '}' 'else' '{' Term '}'    (rule 21)
-
-	')'            shift, and enter state 122
-
-
-State 98
-
-	Decl -> 'let' VarIdent '=' . Term ';'               (rule 33)
-
-	'('            shift, and enter state 34
-	'/*@'          shift, and enter state 35
-	'false'        shift, and enter state 36
-	'if'           shift, and enter state 37
-	'let'          shift, and enter state 38
-	'switch'       shift, and enter state 39
-	'true'         shift, and enter state 40
-	L_integ        shift, and enter state 2
-	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
-
-	Integer        goto state 26
-	VarIdent       goto state 27
-	ConIdent       goto state 28
-	Term           goto state 121
-	ConstBool      goto state 30
-	Annotation     goto state 31
-	Decl           goto state 32
-	FuncAppArg     goto state 33
-
-State 99
-
-	Term -> 'switch' '(' VarIdent . ')' '{' ListSwitchCase '}'    (rule 25)
 
 	')'            shift, and enter state 120
 
 
-State 100
+State 96
 
-	FuncArg -> '_' ':' . RType                          (rule 72)
+	Decl -> 'let' VarIdent '=' . Term ';'               (rule 33)
 
-	'\''           shift, and enter state 48
-	'('            shift, and enter state 49
-	'_'            shift, and enter state 50
-	'bool'         shift, and enter state 51
-	'int'          shift, and enter state 52
+	'('            shift, and enter state 31
+	'/*@'          shift, and enter state 32
+	'false'        shift, and enter state 33
+	'if'           shift, and enter state 34
+	'let'          shift, and enter state 35
+	'switch'       shift, and enter state 36
+	'true'         shift, and enter state 37
+	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
+	L_ConIdent     shift, and enter state 38
 
-	VarIdent       goto state 43
-	RType          goto state 119
-	FuncArg        goto state 45
-	BaseType       goto state 46
-	TypeVarId      goto state 47
+	Integer        goto state 23
+	VarIdent       goto state 24
+	ConIdent       goto state 25
+	Term           goto state 119
+	ConstBool      goto state 27
+	Annotation     goto state 28
+	Decl           goto state 29
+	FuncAppArg     goto state 30
 
-State 101
+State 97
 
-	RType -> '(' RType . ')'                            (rule 53)
+	Term -> 'switch' '(' VarIdent . ')' '{' ListSwitchCase '}'    (rule 25)
 
 	')'            shift, and enter state 118
 
 
-State 102
+State 98
+
+	FuncArg -> '_' ':' . RType                          (rule 72)
+
+	'\''           shift, and enter state 46
+	'('            shift, and enter state 47
+	'_'            shift, and enter state 48
+	'bool'         shift, and enter state 49
+	'int'          shift, and enter state 50
+	L_VarIdent     shift, and enter state 8
+
+	VarIdent       goto state 41
+	RType          goto state 117
+	FuncArg        goto state 43
+	BaseType       goto state 44
+	TypeVarId      goto state 45
+
+State 99
+
+	RType -> '(' RType . ')'                            (rule 53)
+
+	')'            shift, and enter state 116
+
+
+State 100
 
 	TypeVarId -> '\'' VarIdent .                        (rule 102)
 
@@ -1416,7 +1397,7 @@ State 102
 	'['            reduce using rule 102
 
 
-State 103
+State 101
 
 	RType -> BaseType Refinement .                      (rule 51)
 
@@ -1426,36 +1407,36 @@ State 103
 	'=>'           reduce using rule 51
 
 
-State 104
+State 102
 
 	Refinement -> '[' . VarIdent '|' Pred ']'           (rule 47)
 	Refinement -> '[' . '?' ']'                         (rule 48)
 
-	'?'            shift, and enter state 117
+	'?'            shift, and enter state 115
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 116
+	VarIdent       goto state 114
 
-State 105
+State 103
 
 	RType -> FuncArg '=>' . RType                       (rule 50)
 
-	'\''           shift, and enter state 48
-	'('            shift, and enter state 49
-	'_'            shift, and enter state 50
-	'bool'         shift, and enter state 51
-	'int'          shift, and enter state 52
+	'\''           shift, and enter state 46
+	'('            shift, and enter state 47
+	'_'            shift, and enter state 48
+	'bool'         shift, and enter state 49
+	'int'          shift, and enter state 50
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 43
-	RType          goto state 115
-	FuncArg        goto state 45
-	BaseType       goto state 46
-	TypeVarId      goto state 47
+	VarIdent       goto state 41
+	RType          goto state 113
+	FuncArg        goto state 43
+	BaseType       goto state 44
+	TypeVarId      goto state 45
 
-State 106
+State 104
 
-	Measure -> '/*M' MeasureIdent ':' RType '*/' .      (rule 11)
+	Measure -> '/*M' VarIdent ':' RType '*/' .          (rule 11)
 
 	'('            reduce using rule 11
 	'/*@'          reduce using rule 11
@@ -1471,7 +1452,7 @@ State 106
 	L_ConIdent     reduce using rule 11
 
 
-State 107
+State 105
 
 	RType -> VarIdent TypeDataArgs . Refinement         (rule 52)
 
@@ -1479,47 +1460,47 @@ State 107
 	'*/'           reduce using rule 49
 	','            reduce using rule 49
 	'=>'           reduce using rule 49
-	'['            shift, and enter state 104
+	'['            shift, and enter state 102
 
-	Refinement     goto state 114
+	Refinement     goto state 112
 
-State 108
+State 106
 
 	TypeDataArgs -> '(' . ListTypeDataArg ')'           (rule 57)
 
-	'\''           shift, and enter state 48
-	'('            shift, and enter state 49
-	'_'            shift, and enter state 50
-	'bool'         shift, and enter state 51
-	'int'          shift, and enter state 52
+	'\''           shift, and enter state 46
+	'('            shift, and enter state 47
+	'_'            shift, and enter state 48
+	'bool'         shift, and enter state 49
+	'int'          shift, and enter state 50
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 43
-	RType          goto state 111
-	TypeDataArg    goto state 112
-	ListTypeDataArggoto state 113
-	FuncArg        goto state 45
-	BaseType       goto state 46
-	TypeVarId      goto state 47
+	VarIdent       goto state 41
+	RType          goto state 109
+	TypeDataArg    goto state 110
+	ListTypeDataArggoto state 111
+	FuncArg        goto state 43
+	BaseType       goto state 44
+	TypeVarId      goto state 45
 
-State 109
+State 107
 
 	FuncArg -> VarIdent ':' . RType                     (rule 71)
 
-	'\''           shift, and enter state 48
-	'('            shift, and enter state 49
-	'_'            shift, and enter state 50
-	'bool'         shift, and enter state 51
-	'int'          shift, and enter state 52
+	'\''           shift, and enter state 46
+	'('            shift, and enter state 47
+	'_'            shift, and enter state 48
+	'bool'         shift, and enter state 49
+	'int'          shift, and enter state 50
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 43
-	RType          goto state 110
-	FuncArg        goto state 45
-	BaseType       goto state 46
-	TypeVarId      goto state 47
+	VarIdent       goto state 41
+	RType          goto state 108
+	FuncArg        goto state 43
+	BaseType       goto state 44
+	TypeVarId      goto state 45
 
-State 110
+State 108
 
 	FuncArg -> VarIdent ':' RType .                     (rule 71)
 
@@ -1528,7 +1509,7 @@ State 110
 	'=>'           reduce using rule 71
 
 
-State 111
+State 109
 
 	TypeDataArg -> RType .                              (rule 54)
 
@@ -1536,23 +1517,23 @@ State 111
 	','            reduce using rule 54
 
 
-State 112
+State 110
 
 	ListTypeDataArg -> TypeDataArg .                    (rule 55)
 	ListTypeDataArg -> TypeDataArg . ',' ListTypeDataArg    (rule 56)
 
 	')'            reduce using rule 55
-	','            shift, and enter state 162
+	','            shift, and enter state 161
 
 
-State 113
+State 111
 
 	TypeDataArgs -> '(' ListTypeDataArg . ')'           (rule 57)
 
-	')'            shift, and enter state 161
+	')'            shift, and enter state 160
 
 
-State 114
+State 112
 
 	RType -> VarIdent TypeDataArgs Refinement .         (rule 52)
 
@@ -1562,7 +1543,7 @@ State 114
 	'=>'           reduce using rule 52
 
 
-State 115
+State 113
 
 	RType -> FuncArg '=>' RType .                       (rule 50)
 
@@ -1572,21 +1553,21 @@ State 115
 	'=>'           reduce using rule 50
 
 
-State 116
+State 114
 
 	Refinement -> '[' VarIdent . '|' Pred ']'           (rule 47)
 
-	'|'            shift, and enter state 160
+	'|'            shift, and enter state 159
 
 
-State 117
+State 115
 
 	Refinement -> '[' '?' . ']'                         (rule 48)
 
-	']'            shift, and enter state 159
+	']'            shift, and enter state 158
 
 
-State 118
+State 116
 
 	RType -> '(' RType ')' .                            (rule 53)
 
@@ -1596,7 +1577,7 @@ State 118
 	'=>'           reduce using rule 53
 
 
-State 119
+State 117
 
 	FuncArg -> '_' ':' RType .                          (rule 72)
 
@@ -1605,90 +1586,90 @@ State 119
 	'=>'           reduce using rule 72
 
 
-State 120
+State 118
 
 	Term -> 'switch' '(' VarIdent ')' . '{' ListSwitchCase '}'    (rule 25)
 
-	'{'            shift, and enter state 158
+	'{'            shift, and enter state 157
+
+
+State 119
+
+	Decl -> 'let' VarIdent '=' Term . ';'               (rule 33)
+
+	';'            shift, and enter state 156
+
+
+State 120
+
+	Term -> 'if' '(' FuncAppArg ')' . '{' Term '}' 'else' '{' Term '}'    (rule 21)
+
+	'{'            shift, and enter state 155
 
 
 State 121
 
-	Decl -> 'let' VarIdent '=' Term . ';'               (rule 33)
-
-	';'            shift, and enter state 157
-
-
-State 122
-
-	Term -> 'if' '(' FuncAppArg ')' . '{' Term '}' 'else' '{' Term '}'    (rule 21)
-
-	'{'            shift, and enter state 156
-
-
-State 123
-
 	Annotation -> '/*@' 'val' VarIdent ':' . RType '*/'    (rule 30)
 
-	'\''           shift, and enter state 48
-	'('            shift, and enter state 49
-	'_'            shift, and enter state 50
-	'bool'         shift, and enter state 51
-	'int'          shift, and enter state 52
+	'\''           shift, and enter state 46
+	'('            shift, and enter state 47
+	'_'            shift, and enter state 48
+	'bool'         shift, and enter state 49
+	'int'          shift, and enter state 50
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 43
-	RType          goto state 155
-	FuncArg        goto state 45
-	BaseType       goto state 46
-	TypeVarId      goto state 47
+	VarIdent       goto state 41
+	RType          goto state 154
+	FuncArg        goto state 43
+	BaseType       goto state 44
+	TypeVarId      goto state 45
 
-State 124
+State 122
 
 	ListFunArgName -> FunArgName ',' ListFunArgName .    (rule 107)
 
 	')'            reduce using rule 107
 
 
-State 125
+State 123
 
 	Term -> '(' ListFunArgName ')' '=>' . '{' Term '}'    (rule 23)
 
-	'{'            shift, and enter state 154
+	'{'            shift, and enter state 153
 
 
-State 126
+State 124
 
 	Decl -> Annotation 'let' 'rec' VarIdent . '=' Term ';'    (rule 31)
 
-	'='            shift, and enter state 153
+	'='            shift, and enter state 152
 
 
-State 127
+State 125
 
 	Decl -> Annotation 'let' VarIdent '=' . Term ';'    (rule 32)
 
-	'('            shift, and enter state 34
-	'/*@'          shift, and enter state 35
-	'false'        shift, and enter state 36
-	'if'           shift, and enter state 37
-	'let'          shift, and enter state 38
-	'switch'       shift, and enter state 39
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 31
+	'/*@'          shift, and enter state 32
+	'false'        shift, and enter state 33
+	'if'           shift, and enter state 34
+	'let'          shift, and enter state 35
+	'switch'       shift, and enter state 36
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 26
-	VarIdent       goto state 27
-	ConIdent       goto state 28
-	Term           goto state 152
-	ConstBool      goto state 30
-	Annotation     goto state 31
-	Decl           goto state 32
-	FuncAppArg     goto state 33
+	Integer        goto state 23
+	VarIdent       goto state 24
+	ConIdent       goto state 25
+	Term           goto state 151
+	ConstBool      goto state 27
+	Annotation     goto state 28
+	Decl           goto state 29
+	FuncAppArg     goto state 30
 
-State 128
+State 126
 
 	ConAppArgs -> '(' ListFuncAppArg ')' .              (rule 29)
 
@@ -1698,7 +1679,7 @@ State 128
 	%eof           reduce using rule 29
 
 
-State 129
+State 127
 
 	Term -> VarIdent '(' ListFuncAppArg ')' .           (rule 20)
 
@@ -1708,72 +1689,72 @@ State 129
 	%eof           reduce using rule 20
 
 
-State 130
+State 128
 
 	ListFuncAppArg -> FuncAppArg ',' . ListFuncAppArg    (rule 112)
 
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
 
-	Integer        goto state 85
-	VarIdent       goto state 86
-	ConstBool      goto state 87
-	FuncAppArg     goto state 88
-	ListFuncAppArg goto state 151
+	Integer        goto state 83
+	VarIdent       goto state 84
+	ConstBool      goto state 85
+	FuncAppArg     goto state 86
+	ListFuncAppArg goto state 150
 
-State 131
+State 129
 
 	DataType -> 'type' VarIdent DataTypeArgs '=' '|' . ListDataTypeConstructor ';'    (rule 59)
 
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	ConIdent       goto state 148
-	DataTypeConstructorgoto state 149
-	ListDataTypeConstructorgoto state 150
+	ConIdent       goto state 147
+	DataTypeConstructorgoto state 148
+	ListDataTypeConstructorgoto state 149
 
-State 132
+State 130
 
 	DataTypeArgs -> '(' ListTypeVarId ')' .             (rule 69)
 
 	'='            reduce using rule 69
 
 
-State 133
+State 131
 
 	ListTypeVarId -> TypeVarId ',' . ListTypeVarId      (rule 104)
 
-	'\''           shift, and enter state 48
+	'\''           shift, and enter state 46
 
-	TypeVarId      goto state 82
-	ListTypeVarId  goto state 147
+	TypeVarId      goto state 80
+	ListTypeVarId  goto state 146
 
-State 134
+State 132
 
 	Qualifier -> '/*Q' VarIdent '(' ListQualifierArg ')' ':' '(' . Pred ')' '*/'    (rule 5)
 
-	'('            shift, and enter state 146
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 145
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 135
-	VarIdent       goto state 136
-	ConIdent       goto state 14
-	MeasureIdent   goto state 137
-	ConstBool      goto state 138
-	Pred6          goto state 139
-	Pred1          goto state 140
-	Pred2          goto state 141
-	Pred3          goto state 142
-	Pred4          goto state 143
-	Pred5          goto state 144
-	Pred           goto state 145
+	Integer        goto state 133
+	VarIdent       goto state 134
+	ConIdent       goto state 135
+	MeasureIdent   goto state 136
+	ConstBool      goto state 137
+	Pred6          goto state 138
+	Pred1          goto state 139
+	Pred2          goto state 140
+	Pred3          goto state 141
+	Pred4          goto state 142
+	Pred5          goto state 143
+	Pred           goto state 144
 
-State 135
+State 133
 
 	Pred6 -> Integer .                                  (rule 77)
 
@@ -1792,7 +1773,7 @@ State 135
 	'||'           reduce using rule 77
 
 
-State 136
+State 134
 
 	MeasureIdent -> VarIdent .                          (rule 14)
 	Pred6 -> VarIdent .                                 (rule 75)
@@ -1813,14 +1794,21 @@ State 136
 	'||'           reduce using rule 75
 
 
-State 137
+State 135
+
+	MeasureIdent -> ConIdent .                          (rule 15)
+
+	'('            reduce using rule 15
+
+
+State 136
 
 	Pred6 -> MeasureIdent . '(' ListMeasureArg ')'      (rule 78)
 
-	'('            shift, and enter state 189
+	'('            shift, and enter state 188
 
 
-State 138
+State 137
 
 	Pred6 -> ConstBool .                                (rule 76)
 
@@ -1839,7 +1827,7 @@ State 138
 	'||'           reduce using rule 76
 
 
-State 139
+State 138
 
 	Pred5 -> Pred6 .                                    (rule 94)
 
@@ -1858,7 +1846,7 @@ State 139
 	'||'           reduce using rule 94
 
 
-State 140
+State 139
 
 	Pred1 -> Pred1 . '||' Pred2                         (rule 80)
 	Pred -> Pred1 .                                     (rule 95)
@@ -1866,22 +1854,22 @@ State 140
 	')'            reduce using rule 95
 	','            reduce using rule 95
 	']'            reduce using rule 95
-	'||'           shift, and enter state 188
+	'||'           shift, and enter state 187
 
 
-State 141
+State 140
 
 	Pred1 -> Pred2 .                                    (rule 81)
 	Pred2 -> Pred2 . '&&' Pred3                         (rule 82)
 
-	'&&'           shift, and enter state 187
+	'&&'           shift, and enter state 186
 	')'            reduce using rule 81
 	','            reduce using rule 81
 	']'            reduce using rule 81
 	'||'           reduce using rule 81
 
 
-State 142
+State 141
 
 	Pred2 -> Pred3 .                                    (rule 83)
 	Pred3 -> Pred3 . '==' Pred4                         (rule 84)
@@ -1889,12 +1877,12 @@ State 142
 	'&&'           reduce using rule 83
 	')'            reduce using rule 83
 	','            reduce using rule 83
-	'=='           shift, and enter state 186
+	'=='           shift, and enter state 185
 	']'            reduce using rule 83
 	'||'           reduce using rule 83
 
 
-State 143
+State 142
 
 	Pred3 -> Pred4 .                                    (rule 85)
 	Pred4 -> Pred4 . '<' Pred5                          (rule 86)
@@ -1905,16 +1893,16 @@ State 143
 	'&&'           reduce using rule 85
 	')'            reduce using rule 85
 	','            reduce using rule 85
-	'<'            shift, and enter state 182
-	'<='           shift, and enter state 183
+	'<'            shift, and enter state 181
+	'<='           shift, and enter state 182
 	'=='           reduce using rule 85
-	'>'            shift, and enter state 184
-	'>='           shift, and enter state 185
+	'>'            shift, and enter state 183
+	'>='           shift, and enter state 184
 	']'            reduce using rule 85
 	'||'           reduce using rule 85
 
 
-State 144
+State 143
 
 	Pred4 -> Pred5 .                                    (rule 90)
 	Pred5 -> Pred5 . '+' Pred6                          (rule 91)
@@ -1923,10 +1911,10 @@ State 144
 
 	'&&'           reduce using rule 90
 	')'            reduce using rule 90
-	'*'            shift, and enter state 179
-	'+'            shift, and enter state 180
+	'*'            shift, and enter state 178
+	'+'            shift, and enter state 179
 	','            reduce using rule 90
-	'-'            shift, and enter state 181
+	'-'            shift, and enter state 180
 	'<'            reduce using rule 90
 	'<='           reduce using rule 90
 	'=='           reduce using rule 90
@@ -1936,165 +1924,165 @@ State 144
 	'||'           reduce using rule 90
 
 
-State 145
+State 144
 
 	Qualifier -> '/*Q' VarIdent '(' ListQualifierArg ')' ':' '(' Pred . ')' '*/'    (rule 5)
 
-	')'            shift, and enter state 178
+	')'            shift, and enter state 177
 
 
-State 146
+State 145
 
 	Pred6 -> '(' . Pred ')'                             (rule 79)
 
-	'('            shift, and enter state 146
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 145
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 135
-	VarIdent       goto state 136
-	ConIdent       goto state 14
-	MeasureIdent   goto state 137
-	ConstBool      goto state 138
-	Pred6          goto state 139
-	Pred1          goto state 140
-	Pred2          goto state 141
-	Pred3          goto state 142
-	Pred4          goto state 143
-	Pred5          goto state 144
-	Pred           goto state 177
+	Integer        goto state 133
+	VarIdent       goto state 134
+	ConIdent       goto state 135
+	MeasureIdent   goto state 136
+	ConstBool      goto state 137
+	Pred6          goto state 138
+	Pred1          goto state 139
+	Pred2          goto state 140
+	Pred3          goto state 141
+	Pred4          goto state 142
+	Pred5          goto state 143
+	Pred           goto state 176
 
-State 147
+State 146
 
 	ListTypeVarId -> TypeVarId ',' ListTypeVarId .      (rule 104)
 
 	')'            reduce using rule 104
 
 
-State 148
+State 147
 
 	DataTypeConstructor -> ConIdent . DataTypeConstructorArgs DataTypeConstructorPredicate    (rule 62)
 
-	'('            shift, and enter state 176
+	'('            shift, and enter state 175
 	';'            reduce using rule 66
 	'=>'           reduce using rule 66
 	'|'            reduce using rule 66
 
-	DataTypeConstructorArgsgoto state 175
+	DataTypeConstructorArgsgoto state 174
 
-State 149
+State 148
 
 	ListDataTypeConstructor -> DataTypeConstructor .    (rule 63)
 	ListDataTypeConstructor -> DataTypeConstructor . '|' ListDataTypeConstructor    (rule 64)
 
 	';'            reduce using rule 63
-	'|'            shift, and enter state 174
+	'|'            shift, and enter state 173
 
 
-State 150
+State 149
 
 	DataType -> 'type' VarIdent DataTypeArgs '=' '|' ListDataTypeConstructor . ';'    (rule 59)
 
-	';'            shift, and enter state 173
+	';'            shift, and enter state 172
 
 
-State 151
+State 150
 
 	ListFuncAppArg -> FuncAppArg ',' ListFuncAppArg .    (rule 112)
 
 	')'            reduce using rule 112
 
 
-State 152
+State 151
 
 	Decl -> Annotation 'let' VarIdent '=' Term . ';'    (rule 32)
 
-	';'            shift, and enter state 172
+	';'            shift, and enter state 171
 
 
-State 153
+State 152
 
 	Decl -> Annotation 'let' 'rec' VarIdent '=' . Term ';'    (rule 31)
 
-	'('            shift, and enter state 34
-	'/*@'          shift, and enter state 35
-	'false'        shift, and enter state 36
-	'if'           shift, and enter state 37
-	'let'          shift, and enter state 38
-	'switch'       shift, and enter state 39
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 31
+	'/*@'          shift, and enter state 32
+	'false'        shift, and enter state 33
+	'if'           shift, and enter state 34
+	'let'          shift, and enter state 35
+	'switch'       shift, and enter state 36
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 26
-	VarIdent       goto state 27
-	ConIdent       goto state 28
-	Term           goto state 171
-	ConstBool      goto state 30
-	Annotation     goto state 31
-	Decl           goto state 32
-	FuncAppArg     goto state 33
+	Integer        goto state 23
+	VarIdent       goto state 24
+	ConIdent       goto state 25
+	Term           goto state 170
+	ConstBool      goto state 27
+	Annotation     goto state 28
+	Decl           goto state 29
+	FuncAppArg     goto state 30
 
-State 154
+State 153
 
 	Term -> '(' ListFunArgName ')' '=>' '{' . Term '}'    (rule 23)
 
-	'('            shift, and enter state 34
-	'/*@'          shift, and enter state 35
-	'false'        shift, and enter state 36
-	'if'           shift, and enter state 37
-	'let'          shift, and enter state 38
-	'switch'       shift, and enter state 39
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 31
+	'/*@'          shift, and enter state 32
+	'false'        shift, and enter state 33
+	'if'           shift, and enter state 34
+	'let'          shift, and enter state 35
+	'switch'       shift, and enter state 36
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 26
-	VarIdent       goto state 27
-	ConIdent       goto state 28
-	Term           goto state 170
-	ConstBool      goto state 30
-	Annotation     goto state 31
-	Decl           goto state 32
-	FuncAppArg     goto state 33
+	Integer        goto state 23
+	VarIdent       goto state 24
+	ConIdent       goto state 25
+	Term           goto state 169
+	ConstBool      goto state 27
+	Annotation     goto state 28
+	Decl           goto state 29
+	FuncAppArg     goto state 30
 
-State 155
+State 154
 
 	Annotation -> '/*@' 'val' VarIdent ':' RType . '*/'    (rule 30)
 
-	'*/'           shift, and enter state 169
+	'*/'           shift, and enter state 168
 
 
-State 156
+State 155
 
 	Term -> 'if' '(' FuncAppArg ')' '{' . Term '}' 'else' '{' Term '}'    (rule 21)
 
-	'('            shift, and enter state 34
-	'/*@'          shift, and enter state 35
-	'false'        shift, and enter state 36
-	'if'           shift, and enter state 37
-	'let'          shift, and enter state 38
-	'switch'       shift, and enter state 39
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 31
+	'/*@'          shift, and enter state 32
+	'false'        shift, and enter state 33
+	'if'           shift, and enter state 34
+	'let'          shift, and enter state 35
+	'switch'       shift, and enter state 36
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 26
-	VarIdent       goto state 27
-	ConIdent       goto state 28
-	Term           goto state 168
-	ConstBool      goto state 30
-	Annotation     goto state 31
-	Decl           goto state 32
-	FuncAppArg     goto state 33
+	Integer        goto state 23
+	VarIdent       goto state 24
+	ConIdent       goto state 25
+	Term           goto state 167
+	ConstBool      goto state 27
+	Annotation     goto state 28
+	Decl           goto state 29
+	FuncAppArg     goto state 30
 
-State 157
+State 156
 
 	Decl -> 'let' VarIdent '=' Term ';' .               (rule 33)
 
@@ -2110,16 +2098,16 @@ State 157
 	L_ConIdent     reduce using rule 33
 
 
-State 158
+State 157
 
 	Term -> 'switch' '(' VarIdent ')' '{' . ListSwitchCase '}'    (rule 25)
 
-	'|'            shift, and enter state 167
+	'|'            shift, and enter state 166
 
-	SwitchCase     goto state 165
-	ListSwitchCase goto state 166
+	SwitchCase     goto state 164
+	ListSwitchCase goto state 165
 
-State 159
+State 158
 
 	Refinement -> '[' '?' ']' .                         (rule 48)
 
@@ -2129,31 +2117,31 @@ State 159
 	'=>'           reduce using rule 48
 
 
-State 160
+State 159
 
 	Refinement -> '[' VarIdent '|' . Pred ']'           (rule 47)
 
-	'('            shift, and enter state 146
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 145
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 135
-	VarIdent       goto state 136
-	ConIdent       goto state 14
-	MeasureIdent   goto state 137
-	ConstBool      goto state 138
-	Pred6          goto state 139
-	Pred1          goto state 140
-	Pred2          goto state 141
-	Pred3          goto state 142
-	Pred4          goto state 143
-	Pred5          goto state 144
-	Pred           goto state 164
+	Integer        goto state 133
+	VarIdent       goto state 134
+	ConIdent       goto state 135
+	MeasureIdent   goto state 136
+	ConstBool      goto state 137
+	Pred6          goto state 138
+	Pred1          goto state 139
+	Pred2          goto state 140
+	Pred3          goto state 141
+	Pred4          goto state 142
+	Pred5          goto state 143
+	Pred           goto state 163
 
-State 161
+State 160
 
 	TypeDataArgs -> '(' ListTypeDataArg ')' .           (rule 57)
 
@@ -2164,94 +2152,94 @@ State 161
 	'['            reduce using rule 57
 
 
-State 162
+State 161
 
 	ListTypeDataArg -> TypeDataArg ',' . ListTypeDataArg    (rule 56)
 
-	'\''           shift, and enter state 48
-	'('            shift, and enter state 49
-	'_'            shift, and enter state 50
-	'bool'         shift, and enter state 51
-	'int'          shift, and enter state 52
+	'\''           shift, and enter state 46
+	'('            shift, and enter state 47
+	'_'            shift, and enter state 48
+	'bool'         shift, and enter state 49
+	'int'          shift, and enter state 50
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 43
-	RType          goto state 111
-	TypeDataArg    goto state 112
-	ListTypeDataArggoto state 163
-	FuncArg        goto state 45
-	BaseType       goto state 46
-	TypeVarId      goto state 47
+	VarIdent       goto state 41
+	RType          goto state 109
+	TypeDataArg    goto state 110
+	ListTypeDataArggoto state 162
+	FuncArg        goto state 43
+	BaseType       goto state 44
+	TypeVarId      goto state 45
 
-State 163
+State 162
 
 	ListTypeDataArg -> TypeDataArg ',' ListTypeDataArg .    (rule 56)
 
 	')'            reduce using rule 56
 
 
-State 164
+State 163
 
 	Refinement -> '[' VarIdent '|' Pred . ']'           (rule 47)
 
-	']'            shift, and enter state 217
+	']'            shift, and enter state 216
 
 
-State 165
+State 164
 
 	ListSwitchCase -> SwitchCase .                      (rule 35)
 	ListSwitchCase -> SwitchCase . ListSwitchCase       (rule 36)
 
-	'|'            shift, and enter state 167
+	'|'            shift, and enter state 166
 	'}'            reduce using rule 35
 
-	SwitchCase     goto state 165
-	ListSwitchCase goto state 216
+	SwitchCase     goto state 164
+	ListSwitchCase goto state 215
 
-State 166
+State 165
 
 	Term -> 'switch' '(' VarIdent ')' '{' ListSwitchCase . '}'    (rule 25)
 
-	'}'            shift, and enter state 215
+	'}'            shift, and enter state 214
 
 
-State 167
+State 166
 
 	SwitchCase -> '|' . ConIdent SwitchCaseDataConArgs '=>' Term    (rule 34)
 
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	ConIdent       goto state 214
+	ConIdent       goto state 213
 
-State 168
+State 167
 
 	Term -> 'if' '(' FuncAppArg ')' '{' Term . '}' 'else' '{' Term '}'    (rule 21)
 
-	'}'            shift, and enter state 213
+	'}'            shift, and enter state 212
 
 
-State 169
+State 168
 
 	Annotation -> '/*@' 'val' VarIdent ':' RType '*/' .    (rule 30)
 
 	'let'          reduce using rule 30
 
 
-State 170
+State 169
 
 	Term -> '(' ListFunArgName ')' '=>' '{' Term . '}'    (rule 23)
 
-	'}'            shift, and enter state 212
+	'}'            shift, and enter state 211
 
 
-State 171
+State 170
 
 	Decl -> Annotation 'let' 'rec' VarIdent '=' Term . ';'    (rule 31)
 
-	';'            shift, and enter state 211
+	';'            shift, and enter state 210
 
 
-State 172
+State 171
 
 	Decl -> Annotation 'let' VarIdent '=' Term ';' .    (rule 32)
 
@@ -2267,7 +2255,7 @@ State 172
 	L_ConIdent     reduce using rule 32
 
 
-State 173
+State 172
 
 	DataType -> 'type' VarIdent DataTypeArgs '=' '|' ListDataTypeConstructor ';' .    (rule 59)
 
@@ -2284,271 +2272,271 @@ State 173
 	L_ConIdent     reduce using rule 59
 
 
-State 174
+State 173
 
 	ListDataTypeConstructor -> DataTypeConstructor '|' . ListDataTypeConstructor    (rule 64)
 
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	ConIdent       goto state 148
-	DataTypeConstructorgoto state 149
-	ListDataTypeConstructorgoto state 210
+	ConIdent       goto state 147
+	DataTypeConstructorgoto state 148
+	ListDataTypeConstructorgoto state 209
 
-State 175
+State 174
 
 	DataTypeConstructor -> ConIdent DataTypeConstructorArgs . DataTypeConstructorPredicate    (rule 62)
 
 	';'            reduce using rule 68
-	'=>'           shift, and enter state 209
+	'=>'           shift, and enter state 208
 	'|'            reduce using rule 68
 
-	DataTypeConstructorPredicategoto state 208
+	DataTypeConstructorPredicategoto state 207
 
-State 176
+State 175
 
 	DataTypeConstructorArgs -> '(' . ListFuncArg ')'    (rule 65)
 
-	'_'            shift, and enter state 50
+	'_'            shift, and enter state 48
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 205
-	FuncArg        goto state 206
-	ListFuncArg    goto state 207
+	VarIdent       goto state 204
+	FuncArg        goto state 205
+	ListFuncArg    goto state 206
 
-State 177
+State 176
 
 	Pred6 -> '(' Pred . ')'                             (rule 79)
 
-	')'            shift, and enter state 204
+	')'            shift, and enter state 203
+
+
+State 177
+
+	Qualifier -> '/*Q' VarIdent '(' ListQualifierArg ')' ':' '(' Pred ')' . '*/'    (rule 5)
+
+	'*/'           shift, and enter state 202
 
 
 State 178
 
-	Qualifier -> '/*Q' VarIdent '(' ListQualifierArg ')' ':' '(' Pred ')' . '*/'    (rule 5)
+	Pred5 -> Pred5 '*' . Pred6                          (rule 93)
 
-	'*/'           shift, and enter state 203
+	'('            shift, and enter state 145
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
+	L_integ        shift, and enter state 2
+	L_VarIdent     shift, and enter state 8
+	L_ConIdent     shift, and enter state 38
 
+	Integer        goto state 133
+	VarIdent       goto state 134
+	ConIdent       goto state 135
+	MeasureIdent   goto state 136
+	ConstBool      goto state 137
+	Pred6          goto state 201
 
 State 179
 
-	Pred5 -> Pred5 '*' . Pred6                          (rule 93)
+	Pred5 -> Pred5 '+' . Pred6                          (rule 91)
 
-	'('            shift, and enter state 146
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 145
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 135
-	VarIdent       goto state 136
-	ConIdent       goto state 14
-	MeasureIdent   goto state 137
-	ConstBool      goto state 138
-	Pred6          goto state 202
+	Integer        goto state 133
+	VarIdent       goto state 134
+	ConIdent       goto state 135
+	MeasureIdent   goto state 136
+	ConstBool      goto state 137
+	Pred6          goto state 200
 
 State 180
 
-	Pred5 -> Pred5 '+' . Pred6                          (rule 91)
+	Pred5 -> Pred5 '-' . Pred6                          (rule 92)
 
-	'('            shift, and enter state 146
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 145
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 135
-	VarIdent       goto state 136
-	ConIdent       goto state 14
-	MeasureIdent   goto state 137
-	ConstBool      goto state 138
-	Pred6          goto state 201
+	Integer        goto state 133
+	VarIdent       goto state 134
+	ConIdent       goto state 135
+	MeasureIdent   goto state 136
+	ConstBool      goto state 137
+	Pred6          goto state 199
 
 State 181
 
-	Pred5 -> Pred5 '-' . Pred6                          (rule 92)
+	Pred4 -> Pred4 '<' . Pred5                          (rule 86)
 
-	'('            shift, and enter state 146
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 145
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 135
-	VarIdent       goto state 136
-	ConIdent       goto state 14
-	MeasureIdent   goto state 137
-	ConstBool      goto state 138
-	Pred6          goto state 200
+	Integer        goto state 133
+	VarIdent       goto state 134
+	ConIdent       goto state 135
+	MeasureIdent   goto state 136
+	ConstBool      goto state 137
+	Pred6          goto state 138
+	Pred5          goto state 198
 
 State 182
 
-	Pred4 -> Pred4 '<' . Pred5                          (rule 86)
+	Pred4 -> Pred4 '<=' . Pred5                         (rule 87)
 
-	'('            shift, and enter state 146
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 145
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 135
-	VarIdent       goto state 136
-	ConIdent       goto state 14
-	MeasureIdent   goto state 137
-	ConstBool      goto state 138
-	Pred6          goto state 139
-	Pred5          goto state 199
+	Integer        goto state 133
+	VarIdent       goto state 134
+	ConIdent       goto state 135
+	MeasureIdent   goto state 136
+	ConstBool      goto state 137
+	Pred6          goto state 138
+	Pred5          goto state 197
 
 State 183
 
-	Pred4 -> Pred4 '<=' . Pred5                         (rule 87)
+	Pred4 -> Pred4 '>' . Pred5                          (rule 88)
 
-	'('            shift, and enter state 146
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 145
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 135
-	VarIdent       goto state 136
-	ConIdent       goto state 14
-	MeasureIdent   goto state 137
-	ConstBool      goto state 138
-	Pred6          goto state 139
-	Pred5          goto state 198
+	Integer        goto state 133
+	VarIdent       goto state 134
+	ConIdent       goto state 135
+	MeasureIdent   goto state 136
+	ConstBool      goto state 137
+	Pred6          goto state 138
+	Pred5          goto state 196
 
 State 184
 
-	Pred4 -> Pred4 '>' . Pred5                          (rule 88)
+	Pred4 -> Pred4 '>=' . Pred5                         (rule 89)
 
-	'('            shift, and enter state 146
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 145
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 135
-	VarIdent       goto state 136
-	ConIdent       goto state 14
-	MeasureIdent   goto state 137
-	ConstBool      goto state 138
-	Pred6          goto state 139
-	Pred5          goto state 197
+	Integer        goto state 133
+	VarIdent       goto state 134
+	ConIdent       goto state 135
+	MeasureIdent   goto state 136
+	ConstBool      goto state 137
+	Pred6          goto state 138
+	Pred5          goto state 195
 
 State 185
 
-	Pred4 -> Pred4 '>=' . Pred5                         (rule 89)
+	Pred3 -> Pred3 '==' . Pred4                         (rule 84)
 
-	'('            shift, and enter state 146
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 145
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 135
-	VarIdent       goto state 136
-	ConIdent       goto state 14
-	MeasureIdent   goto state 137
-	ConstBool      goto state 138
-	Pred6          goto state 139
-	Pred5          goto state 196
+	Integer        goto state 133
+	VarIdent       goto state 134
+	ConIdent       goto state 135
+	MeasureIdent   goto state 136
+	ConstBool      goto state 137
+	Pred6          goto state 138
+	Pred4          goto state 194
+	Pred5          goto state 143
 
 State 186
 
-	Pred3 -> Pred3 '==' . Pred4                         (rule 84)
+	Pred2 -> Pred2 '&&' . Pred3                         (rule 82)
 
-	'('            shift, and enter state 146
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 145
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 135
-	VarIdent       goto state 136
-	ConIdent       goto state 14
-	MeasureIdent   goto state 137
-	ConstBool      goto state 138
-	Pred6          goto state 139
-	Pred4          goto state 195
-	Pred5          goto state 144
+	Integer        goto state 133
+	VarIdent       goto state 134
+	ConIdent       goto state 135
+	MeasureIdent   goto state 136
+	ConstBool      goto state 137
+	Pred6          goto state 138
+	Pred3          goto state 193
+	Pred4          goto state 142
+	Pred5          goto state 143
 
 State 187
 
-	Pred2 -> Pred2 '&&' . Pred3                         (rule 82)
+	Pred1 -> Pred1 '||' . Pred2                         (rule 80)
 
-	'('            shift, and enter state 146
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 145
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 135
-	VarIdent       goto state 136
-	ConIdent       goto state 14
-	MeasureIdent   goto state 137
-	ConstBool      goto state 138
-	Pred6          goto state 139
-	Pred3          goto state 194
-	Pred4          goto state 143
-	Pred5          goto state 144
+	Integer        goto state 133
+	VarIdent       goto state 134
+	ConIdent       goto state 135
+	MeasureIdent   goto state 136
+	ConstBool      goto state 137
+	Pred6          goto state 138
+	Pred2          goto state 192
+	Pred3          goto state 141
+	Pred4          goto state 142
+	Pred5          goto state 143
 
 State 188
 
-	Pred1 -> Pred1 '||' . Pred2                         (rule 80)
-
-	'('            shift, and enter state 146
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
-	L_integ        shift, and enter state 2
-	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
-
-	Integer        goto state 135
-	VarIdent       goto state 136
-	ConIdent       goto state 14
-	MeasureIdent   goto state 137
-	ConstBool      goto state 138
-	Pred6          goto state 139
-	Pred2          goto state 193
-	Pred3          goto state 142
-	Pred4          goto state 143
-	Pred5          goto state 144
-
-State 189
-
 	Pred6 -> MeasureIdent '(' . ListMeasureArg ')'      (rule 78)
 
-	'('            shift, and enter state 146
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 145
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 135
-	VarIdent       goto state 136
-	ConIdent       goto state 14
-	MeasureIdent   goto state 137
-	ConstBool      goto state 138
-	Pred6          goto state 139
-	Pred1          goto state 140
-	Pred2          goto state 141
-	Pred3          goto state 142
-	Pred4          goto state 143
-	Pred5          goto state 144
-	Pred           goto state 190
-	MeasureArg     goto state 191
-	ListMeasureArg goto state 192
+	Integer        goto state 133
+	VarIdent       goto state 134
+	ConIdent       goto state 135
+	MeasureIdent   goto state 136
+	ConstBool      goto state 137
+	Pred6          goto state 138
+	Pred1          goto state 139
+	Pred2          goto state 140
+	Pred3          goto state 141
+	Pred4          goto state 142
+	Pred5          goto state 143
+	Pred           goto state 189
+	MeasureArg     goto state 190
+	ListMeasureArg goto state 191
 
-State 190
+State 189
 
 	MeasureArg -> Pred .                                (rule 96)
 
@@ -2556,35 +2544,35 @@ State 190
 	','            reduce using rule 96
 
 
-State 191
+State 190
 
 	ListMeasureArg -> MeasureArg .                      (rule 97)
 	ListMeasureArg -> MeasureArg . ',' ListMeasureArg    (rule 98)
 
 	')'            reduce using rule 97
-	','            shift, and enter state 225
+	','            shift, and enter state 224
+
+
+State 191
+
+	Pred6 -> MeasureIdent '(' ListMeasureArg . ')'      (rule 78)
+
+	')'            shift, and enter state 223
 
 
 State 192
 
-	Pred6 -> MeasureIdent '(' ListMeasureArg . ')'      (rule 78)
-
-	')'            shift, and enter state 224
-
-
-State 193
-
 	Pred1 -> Pred1 '||' Pred2 .                         (rule 80)
 	Pred2 -> Pred2 . '&&' Pred3                         (rule 82)
 
-	'&&'           shift, and enter state 187
+	'&&'           shift, and enter state 186
 	')'            reduce using rule 80
 	','            reduce using rule 80
 	']'            reduce using rule 80
 	'||'           reduce using rule 80
 
 
-State 194
+State 193
 
 	Pred2 -> Pred2 '&&' Pred3 .                         (rule 82)
 	Pred3 -> Pred3 . '==' Pred4                         (rule 84)
@@ -2592,12 +2580,12 @@ State 194
 	'&&'           reduce using rule 82
 	')'            reduce using rule 82
 	','            reduce using rule 82
-	'=='           shift, and enter state 186
+	'=='           shift, and enter state 185
 	']'            reduce using rule 82
 	'||'           reduce using rule 82
 
 
-State 195
+State 194
 
 	Pred3 -> Pred3 '==' Pred4 .                         (rule 84)
 	Pred4 -> Pred4 . '<' Pred5                          (rule 86)
@@ -2608,16 +2596,16 @@ State 195
 	'&&'           reduce using rule 84
 	')'            reduce using rule 84
 	','            reduce using rule 84
-	'<'            shift, and enter state 182
-	'<='           shift, and enter state 183
+	'<'            shift, and enter state 181
+	'<='           shift, and enter state 182
 	'=='           reduce using rule 84
-	'>'            shift, and enter state 184
-	'>='           shift, and enter state 185
+	'>'            shift, and enter state 183
+	'>='           shift, and enter state 184
 	']'            reduce using rule 84
 	'||'           reduce using rule 84
 
 
-State 196
+State 195
 
 	Pred4 -> Pred4 '>=' Pred5 .                         (rule 89)
 	Pred5 -> Pred5 . '+' Pred6                          (rule 91)
@@ -2626,10 +2614,10 @@ State 196
 
 	'&&'           reduce using rule 89
 	')'            reduce using rule 89
-	'*'            shift, and enter state 179
-	'+'            shift, and enter state 180
+	'*'            shift, and enter state 178
+	'+'            shift, and enter state 179
 	','            reduce using rule 89
-	'-'            shift, and enter state 181
+	'-'            shift, and enter state 180
 	'<'            reduce using rule 89
 	'<='           reduce using rule 89
 	'=='           reduce using rule 89
@@ -2639,7 +2627,7 @@ State 196
 	'||'           reduce using rule 89
 
 
-State 197
+State 196
 
 	Pred4 -> Pred4 '>' Pred5 .                          (rule 88)
 	Pred5 -> Pred5 . '+' Pred6                          (rule 91)
@@ -2648,10 +2636,10 @@ State 197
 
 	'&&'           reduce using rule 88
 	')'            reduce using rule 88
-	'*'            shift, and enter state 179
-	'+'            shift, and enter state 180
+	'*'            shift, and enter state 178
+	'+'            shift, and enter state 179
 	','            reduce using rule 88
-	'-'            shift, and enter state 181
+	'-'            shift, and enter state 180
 	'<'            reduce using rule 88
 	'<='           reduce using rule 88
 	'=='           reduce using rule 88
@@ -2661,7 +2649,7 @@ State 197
 	'||'           reduce using rule 88
 
 
-State 198
+State 197
 
 	Pred4 -> Pred4 '<=' Pred5 .                         (rule 87)
 	Pred5 -> Pred5 . '+' Pred6                          (rule 91)
@@ -2670,10 +2658,10 @@ State 198
 
 	'&&'           reduce using rule 87
 	')'            reduce using rule 87
-	'*'            shift, and enter state 179
-	'+'            shift, and enter state 180
+	'*'            shift, and enter state 178
+	'+'            shift, and enter state 179
 	','            reduce using rule 87
-	'-'            shift, and enter state 181
+	'-'            shift, and enter state 180
 	'<'            reduce using rule 87
 	'<='           reduce using rule 87
 	'=='           reduce using rule 87
@@ -2683,7 +2671,7 @@ State 198
 	'||'           reduce using rule 87
 
 
-State 199
+State 198
 
 	Pred4 -> Pred4 '<' Pred5 .                          (rule 86)
 	Pred5 -> Pred5 . '+' Pred6                          (rule 91)
@@ -2692,10 +2680,10 @@ State 199
 
 	'&&'           reduce using rule 86
 	')'            reduce using rule 86
-	'*'            shift, and enter state 179
-	'+'            shift, and enter state 180
+	'*'            shift, and enter state 178
+	'+'            shift, and enter state 179
 	','            reduce using rule 86
-	'-'            shift, and enter state 181
+	'-'            shift, and enter state 180
 	'<'            reduce using rule 86
 	'<='           reduce using rule 86
 	'=='           reduce using rule 86
@@ -2705,7 +2693,7 @@ State 199
 	'||'           reduce using rule 86
 
 
-State 200
+State 199
 
 	Pred5 -> Pred5 '-' Pred6 .                          (rule 92)
 
@@ -2724,7 +2712,7 @@ State 200
 	'||'           reduce using rule 92
 
 
-State 201
+State 200
 
 	Pred5 -> Pred5 '+' Pred6 .                          (rule 91)
 
@@ -2743,7 +2731,7 @@ State 201
 	'||'           reduce using rule 91
 
 
-State 202
+State 201
 
 	Pred5 -> Pred5 '*' Pred6 .                          (rule 93)
 
@@ -2762,7 +2750,7 @@ State 202
 	'||'           reduce using rule 93
 
 
-State 203
+State 202
 
 	Qualifier -> '/*Q' VarIdent '(' ListQualifierArg ')' ':' '(' Pred ')' '*/' .    (rule 5)
 
@@ -2781,7 +2769,7 @@ State 203
 	L_ConIdent     reduce using rule 5
 
 
-State 204
+State 203
 
 	Pred6 -> '(' Pred ')' .                             (rule 79)
 
@@ -2800,30 +2788,30 @@ State 204
 	'||'           reduce using rule 79
 
 
-State 205
+State 204
 
 	FuncArg -> VarIdent . ':' RType                     (rule 71)
 
-	':'            shift, and enter state 109
+	':'            shift, and enter state 107
 
 
-State 206
+State 205
 
 	ListFuncArg -> FuncArg .                            (rule 73)
 	ListFuncArg -> FuncArg . ',' ListFuncArg            (rule 74)
 
 	')'            reduce using rule 73
-	','            shift, and enter state 223
+	','            shift, and enter state 222
 
 
-State 207
+State 206
 
 	DataTypeConstructorArgs -> '(' ListFuncArg . ')'    (rule 65)
 
-	')'            shift, and enter state 222
+	')'            shift, and enter state 221
 
 
-State 208
+State 207
 
 	DataTypeConstructor -> ConIdent DataTypeConstructorArgs DataTypeConstructorPredicate .    (rule 62)
 
@@ -2831,21 +2819,21 @@ State 208
 	'|'            reduce using rule 62
 
 
-State 209
+State 208
 
 	DataTypeConstructorPredicate -> '=>' . '[' VarIdent '|' Pred ']'    (rule 67)
 
-	'['            shift, and enter state 221
+	'['            shift, and enter state 220
 
 
-State 210
+State 209
 
 	ListDataTypeConstructor -> DataTypeConstructor '|' ListDataTypeConstructor .    (rule 64)
 
 	';'            reduce using rule 64
 
 
-State 211
+State 210
 
 	Decl -> Annotation 'let' 'rec' VarIdent '=' Term ';' .    (rule 31)
 
@@ -2861,7 +2849,7 @@ State 211
 	L_ConIdent     reduce using rule 31
 
 
-State 212
+State 211
 
 	Term -> '(' ListFunArgName ')' '=>' '{' Term '}' .    (rule 23)
 
@@ -2871,23 +2859,23 @@ State 212
 	%eof           reduce using rule 23
 
 
-State 213
+State 212
 
 	Term -> 'if' '(' FuncAppArg ')' '{' Term '}' . 'else' '{' Term '}'    (rule 21)
 
-	'else'         shift, and enter state 220
+	'else'         shift, and enter state 219
 
 
-State 214
+State 213
 
 	SwitchCase -> '|' ConIdent . SwitchCaseDataConArgs '=>' Term    (rule 34)
 
-	'('            shift, and enter state 219
+	'('            shift, and enter state 218
 	'=>'           reduce using rule 38
 
-	SwitchCaseDataConArgsgoto state 218
+	SwitchCaseDataConArgsgoto state 217
 
-State 215
+State 214
 
 	Term -> 'switch' '(' VarIdent ')' '{' ListSwitchCase '}' .    (rule 25)
 
@@ -2897,14 +2885,14 @@ State 215
 	%eof           reduce using rule 25
 
 
-State 216
+State 215
 
 	ListSwitchCase -> SwitchCase ListSwitchCase .       (rule 36)
 
 	'}'            reduce using rule 36
 
 
-State 217
+State 216
 
 	Refinement -> '[' VarIdent '|' Pred ']' .           (rule 47)
 
@@ -2914,39 +2902,39 @@ State 217
 	'=>'           reduce using rule 47
 
 
-State 218
+State 217
 
 	SwitchCase -> '|' ConIdent SwitchCaseDataConArgs . '=>' Term    (rule 34)
 
-	'=>'           shift, and enter state 231
+	'=>'           shift, and enter state 230
 
 
-State 219
+State 218
 
 	SwitchCaseDataConArgs -> '(' . ListFunArgName ')'    (rule 37)
 
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 57
-	FunArgName     goto state 58
-	ListFunArgName goto state 230
+	VarIdent       goto state 55
+	FunArgName     goto state 56
+	ListFunArgName goto state 229
 
-State 220
+State 219
 
 	Term -> 'if' '(' FuncAppArg ')' '{' Term '}' 'else' . '{' Term '}'    (rule 21)
 
-	'{'            shift, and enter state 229
+	'{'            shift, and enter state 228
 
 
-State 221
+State 220
 
 	DataTypeConstructorPredicate -> '=>' '[' . VarIdent '|' Pred ']'    (rule 67)
 
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 228
+	VarIdent       goto state 227
 
-State 222
+State 221
 
 	DataTypeConstructorArgs -> '(' ListFuncArg ')' .    (rule 65)
 
@@ -2955,18 +2943,18 @@ State 222
 	'|'            reduce using rule 65
 
 
-State 223
+State 222
 
 	ListFuncArg -> FuncArg ',' . ListFuncArg            (rule 74)
 
-	'_'            shift, and enter state 50
+	'_'            shift, and enter state 48
 	L_VarIdent     shift, and enter state 8
 
-	VarIdent       goto state 205
-	FuncArg        goto state 206
-	ListFuncArg    goto state 227
+	VarIdent       goto state 204
+	FuncArg        goto state 205
+	ListFuncArg    goto state 226
 
-State 224
+State 223
 
 	Pred6 -> MeasureIdent '(' ListMeasureArg ')' .      (rule 78)
 
@@ -2985,109 +2973,109 @@ State 224
 	'||'           reduce using rule 78
 
 
-State 225
+State 224
 
 	ListMeasureArg -> MeasureArg ',' . ListMeasureArg    (rule 98)
 
-	'('            shift, and enter state 146
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 145
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 135
-	VarIdent       goto state 136
-	ConIdent       goto state 14
-	MeasureIdent   goto state 137
-	ConstBool      goto state 138
-	Pred6          goto state 139
-	Pred1          goto state 140
-	Pred2          goto state 141
-	Pred3          goto state 142
-	Pred4          goto state 143
-	Pred5          goto state 144
-	Pred           goto state 190
-	MeasureArg     goto state 191
-	ListMeasureArg goto state 226
+	Integer        goto state 133
+	VarIdent       goto state 134
+	ConIdent       goto state 135
+	MeasureIdent   goto state 136
+	ConstBool      goto state 137
+	Pred6          goto state 138
+	Pred1          goto state 139
+	Pred2          goto state 140
+	Pred3          goto state 141
+	Pred4          goto state 142
+	Pred5          goto state 143
+	Pred           goto state 189
+	MeasureArg     goto state 190
+	ListMeasureArg goto state 225
 
-State 226
+State 225
 
 	ListMeasureArg -> MeasureArg ',' ListMeasureArg .    (rule 98)
 
 	')'            reduce using rule 98
 
 
-State 227
+State 226
 
 	ListFuncArg -> FuncArg ',' ListFuncArg .            (rule 74)
 
 	')'            reduce using rule 74
 
 
-State 228
+State 227
 
 	DataTypeConstructorPredicate -> '=>' '[' VarIdent . '|' Pred ']'    (rule 67)
 
-	'|'            shift, and enter state 235
+	'|'            shift, and enter state 234
 
 
-State 229
+State 228
 
 	Term -> 'if' '(' FuncAppArg ')' '{' Term '}' 'else' '{' . Term '}'    (rule 21)
 
-	'('            shift, and enter state 34
-	'/*@'          shift, and enter state 35
-	'false'        shift, and enter state 36
-	'if'           shift, and enter state 37
-	'let'          shift, and enter state 38
-	'switch'       shift, and enter state 39
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 31
+	'/*@'          shift, and enter state 32
+	'false'        shift, and enter state 33
+	'if'           shift, and enter state 34
+	'let'          shift, and enter state 35
+	'switch'       shift, and enter state 36
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 26
-	VarIdent       goto state 27
-	ConIdent       goto state 28
-	Term           goto state 234
-	ConstBool      goto state 30
-	Annotation     goto state 31
-	Decl           goto state 32
-	FuncAppArg     goto state 33
+	Integer        goto state 23
+	VarIdent       goto state 24
+	ConIdent       goto state 25
+	Term           goto state 233
+	ConstBool      goto state 27
+	Annotation     goto state 28
+	Decl           goto state 29
+	FuncAppArg     goto state 30
 
-State 230
+State 229
 
 	SwitchCaseDataConArgs -> '(' ListFunArgName . ')'    (rule 37)
 
-	')'            shift, and enter state 233
+	')'            shift, and enter state 232
 
 
-State 231
+State 230
 
 	SwitchCase -> '|' ConIdent SwitchCaseDataConArgs '=>' . Term    (rule 34)
 
-	'('            shift, and enter state 34
-	'/*@'          shift, and enter state 35
-	'false'        shift, and enter state 36
-	'if'           shift, and enter state 37
-	'let'          shift, and enter state 38
-	'switch'       shift, and enter state 39
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 31
+	'/*@'          shift, and enter state 32
+	'false'        shift, and enter state 33
+	'if'           shift, and enter state 34
+	'let'          shift, and enter state 35
+	'switch'       shift, and enter state 36
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 26
-	VarIdent       goto state 27
-	ConIdent       goto state 28
-	Term           goto state 232
-	ConstBool      goto state 30
-	Annotation     goto state 31
-	Decl           goto state 32
-	FuncAppArg     goto state 33
+	Integer        goto state 23
+	VarIdent       goto state 24
+	ConIdent       goto state 25
+	Term           goto state 231
+	ConstBool      goto state 27
+	Annotation     goto state 28
+	Decl           goto state 29
+	FuncAppArg     goto state 30
 
-State 232
+State 231
 
 	SwitchCase -> '|' ConIdent SwitchCaseDataConArgs '=>' Term .    (rule 34)
 
@@ -3095,52 +3083,52 @@ State 232
 	'}'            reduce using rule 34
 
 
-State 233
+State 232
 
 	SwitchCaseDataConArgs -> '(' ListFunArgName ')' .    (rule 37)
 
 	'=>'           reduce using rule 37
 
 
-State 234
+State 233
 
 	Term -> 'if' '(' FuncAppArg ')' '{' Term '}' 'else' '{' Term . '}'    (rule 21)
 
-	'}'            shift, and enter state 237
+	'}'            shift, and enter state 236
 
 
-State 235
+State 234
 
 	DataTypeConstructorPredicate -> '=>' '[' VarIdent '|' . Pred ']'    (rule 67)
 
-	'('            shift, and enter state 146
-	'false'        shift, and enter state 36
-	'true'         shift, and enter state 40
+	'('            shift, and enter state 145
+	'false'        shift, and enter state 33
+	'true'         shift, and enter state 37
 	L_integ        shift, and enter state 2
 	L_VarIdent     shift, and enter state 8
-	L_ConIdent     shift, and enter state 16
+	L_ConIdent     shift, and enter state 38
 
-	Integer        goto state 135
-	VarIdent       goto state 136
-	ConIdent       goto state 14
-	MeasureIdent   goto state 137
-	ConstBool      goto state 138
-	Pred6          goto state 139
-	Pred1          goto state 140
-	Pred2          goto state 141
-	Pred3          goto state 142
-	Pred4          goto state 143
-	Pred5          goto state 144
-	Pred           goto state 236
+	Integer        goto state 133
+	VarIdent       goto state 134
+	ConIdent       goto state 135
+	MeasureIdent   goto state 136
+	ConstBool      goto state 137
+	Pred6          goto state 138
+	Pred1          goto state 139
+	Pred2          goto state 140
+	Pred3          goto state 141
+	Pred4          goto state 142
+	Pred5          goto state 143
+	Pred           goto state 235
 
-State 236
+State 235
 
 	DataTypeConstructorPredicate -> '=>' '[' VarIdent '|' Pred . ']'    (rule 67)
 
-	']'            shift, and enter state 238
+	']'            shift, and enter state 237
 
 
-State 237
+State 236
 
 	Term -> 'if' '(' FuncAppArg ')' '{' Term '}' 'else' '{' Term '}' .    (rule 21)
 
@@ -3150,7 +3138,7 @@ State 237
 	%eof           reduce using rule 21
 
 
-State 238
+State 237
 
 	DataTypeConstructorPredicate -> '=>' '[' VarIdent '|' Pred ']' .    (rule 67)
 
@@ -3164,4 +3152,4 @@ Grammar Totals
 Number of rules: 113
 Number of terminals: 43
 Number of non-terminals: 51
-Number of states: 239
+Number of states: 238

@@ -1,0 +1,49 @@
+token Id letter (letter | digit | '_')* ;
+
+HVar.         Pred ::= "k$" Id "(" [Pred] ")" ;
+MeasureCall.  Pred ::= Id "(" [Pred] ")" ;
+
+ConstInt.     Pred ::= Integer ;
+Boolean.      Pred ::= ConstBool ;
+-- Unknown.      Pred ::= "?";
+Var.          Pred ::= Id;
+OpExpr.       Pred ::= "(" Pred Op Pred ")";
+
+ConstTrue.      ConstBool ::= "true" ;
+ConstFalse.     ConstBool ::= "false" ;
+
+EqOp.            Op ::= "==";
+LessOrEqOp.      Op ::= "<=";
+LessOp.          Op ::= "<";
+GreaterOrEqOp.   Op ::= ">=";
+GreaterOp.       Op ::= ">";
+PlusOp.          Op ::= "+";
+MinusOp.         Op ::= "-";
+MultiplyOp.      Op ::= "*";
+AndOp.           Op ::= "&&";
+OrOp.            Op ::= "||";
+
+separator nonempty Pred ",";
+
+BoolType. Type3 ::= "bool";
+IntType.  Type3 ::= "int";
+VarType.  Type3 ::= "'" Id;
+DataType. Type2 ::= Id  "(" [DataTypeArg] ")" ;
+FunType.  Type1 ::= Type2 "->" Type1;
+
+DataTypeArg. DataTypeArg ::= Type;
+separator DataTypeArg ",";
+
+
+coercions Type 2;
+
+-- /*M len : _:list('a) => int */
+Measure. Measure ::= "measure" Id ":" Type;
+separator Measure "\n";
+
+-- /*Q pos(v:int): (0 <= v) */
+Qualifier. Qualifier ::= "qualifier" Id "(" [QualifierArg] ")" ":" Pred;
+separator Qualifier "\n";
+
+QualifierArg. QualifierArg ::= Id ":" Type;
+separator nonempty QualifierArg ",";
