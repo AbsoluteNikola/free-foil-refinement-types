@@ -45,7 +45,7 @@ library
       Language.Sprite.Syntax
       Language.Sprite.Syntax.Convert.FrontToInner
       Language.Sprite.Syntax.Convert.InnerToFTR
-      Language.Sprite.Syntax.Convert.QualifierToFTR
+      Language.Sprite.Syntax.Convert.QualifierToLR
       Language.Sprite.Syntax.Front.Abs
       Language.Sprite.Syntax.Front.Lex
       Language.Sprite.Syntax.Front.Par

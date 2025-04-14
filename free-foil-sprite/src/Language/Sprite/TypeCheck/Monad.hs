@@ -32,8 +32,7 @@ data CheckerEnv = CheckerEnv
 
 data CheckerState = CheckerState
   -- refinement check env
-  { hornVarIndex :: Int
-  , hornVars :: [H.Var Text]
+  { refinementCheckState :: LR.RefinementCheckState
   -- elaboration env
   , typeVarIndex :: Int
   }
@@ -43,8 +42,7 @@ defaultCheckerEnv = CheckerEnv "" "" Map.empty
 
 defaultCheckerState :: CheckerState
 defaultCheckerState = CheckerState
-  { hornVarIndex = 0
-  , hornVars = []
+  { refinementCheckState = LR.emptyRefinementCheckState
   , typeVarIndex = 0
   }
 
@@ -87,13 +85,15 @@ withRule rule action = do
 
 mkFreshHornVar :: [FP.Sort] -> CheckerM Inner.VarIdent
 mkFreshHornVar sorts = do
-  newIndex <- gets (.hornVarIndex)
+  newIndex <- gets (.refinementCheckState.nextHornVarIndex)
   let varName = "k" <> show newIndex
   let hv = H.HVar (FP.symbol varName) sorts "fake"
   modify $ \s ->
      s
-     { hornVarIndex = newIndex + 1
-     , hornVars = hv : s.hornVars
+     { refinementCheckState = s.refinementCheckState
+       { LR.hornVars = LR.HornVar hv : s.refinementCheckState.hornVars
+       ,   LR.nextHornVarIndex = newIndex + 1
+       }
      }
   pure $ Inner.VarIdent varName
 

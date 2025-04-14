@@ -92,7 +92,7 @@ ListQualifier
 
 QualifierArg :: { Language.Sprite.Syntax.Front.Abs.QualifierArg }
 QualifierArg
-  : VarIdent ':' BaseType { Language.Sprite.Syntax.Front.Abs.QualifierArg $1 $3 }
+  : VarIdent ':' RType { Language.Sprite.Syntax.Front.Abs.QualifierArg $1 $3 }
 
 ListQualifierArg :: { [Language.Sprite.Syntax.Front.Abs.QualifierArg] }
 ListQualifierArg

@@ -10,7 +10,6 @@ import qualified Text.PrettyPrint.HughesPJ.Compat as PJ
 import Language.Refinements.Constraint
 import Language.Refinements.Measure
 import Data.Biapplicative (first)
-import Control.Monad.State (MonadState, gets)
 import Data.Functor ((<&>))
 import qualified Data.HashMap.Strict as HashMap
 import qualified Language.Fixpoint.Horn.Solve as LF
@@ -33,17 +32,14 @@ toResult = \case
   LF.Safe{} -> Safe
   LF.Unsafe _ errors -> Unsafe errors
 
-makeQuery :: MonadState RefinementCheckState m => [Qualifier] -> [Measure] -> Constraint -> m (Either T.Text (LF.Query T.Text))
-makeQuery quals measures constraints = do
+makeQuery :: RefinementCheckState -> [Qualifier] -> [Measure] -> Constraint -> Either T.Text (LF.Query T.Text)
+makeQuery refinementCheckState quals measures constraint = do
+  convertedConstraints <- first (T.pack . show) $ constraintsToLF constraint
   let
-    convertedConstraints = first (T.pack . show) $ constraintsToLF constraints
     convertedQuals = convertQualifier <$> quals
     convertedMeasures = measures <&> \m -> (LF.symbol m.measureName, m.sort)
-  hornVars <- gets (map unHornVar . (.hornVars))
-  pure $ do
-    c' <- convertedConstraints
-    pure $ LF.Query convertedQuals hornVars c' (HashMap.fromList convertedMeasures) mempty mempty mempty mempty mempty mempty
-  where
+    hornVars = unHornVar <$> refinementCheckState.hornVars
+  pure $ LF.Query convertedQuals hornVars convertedConstraints (HashMap.fromList convertedMeasures) mempty mempty mempty mempty mempty mempty
 
 checkValid :: FilePath -> LF.Query T.Text -> IO Result
 checkValid f query = do
@@ -58,3 +54,12 @@ dumpQuery f q = do
   -- need to allow fixpoint cli calls on dumped constraints
   writeFile smtFile (PJ.render . LF.toHornSMT $ q)
   putStrLn "END: Horn VC"
+
+runConstraintsCheck :: FilePath -> RefinementCheckState -> [Qualifier] -> [Measure] -> Constraint -> IO (Either T.Text Result)
+runConstraintsCheck filePath refinementCheckState quals measures constraint = do
+  let eQuery = makeQuery refinementCheckState quals measures constraint
+  case eQuery of
+    Left err -> pure (Left err)
+    Right query -> do
+      dumpQuery filePath query
+      Right <$> checkValid filePath query

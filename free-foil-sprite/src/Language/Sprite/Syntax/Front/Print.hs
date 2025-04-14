@@ -155,7 +155,7 @@ instance Print [Language.Sprite.Syntax.Front.Abs.Qualifier] where
 
 instance Print Language.Sprite.Syntax.Front.Abs.QualifierArg where
   prt i = \case
-    Language.Sprite.Syntax.Front.Abs.QualifierArg varident basetype -> prPrec i 0 (concatD [prt 0 varident, doc (showString ":"), prt 0 basetype])
+    Language.Sprite.Syntax.Front.Abs.QualifierArg varident rtype -> prPrec i 0 (concatD [prt 0 varident, doc (showString ":"), prt 0 rtype])
 
 instance Print [Language.Sprite.Syntax.Front.Abs.QualifierArg] where
   prt _ [] = concatD []

@@ -14,7 +14,7 @@ Grammar
 	Qualifier -> '/*Q' VarIdent '(' ListQualifierArg ')' ':' '(' Pred ')' '*/'   (5)
 	ListQualifier ->                                   (6)
 	ListQualifier -> Qualifier ListQualifier           (7)
-	QualifierArg -> VarIdent ':' BaseType              (8)
+	QualifierArg -> VarIdent ':' RType                 (8)
 	ListQualifierArg -> QualifierArg                   (9)
 	ListQualifierArg -> QualifierArg ',' ListQualifierArg   (10)
 	Measure -> '/*M' VarIdent ':' RType '*/'           (11)
@@ -521,7 +521,7 @@ State 18
 
 State 19
 
-	QualifierArg -> VarIdent . ':' BaseType             (rule 8)
+	QualifierArg -> VarIdent . ':' RType                (rule 8)
 
 	':'            shift, and enter state 76
 
@@ -1162,18 +1162,24 @@ State 75
 
 State 76
 
-	QualifierArg -> VarIdent ':' . BaseType             (rule 8)
+	QualifierArg -> VarIdent ':' . RType                (rule 8)
 
 	'\''           shift, and enter state 46
+	'('            shift, and enter state 47
+	'_'            shift, and enter state 48
 	'bool'         shift, and enter state 49
 	'int'          shift, and enter state 50
+	L_VarIdent     shift, and enter state 8
 
-	BaseType       goto state 77
+	VarIdent       goto state 41
+	RType          goto state 77
+	FuncArg        goto state 43
+	BaseType       goto state 44
 	TypeVarId      goto state 45
 
 State 77
 
-	QualifierArg -> VarIdent ':' BaseType .             (rule 8)
+	QualifierArg -> VarIdent ':' RType .                (rule 8)
 
 	')'            reduce using rule 8
 	','            reduce using rule 8

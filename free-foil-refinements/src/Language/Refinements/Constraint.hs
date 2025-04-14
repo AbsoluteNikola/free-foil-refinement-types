@@ -8,7 +8,6 @@ module Language.Refinements.Constraint where
 import Data.Text (Text)
 import qualified Language.Refinements.Predicates.Abs as P
 import qualified Language.Fixpoint.Types as LF
-import Control.Monad.State (MonadState(..), gets, modify)
 import qualified Language.Fixpoint.Horn.Types as LF
 import qualified Language.Refinements.Predicates as P
 import qualified Control.Monad.Foil as Foil
@@ -148,17 +147,17 @@ singletonT varName typ = snd $ withPred typ $ \(WithPred pNameBinder p) ->
       in ((), newPred)
 
 freshTypeWithPredicate ::
-  (Bitraversable sig, Foil.Distinct n, IsType sig binder, MonadState RefinementCheckState m) =>
+  (Bitraversable sig, Foil.Distinct n, IsType sig binder) =>
+  RefinementCheckState ->
   Env sig binder n ->
   Foil.AST binder sig n ->
-  m (Foil.AST binder sig n)
-freshTypeWithPredicate env typToFresh = do
+  (Foil.AST binder sig n, RefinementCheckState)
+freshTypeWithPredicate refinementState env typToFresh =
   let
     envSorts = flip mapMaybe (envToList env) $ \(name, envTyp) ->
       fst $ withPred envTyp $ \withPredInst ->
         let sort = typeToSort (toTypeSignature envTyp)
         in ((name, sort), withPredInst)
-  let
     -- нужно проверить что у типа есть предикат и он Unknown
     mTypeSort =  fst $ withPred typToFresh $ \wp@(WithPred _ p) ->
       let
@@ -166,16 +165,16 @@ freshTypeWithPredicate env typToFresh = do
           then Just $ typeToSort (toTypeSignature typToFresh)
           else Nothing
       in (sort, wp)
-
-  case mTypeSort of
-    Just (Just typSort) -> do
-      hornVarName <- mkFreshHornVar (typSort : map snd envSorts)
+  in case mTypeSort of
+    Just (Just typSort) ->
       let
+        (hornVarName, refinementState')
+          = mkFreshHornVar refinementState (typSort : map snd envSorts)
         freshedType = snd $ withPred typToFresh $ \(WithPred pNameBinder _) ->
           let newPred = mkHornVar hornVarName (Foil.nameOf pNameBinder : map (Foil.sink . fst) envSorts)
           in ((), WithPred pNameBinder newPred)
-      pure freshedType
-    _ -> pure typToFresh
+      in (freshedType, refinementState')
+    _ -> (typToFresh, refinementState)
 
 newtype HornVar = HornVar { unHornVar :: LF.Var Text }
 
@@ -184,14 +183,17 @@ data RefinementCheckState = RefinementCheckState
   , hornVars :: [HornVar]
   }
 
-mkFreshHornVar :: MonadState RefinementCheckState m => [LF.Sort] -> m String
-mkFreshHornVar sorts = do
-  newIndex <- gets (.nextHornVarIndex)
-  let varName = "k" <> show newIndex
-  let hv = LF.HVar (LF.symbol varName) sorts "fake"
-  modify $ \s ->
-     s
-     { nextHornVarIndex = newIndex + 1
-     , hornVars = HornVar hv : s.hornVars
-     }
-  pure varName
+emptyRefinementCheckState :: RefinementCheckState
+emptyRefinementCheckState = RefinementCheckState 0 []
+
+mkFreshHornVar :: RefinementCheckState -> [LF.Sort] -> (String, RefinementCheckState)
+mkFreshHornVar refinementState sorts =
+  let
+    newIndex = refinementState.nextHornVarIndex
+    varName = "k" <> show newIndex
+    hv = LF.HVar (LF.symbol varName) sorts "fake"
+    refinementState' = refinementState
+      { nextHornVarIndex = newIndex + 1
+      , hornVars = HornVar hv : refinementState.hornVars
+      }
+  in (varName, refinementState')
