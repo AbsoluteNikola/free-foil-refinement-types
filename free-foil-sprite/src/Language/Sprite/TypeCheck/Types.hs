@@ -14,6 +14,8 @@ import Data.Traversable (for)
 import Data.Biapplicative (bimap)
 import qualified Language.Fixpoint.Types.Sorts as FTS
 import Data.Bifoldable (bifoldr)
+import Language.Refinements.Constraint (withExtendedEnv)
+import Language.Refinements.Constraint (envToList)
 
 constIntT :: Integer -> Term F.VoidS
 constIntT x = F.withFreshBinder F.emptyScope $

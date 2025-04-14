@@ -20,6 +20,8 @@ import Data.Traversable (for)
 import Data.Bifunctor (bimap)
 import qualified Data.List as List
 import Control.Monad (foldM)
+import Language.Refinements.Constraint (withExtendedEnv, envToList, changeVarTypeInEnv)
+import Language.Refinements.Constraint (lookupEnv)
 
 mkSolverErrorMessage :: Text -> CheckerM Text
 mkSolverErrorMessage baseMsg = do

@@ -34,6 +34,7 @@ import qualified Language.Sprite.Syntax.Inner.Print as Inner
 import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import qualified Language.Fixpoint.Types.Names as FST
 import qualified Language.Fixpoint.Types.Sorts as FST
+import qualified Language.Refinements.Constraint as LR
 
 -- TODO: add better errors
 instance F.Loc T.Text where
@@ -57,7 +58,7 @@ vcgen ::
 vcgen qualifiers constructors measures term = do
   let
     programType = S.anyIntT
-  (elaboratedTerm, _) <- runM constructors (Elaboration.check Foil.emptyScope Check.EmptyEnv term programType)
+  (elaboratedTerm, _) <- runM constructors (Elaboration.check Foil.emptyScope LR.EmptyEnv term programType)
     >>= \case
       (Left err, _) -> do
         print ("Elaboration errors:" :: Text)
@@ -68,7 +69,7 @@ vcgen qualifiers constructors measures term = do
   print ("Elaborated term:" :: Text)
   TIO.putStrLn $ Check.showT elaboratedTerm
   (eConstraints, checkerState) <-
-    runM constructors $ Check.check Foil.emptyScope Check.EmptyEnv elaboratedTerm programType
+    runM constructors $ Check.check Foil.emptyScope LR.EmptyEnv elaboratedTerm programType
   let
     mkQuery c = do
       c' <- first Check.showT $ Check.constraintsToFHT c
