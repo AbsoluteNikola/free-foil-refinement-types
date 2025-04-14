@@ -13,13 +13,10 @@ import qualified Language.Fixpoint.Horn.Types as LF
 import qualified Language.Refinements.Predicates as P
 import qualified Control.Monad.Foil as Foil
 import qualified Control.Monad.Free.Foil as Foil
-import qualified Data.Kind
 import Data.Bifunctor (bimap, Bifunctor)
-import Data.Bitraversable (bitraverse, Bitraversable)
-import Data.Traversable (for)
+import Data.Bitraversable (Bitraversable)
 import Language.Refinements.TypeSignature (typeToSort)
-import Data.Maybe (catMaybes, mapMaybe, fromMaybe)
-import Data.Functor ((<&>))
+import Data.Maybe (mapMaybe, fromMaybe)
 import qualified Data.Text as Text
 
 -- Env

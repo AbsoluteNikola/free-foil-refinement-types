@@ -11,6 +11,8 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Eta reduce" #-}
 module Language.Sprite.Syntax where
 
 import Data.String (IsString(..))
@@ -23,6 +25,7 @@ import qualified Control.Monad.Foil as Foil
 -- import Control.Monad.Free.Foil.TH.MkFreeFoil
 import Language.Sprite.FreeFoilConfig
 import qualified Language.Sprite.Syntax.Inner.Abs
+import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import qualified GHC.Generics
 import qualified Control.Monad.Free.Foil
 import qualified Language.Refinements.Constraint as Refinements
@@ -498,7 +501,31 @@ instance Refinements.IsPred TermSig Pattern where
     (Language.Sprite.Syntax.Inner.Abs.VarIdent name)
     (Foil.Var <$> vars)
 
-  mkAnd l r= OpExpr l Language.Sprite.Syntax.Inner.Abs.AndOp r
-  mkEq l r= OpExpr l Language.Sprite.Syntax.Inner.Abs.EqOp r
+  mkAnd l r = OpExpr l Language.Sprite.Syntax.Inner.Abs.AndOp r
+  mkEq l r = OpExpr l Language.Sprite.Syntax.Inner.Abs.EqOp r
 
-  toPredicate = undefined -- TODO
+  toPredicate = convert . fromTerm
+    where
+     convert = \case
+        Inner.Var (Inner.VarIdent varId) -> Refinements.Var $ Refinements.Id varId
+        Inner.Boolean b -> Refinements.Boolean $ case b of
+          Inner.ConstTrue -> Refinements.ConstTrue
+          Inner.ConstFalse -> Refinements.ConstTrue
+        Inner.ConstInt n -> Refinements.ConstInt n
+        Inner.OpExpr l op r -> do
+            Refinements.OpExpr (convert l) (op_ op) (convert r)
+        Inner.Measure (Inner.MeasureIdent measureName) args ->
+          Refinements.MeasureCall (Refinements.Id measureName) (convert <$> args)
+        term -> error $ "Unknwon term for toPredicate: " <> show term
+        where
+          op_ = \case
+            Inner.EqOp -> Refinements.EqOp
+            Inner.LessOrEqOp -> Refinements.LessOrEqOp
+            Inner.LessOp -> Refinements.LessOp
+            Inner.GreaterOrEqOp -> Refinements.GreaterOrEqOp
+            Inner.GreaterOp -> Refinements.GreaterOp
+            Inner.AndOp -> Refinements.AndOp
+            Inner.OrOp -> Refinements.OrOp
+            Inner.PlusOp -> Refinements.PlusOp
+            Inner.MinusOp -> Refinements.MinusOp
+            Inner.MultiplyOp -> Refinements.MultiplyOp

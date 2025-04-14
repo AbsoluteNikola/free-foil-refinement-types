@@ -1,4 +1,12 @@
-module Language.Refinements.TypeSignature (P.Type(..), P.Id(..), P.DataTypeArg(..), typeToSort) where
+module Language.Refinements.TypeSignature
+  ( P.Type(..)
+  , P.Id(..)
+  , P.DataTypeArg(..)
+  , P.Pred(..)
+  , P.Op(..)
+  , P.ConstBool(..)
+  , typeToSort
+  ) where
 
 import qualified Language.Refinements.Predicates.Abs as P
 import qualified Language.Fixpoint.Types.Sorts as LF
