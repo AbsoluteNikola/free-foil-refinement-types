@@ -17,6 +17,7 @@ import qualified Language.Fixpoint.Types.Sorts as FTS
 import Control.Monad.Error.Class (throwError)
 
 
+-- В фреймворк
 data Constraint
   = CPred Inner.Term Text
   | CAnd [Constraint]
@@ -26,6 +27,7 @@ data Constraint
 cTrue :: Constraint
 cTrue = CAnd []
 
+-- транзитивно через IsType уехало в фреймворк при помощи TypeSignature
 baseTypeToSort :: I.Term -> Either Text T.Sort
 baseTypeToSort = \case
   I.BaseTypeInt -> pure T.intSort
@@ -41,6 +43,7 @@ buildImplicationFromType msg scope argVarPat typ constraint =
       pure $ CImplication argVarIdRaw typSort (fromTerm p) constraint msg
     Nothing -> pure constraint
 
+-- В фреймворк
 buildImplicationFromType' :: F.Distinct o => Text -> F.Scope o -> F.Name o -> Term o -> Constraint -> CheckerM Constraint
 buildImplicationFromType' msg scope argVarId typ constraint =
   sortPred scope argVarId typ >>= \case
@@ -49,6 +52,7 @@ buildImplicationFromType' msg scope argVarId typ constraint =
       pure $ CImplication argVarIdRaw typSort (fromTerm p) constraint msg
     Nothing -> pure constraint
 
+-- В фреймворк
 sortPred :: F.Distinct o => F.Scope o -> F.Name o -> Term o -> CheckerM (Maybe (FTS.Sort, Term o))
 sortPred scope argVarId typ = case typ of
   TypeRefined _ (PatternVar typVarId) p -> do
@@ -69,6 +73,7 @@ sortPred scope argVarId typ = case typ of
     pure $ Just (typSort, p')
   _ -> pure Nothing
 
+-- В фреймворк
 getTypeSort :: Term i -> Either Text FTS.Sort
 getTypeSort = \case
   TypeRefined b _ _ -> baseTypeToSort (fromTerm b)

@@ -28,6 +28,7 @@ import qualified Control.Monad.Free.Foil
 import qualified Language.Refinements.Constraint as Refinements
 import qualified Language.Refinements.TypeSignature as Refinements
 import qualified Control.Monad.Free.Foil as F
+import qualified Control.Monad.Free.Foil as Foil
 
 -- There is issue with generating patterns and instances for AST nodes with Pattern and multiple Terms/Scoped terms.
 -- Code below just copy paste of generated code via TH and some fixes (marked as FIXED HERE). I hope I will find some time to fix it in free-foil
@@ -459,12 +460,12 @@ instance IsString (Term Foil.VoidS) where
 instance Refinements.IsType TermSig Pattern where
   withPred (TypeRefined base (PatternVar v) p) f = case (Foil.assertDistinct v, Foil.assertExt v) of
     (Foil.Distinct, Foil.Ext) -> case f $ Refinements.WithPred v p of
-      Refinements.WithPred v' p' -> TypeRefined base (PatternVar v') p'
+      (res, Refinements.WithPred v' p') -> (Just res, TypeRefined base (PatternVar v') p')
   withPred (TypeData name args (PatternVar v) p) f = case (Foil.assertDistinct v, Foil.assertExt v) of
     (Foil.Distinct, Foil.Ext) ->
       case f $ Refinements.WithPred v p of
-      Refinements.WithPred v' p' -> TypeData name args (PatternVar v') p'
-  withPred t _ = t
+      (res, Refinements.WithPred v' p') -> (Just res, TypeData name args (PatternVar v') p')
+  withPred t _ = (Nothing, t)
 
   toTypeSignature (TypeRefined BaseTypeInt _ _) = Refinements.IntType
   toTypeSignature (TypeRefined BaseTypeBool _ _) = Refinements.BoolType
@@ -492,6 +493,10 @@ varToPredId name =
 instance Refinements.IsPred TermSig Pattern where
   isUnknown Unknown = True
   isUnknown _ = False
+
+  mkHornVar name vars = HVar
+    (Language.Sprite.Syntax.Inner.Abs.VarIdent name)
+    (Foil.Var <$> vars)
 
   mkAnd l r= OpExpr l Language.Sprite.Syntax.Inner.Abs.AndOp r
   mkEq l r= OpExpr l Language.Sprite.Syntax.Inner.Abs.EqOp r

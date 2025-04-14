@@ -14,36 +14,42 @@ import qualified Language.Refinements.Predicates as P
 import qualified Control.Monad.Foil as Foil
 import qualified Control.Monad.Free.Foil as Foil
 import qualified Data.Kind
-import Data.Bifunctor (bimap)
+import Data.Bifunctor (bimap, Bifunctor)
+import Data.Bitraversable (bitraverse, Bitraversable)
+import Data.Traversable (for)
+import Language.Refinements.TypeSignature (typeToSort)
+import Data.Maybe (catMaybes, mapMaybe, fromMaybe)
+import Data.Functor ((<&>))
+import qualified Data.Text as Text
 
 -- Env
 
-data Env sig n where
-    EmptyEnv :: Foil.Sinkable sig => Env sig Foil.VoidS
+data Env sig binder n where
+    EmptyEnv :: Env sig binder Foil.VoidS
     NonEmptyEnv ::
-      (Foil.Sinkable sig, Foil.DExt i o) =>
-      Env sig i ->
+      (Foil.CoSinkable binder, Foil.DExt i o) =>
+      Env sig binder i ->
       Foil.NameBinder i o ->
-      sig i ->
-      Env sig o
+      Foil.AST binder sig i ->
+      Env sig binder o
 
-withExtendedEnv :: (Foil.DExt i o, Foil.Sinkable sig) => Env sig i -> Foil.NameBinder i o -> sig i -> (Env sig o -> m a) -> m a
+withExtendedEnv :: (Foil.DExt i o, Foil.CoSinkable binder) => Env sig binder i -> Foil.NameBinder i o -> Foil.AST binder sig i -> (Env sig binder o -> m a) -> m a
 withExtendedEnv env binder typ action = do
   let env' = NonEmptyEnv env binder typ
   action env'
 
-lookupEnv :: Env sig o -> Foil.Name o -> sig o
+lookupEnv :: (Bifunctor sig, IsType sig binder) => Env sig binder o -> Foil.Name o -> Foil.AST binder sig o
 lookupEnv env varId = case env of
   EmptyEnv -> error $ "impossible case, no var in env: " <> show varId
   NonEmptyEnv env' binder term ->
     if Foil.nameOf binder == varId
-      then Foil.sink term
+      then singletonT varId $ Foil.sink term
       else
         case Foil.unsinkName binder varId of
           Nothing -> error $ "impossible case. If we didn't found var in bigger scoped map. It should be in smaller scope " <> show varId
           Just varId' -> Foil.sink $ lookupEnv env' varId'
 
-envToList :: Env sig o  -> [(Foil.Name o, sig o)]
+envToList :: Bifunctor sig => Env sig binder o  -> [(Foil.Name o, Foil.AST binder sig o)]
 envToList env = case env of
   EmptyEnv -> []
   NonEmptyEnv env' binder term ->
@@ -74,30 +80,36 @@ constraintsToLF = \case
         msg)
       c'
 
-class Monad m => MonadConstraints m where
-  addConstraint :: Constraint -> m ()
-  getConstraint :: m Constraint
-
-instance (Monad m, MonadState Constraint m) => MonadConstraints m where
-  addConstraint newC = do
-    oldC <- get
-    put $ case oldC of
-      CAnd cs -> CAnd (cs ++ [newC])
-      _       -> CAnd [oldC, newC]
-  getConstraint = get
-
 cTrue :: Constraint
 cTrue = CAnd []
 
 -- equality to build implication from type
-сImplication :: MonadConstraints m => m ()
-сImplication = undefined
+сImplicationFromType ::
+  (IsType sig binder, Foil.Distinct n, Bifunctor sig, Foil.CoSinkable binder) =>
+  Foil.Scope n ->
+  Foil.NameBinder n l ->
+  Foil.AST binder sig n ->
+  Constraint ->
+  Text ->
+  Constraint
+сImplicationFromType scope varBinder typ constraint msg = fromMaybe constraint mImplConstraint
+  where
+    mImplConstraint = fst $ withPred typ $ \wp@(WithPred nameBinder p) ->
+      case (Foil.assertDistinct varBinder, Foil.assertExt varBinder) of
+        (Foil.Distinct, Foil.Ext) ->
+          let
+            sort = typeToSort $ toTypeSignature typ
+            scope' = Foil.extendScope varBinder scope
+            subst = Foil.addRename (Foil.sink Foil.identitySubst) nameBinder (Foil.nameOf varBinder)
+            p' = Foil.substitute scope' subst p
+            rawVarId = Text.pack $ "x" <> show (Foil.nameId $ Foil.nameOf varBinder)
+          in (CImplication rawVarId sort (toPredicate p') constraint msg, wp)
 
-cPred :: MonadConstraints m => P.Pred -> Text -> m ()
-cPred p msg = addConstraint $ CPred p msg
+cPred :: IsPred sig binder => Foil.AST binder sig n -> Text -> Constraint
+cPred p = CPred (toPredicate p)
 
-cAnd :: MonadConstraints m => [m a] -> m [a]
-cAnd = sequenceA
+cAnd ::[Constraint] -> Constraint
+cAnd = CAnd
 
 -- Working with types and predicates
 data WithPred sig binder (i :: Foil.S) where
@@ -107,42 +119,71 @@ class IsType sig binder where
   withPred ::
     Foil.Distinct n =>
     Foil.AST binder sig n ->
-    (WithPred sig binder n -> WithPred sig binder n) ->
-    Foil.AST binder sig n
+    (WithPred sig binder n -> (a, WithPred sig binder n)) ->
+    (Maybe a, Foil.AST binder sig n)
   toTypeSignature :: Foil.AST binder sig n -> P.Type
 
 class IsPred sig binder where
   isUnknown :: Foil.AST binder sig n  -> Bool
   mkAnd :: Foil.AST binder sig n -> Foil.AST binder sig n -> Foil.AST binder sig n
   mkEq :: Foil.AST binder sig n -> Foil.AST binder sig n -> Foil.AST binder sig n
-  mkHornVar :: [Foil.Name n] -> Foil.AST binder sig n
+  mkHornVar :: String -> [Foil.Name n] -> Foil.AST binder sig n
   toPredicate :: Foil.AST binder sig n -> P.Pred
 
 singletonT :: (Foil.Distinct n, IsType sig binder) => Foil.Name n -> Foil.AST binder sig n -> Foil.AST binder sig n
-singletonT varName typ = withPred typ $ \(WithPred pNameBinder p) ->
+singletonT varName typ = snd $ withPred typ $ \(WithPred pNameBinder p) ->
   case (Foil.assertDistinct pNameBinder, Foil.assertExt pNameBinder) of
     (Foil.Distinct, Foil.Ext) ->
-        WithPred pNameBinder
-        ( mkAnd
-          p
-          ( mkEq
-            (Foil.Var $ Foil.sink varName)
-            (Foil.Var $ Foil.nameOf pNameBinder)
+      let
+        newPred =
+          WithPred pNameBinder
+          ( mkAnd
+            p
+            ( mkEq
+              (Foil.Var $ Foil.sink varName)
+              (Foil.Var $ Foil.nameOf pNameBinder)
+            )
           )
-        )
+      in ((), newPred)
 
-fresh :: (Foil.Distinct n, IsType sig binder) => Foil.Name n -> Foil.AST binder sig n -> Foil.AST binder sig n
-fresh = undefined
+freshTypeWithPredicate ::
+  (Bitraversable sig, Foil.Distinct n, IsType sig binder, MonadState RefinementCheckState m) =>
+  Env sig binder n ->
+  Foil.AST binder sig n ->
+  m (Foil.AST binder sig n)
+freshTypeWithPredicate env typToFresh = do
+  let
+    envSorts = flip mapMaybe (envToList env) $ \(name, envTyp) ->
+      fst $ withPred envTyp $ \withPredInst ->
+        let sort = typeToSort (toTypeSignature envTyp)
+        in ((name, sort), withPredInst)
+  let
+    -- нужно проверить что у типа есть предикат и он Unknown
+    mTypeSort =  fst $ withPred typToFresh $ \wp@(WithPred _ p) ->
+      let
+        sort = if isUnknown p
+          then Just $ typeToSort (toTypeSignature typToFresh)
+          else Nothing
+      in (sort, wp)
+
+  case mTypeSort of
+    Just (Just typSort) -> do
+      hornVarName <- mkFreshHornVar (typSort : map snd envSorts)
+      let
+        freshedType = snd $ withPred typToFresh $ \(WithPred pNameBinder _) ->
+          let newPred = mkHornVar hornVarName (Foil.nameOf pNameBinder : map (Foil.sink . fst) envSorts)
+          in ((), WithPred pNameBinder newPred)
+      pure freshedType
+    _ -> pure typToFresh
 
 newtype HornVar = HornVar (LF.Var Text)
-newtype HornVarName = HornVarName String
 
 data RefinementCheckState = RefinementCheckState
   { nextHornVarIndex :: Int
   , hornVars :: [HornVar]
   }
 
-mkFreshHornVar :: MonadState RefinementCheckState m => [LF.Sort] -> m HornVarName
+mkFreshHornVar :: MonadState RefinementCheckState m => [LF.Sort] -> m String
 mkFreshHornVar sorts = do
   newIndex <- gets (.nextHornVarIndex)
   let varName = "k" <> show newIndex
@@ -152,4 +193,4 @@ mkFreshHornVar sorts = do
      { nextHornVarIndex = newIndex + 1
      , hornVars = HornVar hv : s.hornVars
      }
-  pure $ HornVarName varName
+  pure varName

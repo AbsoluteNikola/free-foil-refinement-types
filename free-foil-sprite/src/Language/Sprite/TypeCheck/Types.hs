@@ -32,44 +32,10 @@ boolWithT b = F.withFreshBinder F.emptyScope $ \binder ->
     TypeRefined BaseTypeBool (PatternVar binder) (OpExpr (F.Var (F.nameOf binder)) Inner.EqOp (Boolean b))
 
 extendTypeToCurrentScope :: F.Distinct i => F.Scope i -> Term i -> CheckerM (Term i)
-extendTypeToCurrentScope scope typ = do
-  case typ of
-    TypeRefined b oldVar p -> F.withFreshBinder scope $ \newBinder ->
-      case (F.assertDistinct newBinder, F.assertExt newBinder) of
-        (F.Distinct, F.Ext) -> do
-          let
-            scope' = F.extendScope newBinder scope
-            newPred = F.substitutePattern scope' (F.sink F.identitySubst) oldVar [F.Var (F.nameOf newBinder)] p
-          pure $ TypeRefined b (PatternVar newBinder) newPred
-    TypeData typName typArgs oldVar p ->  F.withFreshBinder scope $ \newBinder ->
-      case (F.assertDistinct newBinder, F.assertExt newBinder) of
-        (F.Distinct, F.Ext) -> do
-          let
-            scope' = F.extendScope newBinder scope
-            newPred = F.substitutePattern scope' (F.sink F.identitySubst) oldVar [F.Var (F.nameOf newBinder)] p
-          typArgs' <- for typArgs (extendTypeToCurrentScope scope)
-          pure $ TypeData typName typArgs' (PatternVar newBinder) newPred
-    TypeFun argName argTyp retTyp ->  F.withFreshBinder scope $ \newBinder ->
-      case (F.assertDistinct newBinder, F.assertExt newBinder) of
-        (F.Distinct, F.Ext) -> do
-          argTypExtended <- extendTypeToCurrentScope scope argTyp
-          let
-            scope' = F.extendScope newBinder scope
-            newRetType = F.substitutePattern scope' (F.sink F.identitySubst) argName [F.Var (F.nameOf newBinder)] retTyp
-          newRetTypeExtended <- extendTypeToCurrentScope scope' newRetType
-          pure $ TypeFun (PatternVar newBinder) argTypExtended newRetTypeExtended
-    TypeForall v typUnderForall -> F.withFreshBinder scope $ \newBinder ->
-      case (F.assertDistinct newBinder, F.assertExt newBinder) of
-        (F.Distinct, F.Ext) -> do
-          let
-            scope' = F.extendScope newBinder scope
-            newTypUnderForall = F.substitutePattern scope' (F.sink F.identitySubst) v [F.Var (F.nameOf newBinder)] typUnderForall
-          newTypUnderForall' <- extendTypeToCurrentScope scope' newTypUnderForall
-          pure $ TypeForall (PatternVar newBinder) newTypUnderForall'
-    _ -> throwError $
-      "extendTypeToCurrentScope should be called only on type, not term\n"
-      <> showT typ
+extendTypeToCurrentScope scope typ = pure $ F.refreshAST scope typ
 
+
+-- TODO: попробовать вынести
 mkPredicatesInTypeUnknown :: F.Distinct i => F.Scope i -> Term i -> CheckerM (Term i)
 mkPredicatesInTypeUnknown scope typ = do
   case typ of
@@ -119,7 +85,7 @@ singletonT varName typ = case typ of
           (OpExpr (F.Var (F.sink varName)) Inner.EqOp (F.Var (F.nameOf typVar))))
   _ -> typ
 
--- В фреймворк
+
 {- See 5.4, Figure 5.4, page 34 -}
 fresh ::F.Distinct i => F.Scope i -> Env i -> Term i -> CheckerM (Term i)
 fresh scope env curType = case curType of
