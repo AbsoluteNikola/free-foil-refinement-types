@@ -472,7 +472,7 @@ instance Refinements.IsType TermSig Pattern where
 
   toTypeSignature (TypeRefined BaseTypeInt _ _) = Refinements.IntType
   toTypeSignature (TypeRefined BaseTypeBool _ _) = Refinements.BoolType
-  toTypeSignature (TypeRefined (F.Var v) _ _) = Refinements.VarType (varToPredId v )
+  toTypeSignature (TypeRefined (BaseTypeVar (F.Var v)) _ _) = Refinements.VarType (varToPredId v )
   toTypeSignature
     (TypeRefined (BaseTypeTempVar v) _ _)
     = Refinements.VarType (Refinements.Id $ getRawVarId v)
@@ -483,6 +483,8 @@ instance Refinements.IsType TermSig Pattern where
   toTypeSignature (TypeFun _ argT retT) = Refinements.FunType
     (Refinements.toTypeSignature argT)
     (Refinements.toTypeSignature retT)
+  toTypeSignature (TypeForall _  retT) =
+    Refinements.toTypeSignature retT
   toTypeSignature t = error $ "Unknown type: " <> show t
 
 getRawVarId :: Language.Sprite.Syntax.Inner.Abs.VarIdent -> String
@@ -510,12 +512,14 @@ instance Refinements.IsPred TermSig Pattern where
         Inner.Var (Inner.VarIdent varId) -> Refinements.Var $ Refinements.Id varId
         Inner.Boolean b -> Refinements.Boolean $ case b of
           Inner.ConstTrue -> Refinements.ConstTrue
-          Inner.ConstFalse -> Refinements.ConstTrue
+          Inner.ConstFalse -> Refinements.ConstFalse
         Inner.ConstInt n -> Refinements.ConstInt n
         Inner.OpExpr l op r -> do
             Refinements.OpExpr (convert l) (op_ op) (convert r)
         Inner.Measure (Inner.MeasureIdent measureName) args ->
           Refinements.MeasureCall (Refinements.Id measureName) (convert <$> args)
+        Inner.HVar (Inner.VarIdent hVarName) args ->
+          Refinements.HVar (Refinements.Id hVarName) (convert <$> args)
         term -> error $ "Unknwon term for toPredicate: " <> show term
         where
           op_ = \case

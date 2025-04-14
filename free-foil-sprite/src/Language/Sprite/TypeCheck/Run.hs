@@ -4,7 +4,6 @@ module Language.Sprite.TypeCheck.Run where
 import Language.Sprite.Syntax.Front.Abs qualified as Front
 import Language.Sprite.Syntax.Convert.FrontToInner qualified as FrontToInner
 import Language.Sprite.TypeCheck.Check qualified as Check
-import Language.Sprite.TypeCheck.Constraints qualified as Check
 import Language.Sprite.TypeCheck.Monad qualified as Check
 import Language.Sprite.Syntax qualified as S
 import System.Exit (exitFailure)
@@ -88,8 +87,7 @@ run filePath (Front.Program rawQualifiers rawMeasures dataTypes rawFrontTerm) = 
   putStrLn "Raw scoped term"
   print scopedTerm
   (constraints, checkerState) <- vcgen scopedConstructors scopedTerm
-  -- TODO: Fix me
-  result <- LR.runConstraintsCheck filePath checkerState qualifiers measures undefined {- constraints -}
+  result <- LR.runConstraintsCheck filePath checkerState qualifiers measures constraints
   case result of
     Left err -> do
       print ("Constraints check error:" :: Text)

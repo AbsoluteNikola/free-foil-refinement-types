@@ -14,6 +14,7 @@ import qualified Language.Fixpoint.Types.Names as LF
 import qualified Language.Fixpoint.Types.Spans as LF
 import Data.Foldable (foldl')
 import Data.List (nub)
+import Data.Functor ((<&>))
 
 typeToSort :: P.Type -> LF.Sort
 typeToSort typ = generalize (go typ)
@@ -27,7 +28,9 @@ typeToSort typ = generalize (go typ)
       P.BoolType -> LF.boolSort
       P.IntType -> LF.intSort
       P.VarType (P.Id varName) -> LF.fObj (LF.dummyLoc $ LF.symbol varName)
-      P.DataType{} -> undefined
+      P.DataType (P.Id typName) args -> LF.fAppTC
+        (LF.symbolFTycon . LF.dummyLoc  . LF.symbol $ typName)
+        (args <&> \(P.DataTypeArg argTyp) -> go argTyp)
       P.FunType argTyp retTyp ->
         LF.FFunc (typeToSort argTyp) (typeToSort retTyp)
 

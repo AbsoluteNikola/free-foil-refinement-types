@@ -15,6 +15,7 @@ import Language.Sprite.Syntax
 import qualified Control.Monad.Free.Foil as F
 import qualified Language.Fixpoint.Types.Sorts as FTS
 import Control.Monad.Error.Class (throwError)
+import qualified Language.Refinements.Constraint as LR
 
 
 -- В фреймворк
@@ -44,13 +45,9 @@ buildImplicationFromType msg scope argVarPat typ constraint =
     Nothing -> pure constraint
 
 -- В фреймворк
-buildImplicationFromType' :: F.Distinct o => Text -> F.Scope o -> F.Name o -> Term o -> Constraint -> CheckerM Constraint
+buildImplicationFromType' :: F.Distinct o => Text -> F.Scope o -> F.Name o -> Term o -> LR.Constraint -> CheckerM LR.Constraint
 buildImplicationFromType' msg scope argVarId typ constraint =
-  sortPred scope argVarId typ >>= \case
-    Just (typSort, p) -> do
-      let argVarIdRaw = getRawVarIdFromPattern (PatternVar $ F.UnsafeNameBinder argVarId)
-      pure $ CImplication argVarIdRaw typSort (fromTerm p) constraint msg
-    Nothing -> pure constraint
+   pure $ LR.сImplicationFromType scope (F.UnsafeNameBinder argVarId)  typ constraint msg
 
 -- В фреймворк
 sortPred :: F.Distinct o => F.Scope o -> F.Name o -> Term o -> CheckerM (Maybe (FTS.Sort, Term o))
