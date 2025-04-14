@@ -12,6 +12,7 @@ import Control.Monad.State (MonadState(..), gets, modify)
 import qualified Language.Fixpoint.Horn.Types as LF
 import qualified Language.Refinements.Predicates as P
 import qualified Control.Monad.Foil as Foil
+import qualified Control.Monad.Foil.Internal as FoilInteral
 import qualified Control.Monad.Free.Foil as Foil
 import Data.Bifunctor (bimap, Bifunctor)
 import Data.Bitraversable (Bitraversable)
@@ -45,6 +46,9 @@ lookupEnv env varId = case env of
         case Foil.unsinkName binder varId of
           Nothing -> error $ "impossible case. If we didn't found var in bigger scoped map. It should be in smaller scope " <> show varId
           Just varId' -> Foil.sink $ lookupEnv env' varId'
+
+changeVarTypeInEnv :: (Foil.Distinct o, Foil.CoSinkable binder) => Env sig binder o -> Foil.Name o -> Foil.AST binder sig o -> Env sig binder  o
+changeVarTypeInEnv env varId = NonEmptyEnv env (FoilInteral.UnsafeNameBinder varId)
 
 envToList :: Bifunctor sig => Env sig binder o  -> [(Foil.Name o, Foil.AST binder sig o)]
 envToList env = case env of
@@ -173,7 +177,7 @@ freshTypeWithPredicate env typToFresh = do
       pure freshedType
     _ -> pure typToFresh
 
-newtype HornVar = HornVar (LF.Var Text)
+newtype HornVar = HornVar { unHornVar :: LF.Var Text }
 
 data RefinementCheckState = RefinementCheckState
   { nextHornVarIndex :: Int

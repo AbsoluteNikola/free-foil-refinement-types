@@ -50,6 +50,7 @@ library
     Language.Refinements.Measure
     Language.Refinements.Env
     Language.Refinements.TypeSignature
+    Language.Refinements.Run
   hs-source-dirs:
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
