@@ -12,36 +12,24 @@ import qualified Language.Refinements.Predicates.Abs as P
 import qualified Language.Fixpoint.Types.Sorts as LF
 import qualified Language.Fixpoint.Types.Names as LF
 import qualified Language.Fixpoint.Types.Spans as LF
-import Data.Foldable (foldl')
-import Data.List (nub)
 import Data.Functor ((<&>))
 
 typeToSort :: P.Type -> LF.Sort
-typeToSort typ = generalize (go typ)
+typeToSort typ = go 0 typ
   where
-    generalize s =
-      let
-        freeVars = collectFreeVars typ
-        subst = LF.mkSortSubst $ zip freeVars (LF.FVar <$> [0..])
-      in foldl' (flip LF.FAbs) (LF.sortSubst subst s) [0 .. length freeVars - 1]
-    go = \case
+    go :: Int -> P.Type -> LF.Sort
+    go forallIndex = \case
       P.BoolType -> LF.boolSort
       P.IntType -> LF.intSort
-      P.VarType (P.Id varName) -> LF.fObj (LF.dummyLoc $ LF.symbol varName)
+      P.VarType (P.Id varName) -> LF.FObj (LF.symbol varName)
       P.DataType (P.Id typName) args -> LF.fAppTC
         (LF.symbolFTycon . LF.dummyLoc  . LF.symbol $ typName)
-        (args <&> \(P.DataTypeArg argTyp) -> go argTyp)
+        (args <&> \(P.DataTypeArg argTyp) -> go forallIndex argTyp)
       P.FunType argTyp retTyp ->
-        LF.FFunc (typeToSort argTyp) (typeToSort retTyp)
-
-collectFreeVars :: P.Type -> [LF.Symbol]
-collectFreeVars = nub . go
-  where
-    go = \case
-      P.VarType (P.Id varName) -> [LF.symbol varName]
-      P.FunType argType retType -> go argType ++ go retType
-      P.DataType _ typArgs -> fromTypeDataArgs typArgs
-      _ -> []
-
-    fromTypeDataArgs args = flip concatMap args $
-        \(P.DataTypeArg arg) -> go arg
+        LF.FFunc (go forallIndex argTyp) (go forallIndex retTyp)
+      P.ForallType (P.Id varName) typUnderForall ->
+        let
+          typeUnderForAllSort = go (forallIndex + 1) typUnderForall
+          subst = LF.mkSortSubst [(LF.symbol varName, LF.FVar forallIndex)]
+          s = LF.sortSubst subst typeUnderForAllSort
+        in LF.FAbs forallIndex s

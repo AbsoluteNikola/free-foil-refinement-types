@@ -483,8 +483,8 @@ instance Refinements.IsType TermSig Pattern where
   toTypeSignature (TypeFun _ argT retT) = Refinements.FunType
     (Refinements.toTypeSignature argT)
     (Refinements.toTypeSignature retT)
-  toTypeSignature (TypeForall _  retT) =
-    Refinements.toTypeSignature retT
+  toTypeSignature (TypeForall (PatternVar var) retT) =
+    Refinements.ForallType (varToPredId $ Foil.nameOf var) (Refinements.toTypeSignature retT)
   toTypeSignature t = error $ "Unknown type: " <> show t
 
 getRawVarId :: Language.Sprite.Syntax.Inner.Abs.VarIdent -> String

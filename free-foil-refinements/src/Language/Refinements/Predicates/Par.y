@@ -62,20 +62,22 @@ import Language.Refinements.Predicates.Lex
   ','         { PT _ (TS _ 7)  }
   '-'         { PT _ (TS _ 8)  }
   '->'        { PT _ (TS _ 9)  }
-  ':'         { PT _ (TS _ 10) }
-  '<'         { PT _ (TS _ 11) }
-  '<='        { PT _ (TS _ 12) }
-  '=='        { PT _ (TS _ 13) }
-  '>'         { PT _ (TS _ 14) }
-  '>='        { PT _ (TS _ 15) }
-  'bool'      { PT _ (TS _ 16) }
-  'false'     { PT _ (TS _ 17) }
-  'int'       { PT _ (TS _ 18) }
-  'k$'        { PT _ (TS _ 19) }
-  'measure'   { PT _ (TS _ 20) }
-  'qualifier' { PT _ (TS _ 21) }
-  'true'      { PT _ (TS _ 22) }
-  '||'        { PT _ (TS _ 23) }
+  '.'         { PT _ (TS _ 10) }
+  ':'         { PT _ (TS _ 11) }
+  '<'         { PT _ (TS _ 12) }
+  '<='        { PT _ (TS _ 13) }
+  '=='        { PT _ (TS _ 14) }
+  '>'         { PT _ (TS _ 15) }
+  '>='        { PT _ (TS _ 16) }
+  'bool'      { PT _ (TS _ 17) }
+  'false'     { PT _ (TS _ 18) }
+  'forall'    { PT _ (TS _ 19) }
+  'int'       { PT _ (TS _ 20) }
+  'k$'        { PT _ (TS _ 21) }
+  'measure'   { PT _ (TS _ 22) }
+  'qualifier' { PT _ (TS _ 23) }
+  'true'      { PT _ (TS _ 24) }
+  '||'        { PT _ (TS _ 25) }
   L_integ     { PT _ (TI $$)   }
   L_Id        { PT _ (T_Id $$) }
 
@@ -131,6 +133,7 @@ Type2
 Type1 :: { Language.Refinements.Predicates.Abs.Type }
 Type1
   : Type2 '->' Type1 { Language.Refinements.Predicates.Abs.FunType $1 $3 }
+  | 'forall' Id '.' Type { Language.Refinements.Predicates.Abs.ForallType $2 $4 }
   | Type2 { $1 }
 
 DataTypeArg :: { Language.Refinements.Predicates.Abs.DataTypeArg }

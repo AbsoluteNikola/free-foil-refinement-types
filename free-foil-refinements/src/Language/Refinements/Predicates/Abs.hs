@@ -46,6 +46,7 @@ data Type
     | VarType Id
     | DataType Id [DataTypeArg]
     | FunType Type Type
+    | ForallType Id Type
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data DataTypeArg = DataTypeArg Type

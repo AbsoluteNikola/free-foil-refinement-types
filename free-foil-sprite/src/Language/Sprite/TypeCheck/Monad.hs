@@ -20,7 +20,6 @@ import Language.Fixpoint.Horn.Types qualified as H
 import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import qualified Language.Fixpoint.Types.Sorts as FP
 import qualified Language.Fixpoint.Types as FP
-import Data.Bifunctor (bimap)
 import qualified Data.Map.Strict as Map
 import qualified Language.Refinements.Constraint as LR
 

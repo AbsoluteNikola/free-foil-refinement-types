@@ -178,6 +178,7 @@ instance Print Language.Refinements.Predicates.Abs.Type where
     Language.Refinements.Predicates.Abs.VarType id_ -> prPrec i 3 (concatD [doc (showString "'"), prt 0 id_])
     Language.Refinements.Predicates.Abs.DataType id_ datatypeargs -> prPrec i 2 (concatD [prt 0 id_, doc (showString "("), prt 0 datatypeargs, doc (showString ")")])
     Language.Refinements.Predicates.Abs.FunType type_1 type_2 -> prPrec i 1 (concatD [prt 2 type_1, doc (showString "->"), prt 1 type_2])
+    Language.Refinements.Predicates.Abs.ForallType id_ type_ -> prPrec i 1 (concatD [doc (showString "forall"), prt 0 id_, doc (showString "."), prt 0 type_])
 
 instance Print Language.Refinements.Predicates.Abs.DataTypeArg where
   prt i = \case

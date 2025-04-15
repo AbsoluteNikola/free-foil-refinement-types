@@ -25,11 +25,12 @@ OrOp.            Op ::= "||";
 
 separator nonempty Pred ",";
 
-BoolType. Type3 ::= "bool";
-IntType.  Type3 ::= "int";
-VarType.  Type3 ::= "'" Id;
-DataType. Type2 ::= Id  "(" [DataTypeArg] ")" ;
-FunType.  Type1 ::= Type2 "->" Type1;
+BoolType.   Type3 ::= "bool";
+IntType.    Type3 ::= "int";
+VarType.    Type3 ::= "'" Id;
+DataType.   Type2 ::= Id  "(" [DataTypeArg] ")" ;
+FunType.    Type1 ::= Type2 "->" Type1;
+ForallType. Type1 ::= "forall" Id "." Type;
 
 DataTypeArg. DataTypeArg ::= Type;
 separator DataTypeArg ",";

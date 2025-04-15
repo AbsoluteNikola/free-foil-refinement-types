@@ -53,6 +53,7 @@ transType x = case x of
   Language.Refinements.Predicates.Abs.VarType id -> failure x
   Language.Refinements.Predicates.Abs.DataType id datatypeargs -> failure x
   Language.Refinements.Predicates.Abs.FunType type_1 type_2 -> failure x
+  Language.Refinements.Predicates.Abs.ForallType id type_ -> failure x
 
 transDataTypeArg :: Language.Refinements.Predicates.Abs.DataTypeArg -> Result
 transDataTypeArg x = case x of
