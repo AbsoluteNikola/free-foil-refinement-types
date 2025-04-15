@@ -1,5 +1,8 @@
 cradle:
   cabal:
+    - path: "free-foil-refinements/src"
+      component: "lib:free-foil-refinements"
+
     - path: "free-foil-sprite/src"
       component: "lib:free-foil-sprite"
 

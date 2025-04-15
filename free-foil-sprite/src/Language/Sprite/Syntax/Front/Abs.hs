@@ -21,10 +21,10 @@ data Program = Program [Qualifier] [Measure] [DataType] Term
 data Qualifier = Qualifier VarIdent [QualifierArg] Pred
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data QualifierArg = QualifierArg VarIdent BaseType
+data QualifierArg = QualifierArg VarIdent RType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data Measure = Measure MeasureIdent RType
+data Measure = Measure VarIdent RType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data MeasureIdent

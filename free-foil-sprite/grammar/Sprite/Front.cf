@@ -13,7 +13,7 @@ entrypoints Program;
 Qualifier. Qualifier ::= "/*Q" VarIdent "(" [QualifierArg] ")" ":" "(" Pred ")" "*/";
 separator Qualifier "\n";
 
-QualifierArg. QualifierArg ::= VarIdent ":" BaseType;
+QualifierArg. QualifierArg ::= VarIdent ":" RType;
 separator nonempty QualifierArg "," ;
 
 -- measures
