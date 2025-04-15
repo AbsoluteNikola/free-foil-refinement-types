@@ -16,8 +16,12 @@ Integer literals //Integer// are nonempty sequences of digits.
 
 
 
+
 VarIdent literals are recognized by the regular expression
 `````lower ('_' | digit | letter)*`````
+
+ConIdent literals are recognized by the regular expression
+`````upper ('_' | digit | letter)*`````
 
 
 ===Reserved words and symbols===
@@ -25,17 +29,18 @@ The set of reserved words is the set of terminals appearing in the grammar. Thos
 
 The reserved words used in Front are the following:
   | ``bool`` | ``else`` | ``false`` | ``if``
-  | ``int`` | ``let`` | ``qualif`` | ``rec``
-  | ``true`` | ``val`` |  |
+  | ``int`` | ``let`` | ``rec`` | ``switch``
+  | ``true`` | ``type`` | ``val`` |
 
 The symbols used in Front are the following:
-  | /**@ | ( | ) | :
-  | */ | , | { | }
-  | => | /*@ | = | ;
-  | + | - | * | ==
-  | < | <= | > | >=
-  | [ | | | ] | ?
-  | ' | _ | || | &&
+  | /*Q | ( | ) | :
+  | */ | , | /*M | {
+  | } | => | /*@ | =
+  | ; | | | + | -
+  | * | == | < | <=
+  | > | >= | [ | ]
+  | ? | _ | || | &&
+  | ' |  |  |
 
 ===Comments===
 There are no single-line comments in the grammar.There are no multiple-line comments in the grammar.
@@ -46,28 +51,41 @@ The symbols -> (production),  **|**  (union)
 and **eps** (empty rule) belong to the BNF notation.
 All other symbols are terminals.
 
-  | //Program// | -> | //[Qualifier]// //Term//
-  | //Qualifier// | -> | ``/**@`` ``qualif`` //VarIdent// ``(`` //[QualifierArg]// ``)`` ``:`` ``(`` //Pred// ``)`` ``*/``
+  | //Program// | -> | //[Qualifier]// //[Measure]// //[DataType]// //Term//
+  | //Qualifier// | -> | ``/*Q`` //VarIdent// ``(`` //[QualifierArg]// ``)`` ``:`` ``(`` //Pred// ``)`` ``*/``
   | //[Qualifier]// | -> | **eps**
   |  |  **|**  | //Qualifier// //[Qualifier]//
   | //QualifierArg// | -> | //VarIdent// ``:`` //BaseType//
   | //[QualifierArg]// | -> | //QualifierArg//
   |  |  **|**  | //QualifierArg// ``,`` //[QualifierArg]//
+  | //Measure// | -> | ``/*M`` //MeasureIdent// ``:`` //RType// ``*/``
+  | //[Measure]// | -> | **eps**
+  |  |  **|**  | //Measure// //[Measure]//
+  | //MeasureIdent// | -> | //VarIdent//
+  |  |  **|**  | //ConIdent//
   | //Term// | -> | //Integer//
   |  |  **|**  | //ConstBool//
   |  |  **|**  | //VarIdent//
+  |  |  **|**  | //ConIdent// //ConAppArgs//
+  |  |  **|**  | //VarIdent// ``(`` //[FuncAppArg]// ``)``
   |  |  **|**  | ``if`` ``(`` //FuncAppArg// ``)`` ``{`` //Term// ``}`` ``else`` ``{`` //Term// ``}``
   |  |  **|**  | //Decl// //Term//
   |  |  **|**  | ``(`` //[FunArgName]// ``)`` ``=>`` ``{`` //Term// ``}``
-  |  |  **|**  | //VarIdent// ``(`` //[FuncAppArg]// ``)``
   |  |  **|**  | //FuncAppArg// //IntOp// //FuncAppArg//
-  |  |  **|**  | ``(`` //Term// ``)``
+  |  |  **|**  | ``switch`` ``(`` //VarIdent// ``)`` ``{`` //[SwitchCase]// ``}``
   | //ConstBool// | -> | ``true``
   |  |  **|**  | ``false``
+  | //ConAppArgs// | -> | **eps**
+  |  |  **|**  | ``(`` //[FuncAppArg]// ``)``
   | //Annotation// | -> | ``/*@`` ``val`` //VarIdent// ``:`` //RType// ``*/``
   | //Decl// | -> | //Annotation// ``let`` ``rec`` //VarIdent// ``=`` //Term// ``;``
   |  |  **|**  | //Annotation// ``let`` //VarIdent// ``=`` //Term// ``;``
   |  |  **|**  | ``let`` //VarIdent// ``=`` //Term// ``;``
+  | //SwitchCase// | -> | ``|`` //ConIdent// //SwitchCaseDataConArgs// ``=>`` //Term//
+  | //[SwitchCase]// | -> | //SwitchCase//
+  |  |  **|**  | //SwitchCase// //[SwitchCase]//
+  | //SwitchCaseDataConArgs// | -> | ``(`` //[FunArgName]// ``)``
+  |  |  **|**  | **eps**
   | //IntOp// | -> | ``+``
   |  |  **|**  | ``-``
   |  |  **|**  | ``*``
@@ -76,20 +94,38 @@ All other symbols are terminals.
   |  |  **|**  | ``<=``
   |  |  **|**  | ``>``
   |  |  **|**  | ``>=``
+  | //Refinement// | -> | ``[`` //VarIdent// ``|`` //Pred// ``]``
+  |  |  **|**  | ``[`` ``?`` ``]``
+  |  |  **|**  | **eps**
   | //RType// | -> | //FuncArg// ``=>`` //RType//
-  |  |  **|**  | //BaseType// ``[`` //VarIdent// ``|`` //Pred// ``]``
-  |  |  **|**  | //BaseType// ``[`` ``?`` ``]``
-  |  |  **|**  | ``'`` //VarIdent//
-  |  |  **|**  | //BaseType//
-  |  |  **|**  | //RType1//
-  | //RType1// | -> | //RType2//
-  | //RType2// | -> | //RType3//
-  | //RType3// | -> | ``(`` //RType// ``)``
+  |  |  **|**  | //BaseType// //Refinement//
+  |  |  **|**  | //VarIdent// //TypeDataArgs// //Refinement//
+  |  |  **|**  | ``(`` //RType// ``)``
+  | //TypeDataArg// | -> | //RType//
+  | //[TypeDataArg]// | -> | //TypeDataArg//
+  |  |  **|**  | //TypeDataArg// ``,`` //[TypeDataArg]//
+  | //TypeDataArgs// | -> | ``(`` //[TypeDataArg]// ``)``
+  |  |  **|**  | **eps**
+  | //DataType// | -> | ``type`` //VarIdent// //DataTypeArgs// ``=`` ``|`` //[DataTypeConstructor]// ``;``
+  | //[DataType]// | -> | **eps**
+  |  |  **|**  | //DataType// //[DataType]//
+  | //DataTypeConstructor// | -> | //ConIdent// //DataTypeConstructorArgs// //DataTypeConstructorPredicate//
+  | //[DataTypeConstructor]// | -> | //DataTypeConstructor//
+  |  |  **|**  | //DataTypeConstructor// ``|`` //[DataTypeConstructor]//
+  | //DataTypeConstructorArgs// | -> | ``(`` //[FuncArg]// ``)``
+  |  |  **|**  | **eps**
+  | //DataTypeConstructorPredicate// | -> | ``=>`` ``[`` //VarIdent// ``|`` //Pred// ``]``
+  |  |  **|**  | **eps**
+  | //DataTypeArgs// | -> | ``(`` //[TypeVarId]// ``)``
+  |  |  **|**  | **eps**
   | //FuncArg// | -> | //VarIdent// ``:`` //RType//
   |  |  **|**  | ``_`` ``:`` //RType//
+  | //[FuncArg]// | -> | //FuncArg//
+  |  |  **|**  | //FuncArg// ``,`` //[FuncArg]//
   | //Pred6// | -> | //VarIdent//
   |  |  **|**  | //ConstBool//
   |  |  **|**  | //Integer//
+  |  |  **|**  | //MeasureIdent// ``(`` //[MeasureArg]// ``)``
   |  |  **|**  | ``(`` //Pred// ``)``
   | //Pred1// | -> | //Pred1// ``||`` //Pred2//
   |  |  **|**  | //Pred2//
@@ -107,8 +143,15 @@ All other symbols are terminals.
   |  |  **|**  | //Pred5// ``*`` //Pred6//
   |  |  **|**  | //Pred6//
   | //Pred// | -> | //Pred1//
+  | //MeasureArg// | -> | //Pred//
+  | //[MeasureArg]// | -> | //MeasureArg//
+  |  |  **|**  | //MeasureArg// ``,`` //[MeasureArg]//
   | //BaseType// | -> | ``int``
   |  |  **|**  | ``bool``
+  |  |  **|**  | //TypeVarId//
+  | //TypeVarId// | -> | ``'`` //VarIdent//
+  | //[TypeVarId]// | -> | //TypeVarId//
+  |  |  **|**  | //TypeVarId// ``,`` //[TypeVarId]//
   | //FunArgName// | -> | //VarIdent//
   | //[FunArgName]// | -> | //FunArgName//
   |  |  **|**  | //FunArgName// ``,`` //[FunArgName]//

@@ -16,8 +16,16 @@ Integer literals //Integer// are nonempty sequences of digits.
 
 
 
+
+
 VarIdent literals are recognized by the regular expression
 `````lower ('_' | digit | letter)*`````
+
+ConIdent literals are recognized by the regular expression
+`````upper ('_' | digit | letter)*`````
+
+MeasureIdent literals are recognized by the regular expression
+`````letter ('_' | digit | letter)*`````
 
 
 ===Reserved words and symbols===
@@ -25,17 +33,18 @@ The set of reserved words is the set of terminals appearing in the grammar. Thos
 
 The reserved words used in Inner are the following:
   | ``bool`` | ``else`` | ``false`` | ``if``
-  | ``int`` | ``let`` | ``rec`` | ``true``
+  | ``int`` | ``let`` | ``rec`` | ``switch``
+  | ``true`` | ``type`` |  |
 
 The symbols used in Inner are the following:
   | ( | ) | { | }
   | = | ; | /*@ | */
-  | => | /\ | : | t(
-  | [ | | | ] | ∀
-  | ? | == | <= | <
-  | >= | > | + | -
-  | * | && | || | '
-  | '' |  |  |
+  | => | | | /\ | :
+  | t( | [ | ] | ∀
+  | , | ? | == | <=
+  | < | >= | > | +
+  | - | * | && | ||
+  | ' | '' |  |
 
 ===Comments===
 There are no single-line comments in the grammar.There are no multiple-line comments in the grammar.
@@ -46,9 +55,11 @@ The symbols -> (production),  **|**  (union)
 and **eps** (empty rule) belong to the BNF notation.
 All other symbols are terminals.
 
+  | //Program// | -> | //[DataType]// //Term//
   | //Term// | -> | //Integer//
   |  |  **|**  | //ConstBool//
   |  |  **|**  | //VarIdent//
+  |  |  **|**  | //ConIdent//
   |  |  **|**  | ``if`` ``(`` //Term// ``)`` ``{`` //Term// ``}`` ``else`` ``{`` //Term// ``}``
   |  |  **|**  | ``let`` //Pattern// ``=`` //Term// ``;`` //ScopedTerm//
   |  |  **|**  | ``/*@`` //Term// ``*/`` ``let`` ``rec`` //Pattern// ``=`` //ScopedTerm// ``;`` //ScopedTerm//
@@ -56,19 +67,29 @@ All other symbols are terminals.
   |  |  **|**  | //Term// ``(`` //Term// ``)``
   |  |  **|**  | ``/*@`` //Term// ``*/`` //Term//
   |  |  **|**  | ``(`` //Term// //Op// //Term// ``)``
+  |  |  **|**  | ``switch`` ``(`` //Term// ``)`` ``{`` //[Term]// ``}``
+  |  |  **|**  | ``|`` //ConIdent// ``(`` //Pattern// ``)`` ``=>`` //ScopedTerm//
   |  |  **|**  | ``/\`` //Pattern// ``:`` //ScopedTerm//
   |  |  **|**  | //Term// ``t(`` //Term// ``)``
   |  |  **|**  | //Term// ``[`` //Pattern// ``|`` //ScopedTerm// ``]``
   |  |  **|**  | //Pattern// ``:`` //Term// ``=>`` //ScopedTerm//
   |  |  **|**  | ``∀`` //Pattern// ``:`` //ScopedTerm//
+  |  |  **|**  | //VarIdent// //TypeDataArgs// ``[`` //Pattern// ``|`` //ScopedTerm// ``]``
   |  |  **|**  | //VarIdent// ``(`` //[Term]// ``)``
+  |  |  **|**  | //MeasureIdent// ``(`` //[Term]// ``)``
   |  |  **|**  | ``?``
   |  |  **|**  | ``int``
   |  |  **|**  | ``bool``
   |  |  **|**  | ``'`` //Term//
   |  |  **|**  | ``''`` //VarIdent//
+  | //ScopedTerm// | -> | //Term//
   | //ConstBool// | -> | ``true``
   |  |  **|**  | ``false``
+  | //TypeDataArgs// | -> | ``(`` //[TypeDataArg]// ``)``
+  |  |  **|**  | **eps**
+  | //TypeDataArg// | -> | //Term//
+  | //[TypeDataArg]// | -> | //TypeDataArg//
+  |  |  **|**  | //TypeDataArg// ``,`` //[TypeDataArg]//
   | //Op// | -> | ``==``
   |  |  **|**  | ``<=``
   |  |  **|**  | ``<``
@@ -80,7 +101,14 @@ All other symbols are terminals.
   |  |  **|**  | ``&&``
   |  |  **|**  | ``||``
   | //Pattern// | -> | //VarIdent//
-  | //ScopedTerm// | -> | //Term//
+  |  |  **|**  | **eps**
+  |  |  **|**  | //VarIdent// //Pattern//
+  | //DataType// | -> | ``type`` //VarIdent// ``=`` //[DataTypeCon]// ``;``
+  | //[DataType]// | -> | **eps**
+  |  |  **|**  | //DataType// //[DataType]//
+  | //DataTypeCon// | -> | ``|`` //VarIdent// ``:`` //Term//
+  | //[DataTypeCon]// | -> | //DataTypeCon//
+  |  |  **|**  | //DataTypeCon// //[DataTypeCon]//
   | //[Term]// | -> | //Term//
   |  |  **|**  | //Term// //[Term]//
 

@@ -19,9 +19,13 @@ transVarIdent :: Language.Sprite.Syntax.Front.Abs.VarIdent -> Result
 transVarIdent x = case x of
   Language.Sprite.Syntax.Front.Abs.VarIdent string -> failure x
 
+transConIdent :: Language.Sprite.Syntax.Front.Abs.ConIdent -> Result
+transConIdent x = case x of
+  Language.Sprite.Syntax.Front.Abs.ConIdent string -> failure x
+
 transProgram :: Language.Sprite.Syntax.Front.Abs.Program -> Result
 transProgram x = case x of
-  Language.Sprite.Syntax.Front.Abs.Program qualifiers term -> failure x
+  Language.Sprite.Syntax.Front.Abs.Program qualifiers measures datatypes term -> failure x
 
 transQualifier :: Language.Sprite.Syntax.Front.Abs.Qualifier -> Result
 transQualifier x = case x of
@@ -31,21 +35,37 @@ transQualifierArg :: Language.Sprite.Syntax.Front.Abs.QualifierArg -> Result
 transQualifierArg x = case x of
   Language.Sprite.Syntax.Front.Abs.QualifierArg varident basetype -> failure x
 
+transMeasure :: Language.Sprite.Syntax.Front.Abs.Measure -> Result
+transMeasure x = case x of
+  Language.Sprite.Syntax.Front.Abs.Measure measureident rtype -> failure x
+
+transMeasureIdent :: Language.Sprite.Syntax.Front.Abs.MeasureIdent -> Result
+transMeasureIdent x = case x of
+  Language.Sprite.Syntax.Front.Abs.MeasureIdAsVar varident -> failure x
+  Language.Sprite.Syntax.Front.Abs.MeasureIdAsCon conident -> failure x
+
 transTerm :: Language.Sprite.Syntax.Front.Abs.Term -> Result
 transTerm x = case x of
   Language.Sprite.Syntax.Front.Abs.ConstInt integer -> failure x
   Language.Sprite.Syntax.Front.Abs.Bool constbool -> failure x
   Language.Sprite.Syntax.Front.Abs.Var varident -> failure x
+  Language.Sprite.Syntax.Front.Abs.ConApp conident conappargs -> failure x
+  Language.Sprite.Syntax.Front.Abs.FunApp varident funcappargs -> failure x
   Language.Sprite.Syntax.Front.Abs.If funcapparg term1 term2 -> failure x
   Language.Sprite.Syntax.Front.Abs.Let decl term -> failure x
   Language.Sprite.Syntax.Front.Abs.Fun funargnames term -> failure x
-  Language.Sprite.Syntax.Front.Abs.App varident funcappargs -> failure x
   Language.Sprite.Syntax.Front.Abs.Op funcapparg1 intop funcapparg2 -> failure x
+  Language.Sprite.Syntax.Front.Abs.Switch varident switchcases -> failure x
 
 transConstBool :: Language.Sprite.Syntax.Front.Abs.ConstBool -> Result
 transConstBool x = case x of
   Language.Sprite.Syntax.Front.Abs.ConstTrue -> failure x
   Language.Sprite.Syntax.Front.Abs.ConstFalse -> failure x
+
+transConAppArgs :: Language.Sprite.Syntax.Front.Abs.ConAppArgs -> Result
+transConAppArgs x = case x of
+  Language.Sprite.Syntax.Front.Abs.EmptyConAppArgs -> failure x
+  Language.Sprite.Syntax.Front.Abs.NonEmptyConAppArgs funcappargs -> failure x
 
 transAnnotation :: Language.Sprite.Syntax.Front.Abs.Annotation -> Result
 transAnnotation x = case x of
@@ -56,6 +76,15 @@ transDecl x = case x of
   Language.Sprite.Syntax.Front.Abs.RecDecl annotation varident term -> failure x
   Language.Sprite.Syntax.Front.Abs.AnnotatedDecl annotation varident term -> failure x
   Language.Sprite.Syntax.Front.Abs.UnAnnotatedDecl varident term -> failure x
+
+transSwitchCase :: Language.Sprite.Syntax.Front.Abs.SwitchCase -> Result
+transSwitchCase x = case x of
+  Language.Sprite.Syntax.Front.Abs.SwitchCase conident switchcasedataconargs term -> failure x
+
+transSwitchCaseDataConArgs :: Language.Sprite.Syntax.Front.Abs.SwitchCaseDataConArgs -> Result
+transSwitchCaseDataConArgs x = case x of
+  Language.Sprite.Syntax.Front.Abs.SwitchCaseNonEmptyDataConArgs funargnames -> failure x
+  Language.Sprite.Syntax.Front.Abs.SwitchCaseEmptyDataConArgs -> failure x
 
 transIntOp :: Language.Sprite.Syntax.Front.Abs.IntOp -> Result
 transIntOp x = case x of
@@ -68,13 +97,49 @@ transIntOp x = case x of
   Language.Sprite.Syntax.Front.Abs.IntGreaterThan -> failure x
   Language.Sprite.Syntax.Front.Abs.IntGreaterOrEqThan -> failure x
 
+transRefinement :: Language.Sprite.Syntax.Front.Abs.Refinement -> Result
+transRefinement x = case x of
+  Language.Sprite.Syntax.Front.Abs.KnownRefinement varident pred -> failure x
+  Language.Sprite.Syntax.Front.Abs.UnknownRefinement -> failure x
+  Language.Sprite.Syntax.Front.Abs.SimpleRefinement -> failure x
+
 transRType :: Language.Sprite.Syntax.Front.Abs.RType -> Result
 transRType x = case x of
   Language.Sprite.Syntax.Front.Abs.TypeFun funcarg rtype -> failure x
-  Language.Sprite.Syntax.Front.Abs.TypeRefined basetype varident pred -> failure x
-  Language.Sprite.Syntax.Front.Abs.TypeRefinedUnknown basetype -> failure x
-  Language.Sprite.Syntax.Front.Abs.TypeVar varident -> failure x
-  Language.Sprite.Syntax.Front.Abs.TypeRefinedSimple basetype -> failure x
+  Language.Sprite.Syntax.Front.Abs.TypeRefined basetype refinement -> failure x
+  Language.Sprite.Syntax.Front.Abs.TypeData varident typedataargs refinement -> failure x
+
+transTypeDataArg :: Language.Sprite.Syntax.Front.Abs.TypeDataArg -> Result
+transTypeDataArg x = case x of
+  Language.Sprite.Syntax.Front.Abs.TypeDataArg rtype -> failure x
+
+transTypeDataArgs :: Language.Sprite.Syntax.Front.Abs.TypeDataArgs -> Result
+transTypeDataArgs x = case x of
+  Language.Sprite.Syntax.Front.Abs.NonEmptyTypeDataArgs typedataargs -> failure x
+  Language.Sprite.Syntax.Front.Abs.EmptyTypeDataArgs -> failure x
+
+transDataType :: Language.Sprite.Syntax.Front.Abs.DataType -> Result
+transDataType x = case x of
+  Language.Sprite.Syntax.Front.Abs.DataType varident datatypeargs datatypeconstructors -> failure x
+
+transDataTypeConstructor :: Language.Sprite.Syntax.Front.Abs.DataTypeConstructor -> Result
+transDataTypeConstructor x = case x of
+  Language.Sprite.Syntax.Front.Abs.DataTypeConstructor conident datatypeconstructorargs datatypeconstructorpredicate -> failure x
+
+transDataTypeConstructorArgs :: Language.Sprite.Syntax.Front.Abs.DataTypeConstructorArgs -> Result
+transDataTypeConstructorArgs x = case x of
+  Language.Sprite.Syntax.Front.Abs.NonEmptyDataTypeConstructorArgs funcargs -> failure x
+  Language.Sprite.Syntax.Front.Abs.EmptyDataTypeConstructorArgs -> failure x
+
+transDataTypeConstructorPredicate :: Language.Sprite.Syntax.Front.Abs.DataTypeConstructorPredicate -> Result
+transDataTypeConstructorPredicate x = case x of
+  Language.Sprite.Syntax.Front.Abs.NonEmptyDataTypeConstructorPredicate varident pred -> failure x
+  Language.Sprite.Syntax.Front.Abs.EmptyDataTypeConstructorPredicate -> failure x
+
+transDataTypeArgs :: Language.Sprite.Syntax.Front.Abs.DataTypeArgs -> Result
+transDataTypeArgs x = case x of
+  Language.Sprite.Syntax.Front.Abs.NonEmptyDataTypeArgs typevarids -> failure x
+  Language.Sprite.Syntax.Front.Abs.EmptyDataTypeArgs -> failure x
 
 transFuncArg :: Language.Sprite.Syntax.Front.Abs.FuncArg -> Result
 transFuncArg x = case x of
@@ -86,6 +151,7 @@ transPred x = case x of
   Language.Sprite.Syntax.Front.Abs.PVar varident -> failure x
   Language.Sprite.Syntax.Front.Abs.PBool constbool -> failure x
   Language.Sprite.Syntax.Front.Abs.PInt integer -> failure x
+  Language.Sprite.Syntax.Front.Abs.PMeasure measureident measureargs -> failure x
   Language.Sprite.Syntax.Front.Abs.POr pred1 pred2 -> failure x
   Language.Sprite.Syntax.Front.Abs.PAnd pred1 pred2 -> failure x
   Language.Sprite.Syntax.Front.Abs.PEq pred1 pred2 -> failure x
@@ -97,10 +163,19 @@ transPred x = case x of
   Language.Sprite.Syntax.Front.Abs.PMinus pred1 pred2 -> failure x
   Language.Sprite.Syntax.Front.Abs.PMultiply pred1 pred2 -> failure x
 
+transMeasureArg :: Language.Sprite.Syntax.Front.Abs.MeasureArg -> Result
+transMeasureArg x = case x of
+  Language.Sprite.Syntax.Front.Abs.MeasureArg pred -> failure x
+
 transBaseType :: Language.Sprite.Syntax.Front.Abs.BaseType -> Result
 transBaseType x = case x of
   Language.Sprite.Syntax.Front.Abs.BaseTypeInt -> failure x
   Language.Sprite.Syntax.Front.Abs.BaseTypeBool -> failure x
+  Language.Sprite.Syntax.Front.Abs.BaseTypeVar typevarid -> failure x
+
+transTypeVarId :: Language.Sprite.Syntax.Front.Abs.TypeVarId -> Result
+transTypeVarId x = case x of
+  Language.Sprite.Syntax.Front.Abs.TypeVarId varident -> failure x
 
 transFunArgName :: Language.Sprite.Syntax.Front.Abs.FunArgName -> Result
 transFunArgName x = case x of

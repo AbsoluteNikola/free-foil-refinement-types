@@ -79,14 +79,13 @@ library
     , base >=4.7 && <5
     , bifunctors
     , containers
+    , unordered-containers
     , free-foil >=0.2.0
     , pretty-simple
     , transformers
     , mtl
     , text
     , liquid-fixpoint
-    , kind-generics
-    , kind-generics-th
 
   default-language: Haskell2010
 

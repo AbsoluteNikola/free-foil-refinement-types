@@ -2,12 +2,13 @@
 {-# HLINT ignore "Use newtype instead of data" #-}
 module Language.Sprite.TypeCheck.Monad where
 import qualified Control.Monad.Foil as F
+import qualified Control.Monad.Foil.Internal as F
 import Data.Text (Text)
 import Control.Monad.Trans.Except (ExceptT)
 import Control.Monad.Trans.Reader (ReaderT)
 import Language.Sprite.Syntax
-import Control.Monad.Except (MonadError)
-import Control.Monad.Reader.Class (MonadReader (ask), local)
+import Control.Monad.Except (MonadError (throwError))
+import Control.Monad.Reader.Class (MonadReader (ask), local, asks)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import qualified Data.Text.Lazy as TL
 import Text.Pretty.Simple (pShow, pShowNoColor)
@@ -20,10 +21,12 @@ import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import qualified Language.Fixpoint.Types.Sorts as FP
 import qualified Language.Fixpoint.Types as FP
 import Data.Bifunctor (bimap)
+import qualified Data.Map.Strict as Map
 
-data CheckerDebugEnv = CheckerDebugEnv
+data CheckerEnv = CheckerEnv
   { currentRule :: Text
   , offset :: Text
+  , dataConstructorsEnv :: Map.Map Inner.ConIdent (Term F.VoidS)
   }
 
 data CheckerState = CheckerState
@@ -31,24 +34,21 @@ data CheckerState = CheckerState
   { hornVarIndex :: Int
   , hornVars :: [H.Var Text]
   -- elaboration env
-  -- Завтрашний я: как будто хранить констреинты не надо, можно сразу в типы делать подстановку и потом ловить ошибки, ну кароч как в спрайте сделано
-  , typeConstraints :: [(Inner.VarIdent, Term F.VoidS)]
   , typeVarIndex :: Int
   }
 
-defaultCheckerDebugEnv :: CheckerDebugEnv
-defaultCheckerDebugEnv = CheckerDebugEnv "" ""
+defaultCheckerEnv :: CheckerEnv
+defaultCheckerEnv = CheckerEnv "" "" Map.empty
 
 defaultCheckerState :: CheckerState
 defaultCheckerState = CheckerState
   { hornVarIndex = 0
   , hornVars = []
-  , typeConstraints = []
   , typeVarIndex = 0
   }
 
-newtype CheckerM a = CheckerM {runCheckerM :: (ExceptT Text (ReaderT CheckerDebugEnv (StateT CheckerState IO))) a }
-  deriving newtype (Functor, Applicative, Monad, MonadError Text, MonadReader CheckerDebugEnv, MonadState CheckerState, MonadIO)
+newtype CheckerM a = CheckerM {runCheckerM :: (ExceptT Text (ReaderT CheckerEnv (StateT CheckerState IO))) a }
+  deriving newtype (Functor, Applicative, Monad, MonadError Text, MonadReader CheckerEnv, MonadState CheckerState, MonadIO)
 
 data Env n where
     EmptyEnv :: Env F.VoidS
@@ -60,21 +60,6 @@ withExtendedEnv env binder typ action = do
   let env' = NonEmptyEnv env binder typ
   action env'
 
-withExtendedEnv' :: (F.Distinct i, F.DExt i o) => Env i -> F.NameBinderList i o -> Term i -> (Env o -> CheckerM a) -> CheckerM a
-withExtendedEnv' env binders typ action =
-  case binders of
-    F.NameBinderListEmpty -> action env
-    F.NameBinderListCons binder otherBinders -> do
-      case (F.assertDistinct binder, F.assertExt binder) of
-        (F.Distinct, F.Ext) -> case (F.assertDistinct otherBinders, F.assertExt otherBinders) of
-          (F.Distinct, F.Ext) -> do
-            env' <- withExtendedEnv env binder typ pure
-            withExtendedEnv'
-              env'
-              otherBinders
-              (F.sink typ)
-              action
-
 lookupEnv :: Env o -> F.Name o -> Term o
 lookupEnv env varId = case env of
   EmptyEnv -> error $ "impossible case, no var in env: " <> show varId
@@ -85,6 +70,16 @@ lookupEnv env varId = case env of
         case F.unsinkName binder varId of
           Nothing -> error $ "impossible case. If we didn't found var in bigger scoped map. It should be in smaller scope " <> show varId
           Just varId' -> F.sink $ lookupEnv env' varId'
+
+changeVarTypeInEnv :: F.Distinct o => Env o -> F.Name o -> Term o -> Env o
+changeVarTypeInEnv env varId = NonEmptyEnv env (F.UnsafeNameBinder varId)
+
+lookupConstructor :: Inner.ConIdent -> CheckerM (Term F.VoidS)
+lookupConstructor conName = do
+  constructors <- asks (.dataConstructorsEnv)
+  case Map.lookup conName constructors of
+    Just typ -> pure typ
+    Nothing -> throwError $ "Unknown constructor: " <> showT conName
 
 envToList :: Env o -> [(F.Name o, Term o)]
 envToList env = case env of
@@ -114,7 +109,7 @@ withRule :: Text -> CheckerM a -> CheckerM a
 withRule rule action = do
   denv <- ask
   liftIO . TIO.putStrLn $ denv.offset <> "  " <> rule
-  res <- local (\debugEnv -> CheckerDebugEnv rule (debugEnv.offset <> "  ")) action
+  res <- local (\debugEnv -> debugEnv{offset = debugEnv.offset <> "  "}) action
   liftIO . TIO.putStrLn $ denv.offset <> "  " <> rule <> " done"
   pure res
 
@@ -141,3 +136,11 @@ mkFreshTempTypVar = do
      }
   pure $ F.withFreshBinder F.emptyScope $ \newBinder ->
       TypeRefined (BaseTypeTempVar varName) (PatternVar newBinder) (Boolean Inner.ConstTrue)
+
+getNameBinderFromPattern :: Pattern i o -> F.NameBinder i o
+getNameBinderFromPattern (PatternVar binder) = binder
+
+getRawVarIdFromPattern :: Pattern i o -> Inner.VarIdent
+getRawVarIdFromPattern varPat = case fromPattern varPat of
+  Inner.PatternVar v -> v
+  _ -> error "getRawVarIdFromPattern should be called on PatternVar"

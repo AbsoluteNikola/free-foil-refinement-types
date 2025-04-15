@@ -1,4 +1,6 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Redundant pure" #-}
 
 module Language.Sprite.TypeCheck.Check where
 import Control.Monad.Foil qualified as F
@@ -14,6 +16,10 @@ import Language.Sprite.TypeCheck.Predicates
 import Language.Sprite.TypeCheck.Types
 import qualified Data.Unique as Unique
 import Language.Sprite.TypeCheck.Monad
+import Data.Traversable (for)
+import Data.Bifunctor (bimap)
+import qualified Data.List as List
+import Control.Monad (foldM)
 
 mkSolverErrorMessage :: Text -> CheckerM Text
 mkSolverErrorMessage baseMsg = do
@@ -80,6 +86,35 @@ subtype scope
       debugPrintT $ "rightArgPat = " <> showT rightFunArgPat <> ", leftFunRetT' = " <> showT leftFunRetT
       returnTypesConstraints <- buildImplicationFromType implMsg scope' rightFunArgPat (F.sink rightFunArgT) returnTypesSubtypingConstraints
       pure $ CAnd [argSubtypingConstrains, returnTypesConstraints]
+
+{-
+G,v:p |- q[w:=v]     G |- si <: ti
+-----------------------------------------
+G |- (C s1...)[v|p] <: (C t1...)[w|q]
+-}
+subtype scope
+  lt@(TypeData typeNameL typeArgsL typVarL _typPredL)
+  (TypeData typeNameR typeArgsR typVarR typPredR)
+  | typeNameL == typeNameR
+  , length typeArgsL == length typeArgsR = do
+    (CAnd -> argsConstraints) <- traverse (\(s1, s2) -> subtype scope s1 s2) (zip typeArgsL typeArgsR)
+    case (F.assertDistinct typVarL, F.assertExt typVarL) of
+      (F.Distinct, F.Ext) -> do
+        implMsg <- mkSolverErrorMessage $ "type data subtype error: (v::t) => q[w := v]. Where v="
+          <> showT typVarL
+          <> ", w=" <> showT typVarL
+        predMsg <- mkSolverErrorMessage $ "type data subtype error: q[w := v]. Where w="
+          <> showT typVarR <> " and v=" <> showT typVarL
+        let
+          scope' = F.extendScopePattern typVarL scope
+          subst = F.addRename
+            (F.sink F.identitySubst)
+            (getNameBinderFromPattern typVarR)
+            (F.nameOf $ getNameBinderFromPattern typVarL)
+          rightPredicate' = F.substitute scope' subst typPredR
+          conclusionPred = CPred (fromTerm rightPredicate') predMsg
+        implPred <- buildImplicationFromType implMsg scope' typVarL (F.sink lt) conclusionPred
+        pure $ CAnd [argsConstraints, implPred]
 
 subtype _ lt rt = throwError $
   "can't subtype:\n"
@@ -234,6 +269,48 @@ check scope env currentTerm currentType = case currentTerm of
               check scope' env' body' typUnderForall
       _ -> throwError $ "TLam with type without forall: " <> showT currentType
 
+  Switch (F.Var varName) cases -> do
+    varTyp <- extendTypeToCurrentScope scope $ lookupEnv env varName
+
+    debugPrintT $ "switch var type" <> showT varTyp
+    caseConstraints <- for cases $ \case
+      CaseAlt conName@(Inner.ConIdent conNameRaw) newVarsPat caseTerm ->
+        case (F.assertDistinct newVarsPat, F.assertExt newVarsPat) of
+          (F.Distinct, F.Ext) -> do
+            conType <- lookupConstructor conName >>= extendTypeToCurrentScope scope . F.sink
+            constructorFunction <- ctor scope varTyp conType
+            (newEnv, ctorType) <- unapply scope env newVarsPat constructorFunction
+            let
+              scope' = F.extendScopePattern newVarsPat scope
+              varsAddedInCasePatternMatch = List.deleteFirstsBy
+                (\(n1, _) (n2, _) -> n1 == n2)
+                (envToList newEnv)
+                (bimap F.sink F.sink <$> envToList env)
+              msg = "Error in switch case in branch with "  <> showT conNameRaw
+
+            -- В теории можно было бы расширить scope еще одним биндером, переименовать
+            -- все вхождения varName на новый биндер и новый биндер добавить в env c усиленным типом,
+            -- но я пошел простым путем. Просто перезатер varName в env. В smt это будет shadowing varName
+            -- Решение принято осознанное
+            strengthenVarType <- meet scope' (F.sink varTyp) ctorType
+            let envWithStrengthenVar = changeVarTypeInEnv newEnv (F.sink varName) strengthenVarType
+            debugPrintT $ "strengthenVarType: " <> showT varName <> showT strengthenVarType
+            caseConstraint <- check
+              (F.extendScopePattern newVarsPat scope)
+              envWithStrengthenVar
+              caseTerm
+              (F.sink currentType)
+            implConstraints <- foldM
+              (\c (addedVarName, addedVarType) ->
+                buildImplicationFromType' msg scope' addedVarName addedVarType c
+              )
+              caseConstraint
+              ((F.sink varName, strengthenVarType) : varsAddedInCasePatternMatch)
+            pure implConstraints
+      otherTerm -> throwError $ "switch case not CaseAlt: " <> showT otherTerm
+    pure $ CAnd caseConstraints
+
+
   {- [Chk-Syn]
   G |- e ==> s        G |- s <: t
   ----------------------------------[Chk-Syn]
@@ -248,23 +325,6 @@ check scope env currentTerm currentType = case currentTerm of
     debugPrintT "right type: " >> debugPrint extendedCurrentType
     subtypingConstraints <- subtype scope termType extendedCurrentType
     pure $ CAnd [synthsConstraints, subtypingConstraints]
-
-buildImplicationFromType :: (F.DExt i o) => Text -> F.Scope o -> Pattern i o -> Term o -> Constraint -> CheckerM Constraint
-buildImplicationFromType msg scope argVarPat@(PatternVar argVarId) typ constraint = case typ of
-  TypeRefined base (PatternVar typVarId) p -> do
-    let
-      subst = F.addRename (F.sink F.identitySubst) typVarId (F.nameOf argVarId)
-      p' = F.substitute scope subst p
-      argVarIdRaw = getRawVarIdFromPattern argVarPat
-      Inner.VarIdent argVarIdRawName = argVarIdRaw
-
-    debugPrintT $ "Implication: " <> "varId = " <> showT argVarIdRawName <> ", term = " <> showT p'
-    pure $ CImplication argVarIdRaw (fromTerm base) (fromTerm p') constraint msg
-  _ -> pure constraint
-  -- otherTerm -> throwError $
-  --   "can't buildImplicationFromType\n"
-  --   <> "context message: " <> msg <> "\n"
-  --   <> "term: " <> showT otherTerm
 
 synths ::
   (F.DExt F.VoidS i) =>
@@ -287,6 +347,11 @@ synths scope env currentTerm = case currentTerm of
     debugPrintT $ "lookup: " <> showT currentTerm
     debugPrintT $ "typ: " <> showT typWithSelf
     pure (cTrue, typWithSelf)
+
+  Constructor conName -> withRule "[Syn-Constructor]" $ do
+    typ <- lookupConstructor conName
+    typExtended <- extendTypeToCurrentScope scope (F.sink typ)
+    pure (cTrue, typExtended)
 
   {- [Syn-Con]
    -----------------
@@ -373,11 +438,5 @@ synths scope env currentTerm = case currentTerm of
   Boolean b -> do
     typ <- extendTypeToCurrentScope scope $ F.sink $ boolWithT b
     pure (cTrue, typ)
-  _ -> throwError $ "unimplemented case:\n" <> pShowT currentTerm
 
-getNameBinderFromPattern :: Pattern i o -> F.NameBinder i o
-getNameBinderFromPattern (PatternVar binder) = binder
-
-getRawVarIdFromPattern :: Pattern i o -> Inner.VarIdent
-getRawVarIdFromPattern varPat = case fromPattern varPat of
-  Inner.PatternVar v -> v
+  _ -> throwError $ "unimplemented case:\n" <> showT currentTerm

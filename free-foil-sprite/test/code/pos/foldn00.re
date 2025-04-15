@@ -1,4 +1,4 @@
-/**@ qualif pos(v:int): (0 <= v) */
+/*Q pos(v:int): (0 <= v) */
 
 /*@ val foldn : _:(_:'a => _:int[v|0<=v] => 'a) => _:'a => i:int[v|0 <= v] => n:int[v|i<=v] => 'a */
 let rec foldn = (f, acc, i, n) => {

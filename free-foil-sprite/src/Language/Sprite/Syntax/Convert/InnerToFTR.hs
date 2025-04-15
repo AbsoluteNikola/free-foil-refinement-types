@@ -6,6 +6,8 @@ import qualified Language.Sprite.Syntax.Inner.Abs as I
 import qualified Language.Fixpoint.Types.Names as T
 import qualified Language.Fixpoint.Horn.Types as H
 import Data.Traversable (for)
+import qualified Language.Fixpoint.Types as T
+import qualified Data.Text as T
 
 -- TODO: pretty printer
 data ConvertError
@@ -26,6 +28,9 @@ convertTerm = \case
     l' <- convertTerm l
     r' <- convertTerm r
     pure $ op_ op l' r'
+  I.Measure (I.MeasureIdent measureName) args -> do
+    args' <- for args convertTerm
+    pure $ T.mkEApp (T.dummyLoc $ T.symbol measureName) args'
   term -> Left $  UnsupportedTerm term
   where
     op_ = \case

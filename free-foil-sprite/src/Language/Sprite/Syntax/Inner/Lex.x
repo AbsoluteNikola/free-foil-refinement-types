@@ -28,7 +28,7 @@ $u = [. \n]          -- universal: any character
 
 -- Symbols and non-identifier-like reserved words
 
-@rsyms = \( | \) | \{ | \} | \= | \; | \/ \* \@ | \* \/ | \= \> | \/ \\ | \: | "t" \( | \[ | \| | \] | \∀ | \? | \= \= | \< \= | \< | \> \= | \> | \+ | \- | \* | \& \& | \| \| | \' | \' \'
+@rsyms = \( | \) | \{ | \} | \= | \; | \/ \* \@ | \* \/ | \= \> | \| | \/ \\ | \: | "t" \( | \[ | \] | \∀ | \, | \? | \= \= | \< \= | \< | \> \= | \> | \+ | \- | \* | \& \& | \| \| | \' | \' \'
 
 :-
 
@@ -42,6 +42,14 @@ $white+ ;
 -- token VarIdent
 $s (\_ | ($d | $l)) *
     { tok (eitherResIdent T_VarIdent) }
+
+-- token ConIdent
+$c (\_ | ($d | $l)) *
+    { tok (eitherResIdent T_ConIdent) }
+
+-- token MeasureIdent
+$l (\_ | ($d | $l)) *
+    { tok (eitherResIdent T_MeasureIdent) }
 
 -- Keywords and Ident
 $l $i*
@@ -65,6 +73,8 @@ data Tok
   | TD !String                    -- ^ Float literal.
   | TC !String                    -- ^ Character literal.
   | T_VarIdent !String
+  | T_ConIdent !String
+  | T_MeasureIdent !String
   deriving (Eq, Show, Ord)
 
 -- | Smart constructor for 'Tok' for the sake of backwards compatibility.
@@ -128,6 +138,8 @@ tokenText t = case t of
   PT _ (TC s)   -> s
   Err _         -> "#error"
   PT _ (T_VarIdent s) -> s
+  PT _ (T_ConIdent s) -> s
+  PT _ (T_MeasureIdent s) -> s
 
 -- | Convert a token to a string.
 prToken :: Token -> String
@@ -154,21 +166,21 @@ eitherResIdent tv s = treeFind resWords
 -- | The keywords and symbols of the language organized as binary search tree.
 resWords :: BTree
 resWords =
-  b ">" 19
-    (b "/*@" 10
-       (b ")" 5
-          (b "''" 3 (b "'" 2 (b "&&" 1 N N) N) (b "(" 4 N N))
-          (b "+" 8 (b "*/" 7 (b "*" 6 N N) N) (b "-" 9 N N)))
-       (b "<=" 15
-          (b ";" 13 (b ":" 12 (b "/\\" 11 N N) N) (b "<" 14 N N))
-          (b "==" 17 (b "=" 16 N N) (b "=>" 18 N N))))
-    (b "let" 29
-       (b "bool" 24
-          (b "[" 22 (b "?" 21 (b ">=" 20 N N) N) (b "]" 23 N N))
-          (b "if" 27 (b "false" 26 (b "else" 25 N N) N) (b "int" 28 N N)))
-       (b "|" 34
-          (b "true" 32 (b "t(" 31 (b "rec" 30 N N) N) (b "{" 33 N N))
-          (b "}" 36 (b "||" 35 N N) (b "\8704" 37 N N))))
+  b ">=" 21
+    (b "/*@" 11
+       (b "*" 6
+          (b "''" 3 (b "'" 2 (b "&&" 1 N N) N) (b ")" 5 (b "(" 4 N N) N))
+          (b "," 9 (b "+" 8 (b "*/" 7 N N) N) (b "-" 10 N N)))
+       (b "<=" 16
+          (b ";" 14 (b ":" 13 (b "/\\" 12 N N) N) (b "<" 15 N N))
+          (b "=>" 19 (b "==" 18 (b "=" 17 N N) N) (b ">" 20 N N))))
+    (b "rec" 31
+       (b "else" 26
+          (b "]" 24 (b "[" 23 (b "?" 22 N N) N) (b "bool" 25 N N))
+          (b "int" 29 (b "if" 28 (b "false" 27 N N) N) (b "let" 30 N N)))
+       (b "{" 36
+          (b "true" 34 (b "t(" 33 (b "switch" 32 N N) N) (b "type" 35 N N))
+          (b "}" 39 (b "||" 38 (b "|" 37 N N) N) (b "\8704" 40 N N))))
   where
   b s n = B bs (TS bs n)
     where

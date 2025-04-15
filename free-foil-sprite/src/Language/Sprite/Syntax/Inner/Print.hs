@@ -139,11 +139,20 @@ instance Print Double where
 
 instance Print Language.Sprite.Syntax.Inner.Abs.VarIdent where
   prt _ (Language.Sprite.Syntax.Inner.Abs.VarIdent i) = doc $ showString i
+instance Print Language.Sprite.Syntax.Inner.Abs.ConIdent where
+  prt _ (Language.Sprite.Syntax.Inner.Abs.ConIdent i) = doc $ showString i
+instance Print Language.Sprite.Syntax.Inner.Abs.MeasureIdent where
+  prt _ (Language.Sprite.Syntax.Inner.Abs.MeasureIdent i) = doc $ showString i
+instance Print Language.Sprite.Syntax.Inner.Abs.Program where
+  prt i = \case
+    Language.Sprite.Syntax.Inner.Abs.Program datatypes term -> prPrec i 0 (concatD [prt 0 datatypes, prt 0 term])
+
 instance Print Language.Sprite.Syntax.Inner.Abs.Term where
   prt i = \case
     Language.Sprite.Syntax.Inner.Abs.ConstInt n -> prPrec i 0 (concatD [prt 0 n])
     Language.Sprite.Syntax.Inner.Abs.Boolean constbool -> prPrec i 0 (concatD [prt 0 constbool])
     Language.Sprite.Syntax.Inner.Abs.Var varident -> prPrec i 0 (concatD [prt 0 varident])
+    Language.Sprite.Syntax.Inner.Abs.Constructor conident -> prPrec i 0 (concatD [prt 0 conident])
     Language.Sprite.Syntax.Inner.Abs.If term1 term2 term3 -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 0 term1, doc (showString ")"), doc (showString "{"), prt 0 term2, doc (showString "}"), doc (showString "else"), doc (showString "{"), prt 0 term3, doc (showString "}")])
     Language.Sprite.Syntax.Inner.Abs.Let pattern_ term scopedterm -> prPrec i 0 (concatD [doc (showString "let"), prt 0 pattern_, doc (showString "="), prt 0 term, doc (showString ";"), prt 0 scopedterm])
     Language.Sprite.Syntax.Inner.Abs.LetRec term pattern_ scopedterm1 scopedterm2 -> prPrec i 0 (concatD [doc (showString "/*@"), prt 0 term, doc (showString "*/"), doc (showString "let"), doc (showString "rec"), prt 0 pattern_, doc (showString "="), prt 0 scopedterm1, doc (showString ";"), prt 0 scopedterm2])
@@ -151,22 +160,44 @@ instance Print Language.Sprite.Syntax.Inner.Abs.Term where
     Language.Sprite.Syntax.Inner.Abs.App term1 term2 -> prPrec i 0 (concatD [prt 0 term1, doc (showString "("), prt 0 term2, doc (showString ")")])
     Language.Sprite.Syntax.Inner.Abs.Ann term1 term2 -> prPrec i 0 (concatD [doc (showString "/*@"), prt 0 term1, doc (showString "*/"), prt 0 term2])
     Language.Sprite.Syntax.Inner.Abs.OpExpr term1 op term2 -> prPrec i 0 (concatD [doc (showString "("), prt 0 term1, prt 0 op, prt 0 term2, doc (showString ")")])
+    Language.Sprite.Syntax.Inner.Abs.Switch term terms -> prPrec i 0 (concatD [doc (showString "switch"), doc (showString "("), prt 0 term, doc (showString ")"), doc (showString "{"), prt 0 terms, doc (showString "}")])
+    Language.Sprite.Syntax.Inner.Abs.CaseAlt conident pattern_ scopedterm -> prPrec i 0 (concatD [doc (showString "|"), prt 0 conident, doc (showString "("), prt 0 pattern_, doc (showString ")"), doc (showString "=>"), prt 0 scopedterm])
     Language.Sprite.Syntax.Inner.Abs.TLam pattern_ scopedterm -> prPrec i 0 (concatD [doc (showString "/\\"), prt 0 pattern_, doc (showString ":"), prt 0 scopedterm])
     Language.Sprite.Syntax.Inner.Abs.TApp term1 term2 -> prPrec i 0 (concatD [prt 0 term1, doc (showString "t("), prt 0 term2, doc (showString ")")])
     Language.Sprite.Syntax.Inner.Abs.TypeRefined term pattern_ scopedterm -> prPrec i 0 (concatD [prt 0 term, doc (showString "["), prt 0 pattern_, doc (showString "|"), prt 0 scopedterm, doc (showString "]")])
     Language.Sprite.Syntax.Inner.Abs.TypeFun pattern_ term scopedterm -> prPrec i 0 (concatD [prt 0 pattern_, doc (showString ":"), prt 0 term, doc (showString "=>"), prt 0 scopedterm])
     Language.Sprite.Syntax.Inner.Abs.TypeForall pattern_ scopedterm -> prPrec i 0 (concatD [doc (showString "\8704"), prt 0 pattern_, doc (showString ":"), prt 0 scopedterm])
+    Language.Sprite.Syntax.Inner.Abs.TypeData varident typedataargs pattern_ scopedterm -> prPrec i 0 (concatD [prt 0 varident, prt 0 typedataargs, doc (showString "["), prt 0 pattern_, doc (showString "|"), prt 0 scopedterm, doc (showString "]")])
     Language.Sprite.Syntax.Inner.Abs.HVar varident terms -> prPrec i 0 (concatD [prt 0 varident, doc (showString "("), prt 0 terms, doc (showString ")")])
+    Language.Sprite.Syntax.Inner.Abs.Measure measureident terms -> prPrec i 0 (concatD [prt 0 measureident, doc (showString "("), prt 0 terms, doc (showString ")")])
     Language.Sprite.Syntax.Inner.Abs.Unknown -> prPrec i 0 (concatD [doc (showString "?")])
     Language.Sprite.Syntax.Inner.Abs.BaseTypeInt -> prPrec i 0 (concatD [doc (showString "int")])
     Language.Sprite.Syntax.Inner.Abs.BaseTypeBool -> prPrec i 0 (concatD [doc (showString "bool")])
     Language.Sprite.Syntax.Inner.Abs.BaseTypeVar term -> prPrec i 0 (concatD [doc (showString "'"), prt 0 term])
     Language.Sprite.Syntax.Inner.Abs.BaseTypeTempVar varident -> prPrec i 0 (concatD [doc (showString "''"), prt 0 varident])
 
+instance Print Language.Sprite.Syntax.Inner.Abs.ScopedTerm where
+  prt i = \case
+    Language.Sprite.Syntax.Inner.Abs.ScopedTerm term -> prPrec i 0 (concatD [prt 0 term])
+
 instance Print Language.Sprite.Syntax.Inner.Abs.ConstBool where
   prt i = \case
     Language.Sprite.Syntax.Inner.Abs.ConstTrue -> prPrec i 0 (concatD [doc (showString "true")])
     Language.Sprite.Syntax.Inner.Abs.ConstFalse -> prPrec i 0 (concatD [doc (showString "false")])
+
+instance Print Language.Sprite.Syntax.Inner.Abs.TypeDataArgs where
+  prt i = \case
+    Language.Sprite.Syntax.Inner.Abs.NonEmptyTypeDataArgs typedataargs -> prPrec i 0 (concatD [doc (showString "("), prt 0 typedataargs, doc (showString ")")])
+    Language.Sprite.Syntax.Inner.Abs.EmptyTypeDataArgs -> prPrec i 0 (concatD [])
+
+instance Print Language.Sprite.Syntax.Inner.Abs.TypeDataArg where
+  prt i = \case
+    Language.Sprite.Syntax.Inner.Abs.TypeDataArg term -> prPrec i 0 (concatD [prt 0 term])
+
+instance Print [Language.Sprite.Syntax.Inner.Abs.TypeDataArg] where
+  prt _ [] = concatD []
+  prt _ [x] = concatD [prt 0 x]
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
 
 instance Print Language.Sprite.Syntax.Inner.Abs.Op where
   prt i = \case
@@ -184,10 +215,25 @@ instance Print Language.Sprite.Syntax.Inner.Abs.Op where
 instance Print Language.Sprite.Syntax.Inner.Abs.Pattern where
   prt i = \case
     Language.Sprite.Syntax.Inner.Abs.PatternVar varident -> prPrec i 0 (concatD [prt 0 varident])
+    Language.Sprite.Syntax.Inner.Abs.PatternNoBinders -> prPrec i 0 (concatD [])
+    Language.Sprite.Syntax.Inner.Abs.PatternSomeBinders varident pattern_ -> prPrec i 0 (concatD [prt 0 varident, prt 0 pattern_])
 
-instance Print Language.Sprite.Syntax.Inner.Abs.ScopedTerm where
+instance Print Language.Sprite.Syntax.Inner.Abs.DataType where
   prt i = \case
-    Language.Sprite.Syntax.Inner.Abs.ScopedTerm term -> prPrec i 0 (concatD [prt 0 term])
+    Language.Sprite.Syntax.Inner.Abs.DataType varident datatypecons -> prPrec i 0 (concatD [doc (showString "type"), prt 0 varident, doc (showString "="), prt 0 datatypecons, doc (showString ";")])
+
+instance Print [Language.Sprite.Syntax.Inner.Abs.DataType] where
+  prt _ [] = concatD []
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString "\n"), prt 0 xs]
+
+instance Print Language.Sprite.Syntax.Inner.Abs.DataTypeCon where
+  prt i = \case
+    Language.Sprite.Syntax.Inner.Abs.DataTypeCon varident term -> prPrec i 0 (concatD [doc (showString "|"), prt 0 varident, doc (showString ":"), prt 0 term])
+
+instance Print [Language.Sprite.Syntax.Inner.Abs.DataTypeCon] where
+  prt _ [] = concatD []
+  prt _ [x] = concatD [prt 0 x, doc (showString "\n")]
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString "\n"), prt 0 xs]
 
 instance Print [Language.Sprite.Syntax.Inner.Abs.Term] where
   prt _ [] = concatD []

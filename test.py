@@ -21,6 +21,7 @@ def run_test(test_path, expected):
 print("Running positive tests...")
 for test_file in os.listdir(pos_dir):
     if test_file in TESTS_TO_IGNORE:
+        print(f"❗ Ignore: {test_file}")
         continue
     test_path = os.path.join(pos_dir, test_file)
     if os.path.isfile(test_path):
@@ -31,6 +32,7 @@ for test_file in os.listdir(pos_dir):
 print("\nRunning negative tests...")
 for test_file in os.listdir(neg_dir):
     if test_file in TESTS_TO_IGNORE:
+        print(f"❗ Ignore: {test_file}")
         continue
     test_path = os.path.join(neg_dir, test_file)
     if os.path.isfile(test_path):

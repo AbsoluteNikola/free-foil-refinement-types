@@ -1,5 +1,5 @@
-/**@ qualif pos(v:int):        (0 <= v) */
-/**@ qualif geq(v:int, n:int): (n <= v) */
+/*Q pos(v:int):        (0 <= v) */
+/*Q geq(v:int, n:int): (n <= v) */
 
 /*@ val foldn : _:(_:'a => _:int[?] => 'a) => _:'a => i:int[?] => n:int[?] => 'a */
 let rec foldn = (f, acc, i, n) => {

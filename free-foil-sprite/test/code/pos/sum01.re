@@ -1,5 +1,5 @@
-/**@ qualif pos(v:int):        (0 <= v) */
-/**@ qualif geq(v:int, n:int): (n <= v) */
+/*Q pos(v:int):        (0 <= v) */
+/*Q geq(v:int, n:int): (n <= v) */
 
 /*@ val cassert : b:bool[b|b] => int */
 let cassert = (b) => { 0 };
