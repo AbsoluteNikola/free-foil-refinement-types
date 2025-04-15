@@ -30,8 +30,8 @@ data Term
     | Var VarIdent
     | If FuncAppArg Term Term
     | Let Decl Term
-    | Fun VarIdent Term
-    | App VarIdent FuncAppArg
+    | Fun [FunArgName] Term
+    | App VarIdent [FuncAppArg]
     | Op FuncAppArg IntOp FuncAppArg
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
@@ -59,18 +59,22 @@ data IntOp
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data RType
-    = TypeRefined BaseType VarIdent Pred
+    = TypeFun FuncArg RType
+    | TypeRefined BaseType VarIdent Pred
     | TypeRefinedUnknown BaseType
-    | TypeFun FuncArg RType
+    | TypeVar VarIdent
+    | TypeRefinedSimple BaseType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data FuncArg = NamedFuncArg VarIdent RType
+data FuncArg = NamedFuncArg VarIdent RType | UnNamedFuncArg RType
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data Pred
     = PVar VarIdent
     | PBool ConstBool
     | PInt Integer
+    | POr Pred Pred
+    | PAnd Pred Pred
     | PEq Pred Pred
     | PLessThan Pred Pred
     | PLessOrEqThan Pred Pred
@@ -81,10 +85,10 @@ data Pred
     | PMultiply Pred Pred
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data Pattern = PatternVar VarIdent
+data BaseType = BaseTypeInt | BaseTypeBool
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
-data BaseType = BaseTypeInt | BaseTypeBool
+data FunArgName = FunArgName VarIdent
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Data, C.Typeable, C.Generic)
 
 data FuncAppArg

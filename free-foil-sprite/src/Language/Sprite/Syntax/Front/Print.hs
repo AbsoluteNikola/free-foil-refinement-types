@@ -167,8 +167,8 @@ instance Print Language.Sprite.Syntax.Front.Abs.Term where
     Language.Sprite.Syntax.Front.Abs.Var varident -> prPrec i 0 (concatD [prt 0 varident])
     Language.Sprite.Syntax.Front.Abs.If funcapparg term1 term2 -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 0 funcapparg, doc (showString ")"), doc (showString "{"), prt 0 term1, doc (showString "}"), doc (showString "else"), doc (showString "{"), prt 0 term2, doc (showString "}")])
     Language.Sprite.Syntax.Front.Abs.Let decl term -> prPrec i 0 (concatD [prt 0 decl, prt 0 term])
-    Language.Sprite.Syntax.Front.Abs.Fun varident term -> prPrec i 0 (concatD [doc (showString "("), prt 0 varident, doc (showString ")"), doc (showString "=>"), doc (showString "{"), prt 0 term, doc (showString "}")])
-    Language.Sprite.Syntax.Front.Abs.App varident funcapparg -> prPrec i 0 (concatD [prt 0 varident, doc (showString "("), prt 0 funcapparg, doc (showString ")")])
+    Language.Sprite.Syntax.Front.Abs.Fun funargnames term -> prPrec i 0 (concatD [doc (showString "("), prt 0 funargnames, doc (showString ")"), doc (showString "=>"), doc (showString "{"), prt 0 term, doc (showString "}")])
+    Language.Sprite.Syntax.Front.Abs.App varident funcappargs -> prPrec i 0 (concatD [prt 0 varident, doc (showString "("), prt 0 funcappargs, doc (showString ")")])
     Language.Sprite.Syntax.Front.Abs.Op funcapparg1 intop funcapparg2 -> prPrec i 0 (concatD [prt 0 funcapparg1, prt 0 intop, prt 0 funcapparg2])
 
 instance Print Language.Sprite.Syntax.Front.Abs.ConstBool where
@@ -199,39 +199,54 @@ instance Print Language.Sprite.Syntax.Front.Abs.IntOp where
 
 instance Print Language.Sprite.Syntax.Front.Abs.RType where
   prt i = \case
-    Language.Sprite.Syntax.Front.Abs.TypeRefined basetype varident pred -> prPrec i 2 (concatD [prt 0 basetype, doc (showString "["), prt 0 varident, doc (showString "|"), prt 0 pred, doc (showString "]")])
-    Language.Sprite.Syntax.Front.Abs.TypeRefinedUnknown basetype -> prPrec i 2 (concatD [prt 0 basetype, doc (showString "["), doc (showString "?"), doc (showString "]")])
-    Language.Sprite.Syntax.Front.Abs.TypeFun funcarg rtype -> prPrec i 1 (concatD [prt 0 funcarg, doc (showString "=>"), prt 2 rtype])
+    Language.Sprite.Syntax.Front.Abs.TypeFun funcarg rtype -> prPrec i 0 (concatD [prt 0 funcarg, doc (showString "=>"), prt 0 rtype])
+    Language.Sprite.Syntax.Front.Abs.TypeRefined basetype varident pred -> prPrec i 0 (concatD [prt 0 basetype, doc (showString "["), prt 0 varident, doc (showString "|"), prt 0 pred, doc (showString "]")])
+    Language.Sprite.Syntax.Front.Abs.TypeRefinedUnknown basetype -> prPrec i 0 (concatD [prt 0 basetype, doc (showString "["), doc (showString "?"), doc (showString "]")])
+    Language.Sprite.Syntax.Front.Abs.TypeVar varident -> prPrec i 0 (concatD [doc (showString "'"), prt 0 varident])
+    Language.Sprite.Syntax.Front.Abs.TypeRefinedSimple basetype -> prPrec i 0 (concatD [prt 0 basetype])
 
 instance Print Language.Sprite.Syntax.Front.Abs.FuncArg where
   prt i = \case
     Language.Sprite.Syntax.Front.Abs.NamedFuncArg varident rtype -> prPrec i 0 (concatD [prt 0 varident, doc (showString ":"), prt 0 rtype])
+    Language.Sprite.Syntax.Front.Abs.UnNamedFuncArg rtype -> prPrec i 0 (concatD [doc (showString "_"), doc (showString ":"), prt 0 rtype])
 
 instance Print Language.Sprite.Syntax.Front.Abs.Pred where
   prt i = \case
-    Language.Sprite.Syntax.Front.Abs.PVar varident -> prPrec i 4 (concatD [prt 0 varident])
-    Language.Sprite.Syntax.Front.Abs.PBool constbool -> prPrec i 4 (concatD [prt 0 constbool])
-    Language.Sprite.Syntax.Front.Abs.PInt n -> prPrec i 4 (concatD [prt 0 n])
-    Language.Sprite.Syntax.Front.Abs.PEq pred1 pred2 -> prPrec i 1 (concatD [prt 1 pred1, doc (showString "=="), prt 2 pred2])
-    Language.Sprite.Syntax.Front.Abs.PLessThan pred1 pred2 -> prPrec i 2 (concatD [prt 2 pred1, doc (showString "<"), prt 3 pred2])
-    Language.Sprite.Syntax.Front.Abs.PLessOrEqThan pred1 pred2 -> prPrec i 2 (concatD [prt 2 pred1, doc (showString "<="), prt 3 pred2])
-    Language.Sprite.Syntax.Front.Abs.PGreaterThan pred1 pred2 -> prPrec i 2 (concatD [prt 2 pred1, doc (showString ">"), prt 3 pred2])
-    Language.Sprite.Syntax.Front.Abs.PGreaterOrEqThan pred1 pred2 -> prPrec i 2 (concatD [prt 2 pred1, doc (showString ">="), prt 3 pred2])
-    Language.Sprite.Syntax.Front.Abs.PPlus pred1 pred2 -> prPrec i 3 (concatD [prt 3 pred1, doc (showString "+"), prt 4 pred2])
-    Language.Sprite.Syntax.Front.Abs.PMinus pred1 pred2 -> prPrec i 3 (concatD [prt 3 pred1, doc (showString "-"), prt 4 pred2])
-    Language.Sprite.Syntax.Front.Abs.PMultiply pred1 pred2 -> prPrec i 3 (concatD [prt 3 pred1, doc (showString "*"), prt 4 pred2])
-
-instance Print Language.Sprite.Syntax.Front.Abs.Pattern where
-  prt i = \case
-    Language.Sprite.Syntax.Front.Abs.PatternVar varident -> prPrec i 0 (concatD [prt 0 varident])
+    Language.Sprite.Syntax.Front.Abs.PVar varident -> prPrec i 6 (concatD [prt 0 varident])
+    Language.Sprite.Syntax.Front.Abs.PBool constbool -> prPrec i 6 (concatD [prt 0 constbool])
+    Language.Sprite.Syntax.Front.Abs.PInt n -> prPrec i 6 (concatD [prt 0 n])
+    Language.Sprite.Syntax.Front.Abs.POr pred1 pred2 -> prPrec i 1 (concatD [prt 1 pred1, doc (showString "||"), prt 2 pred2])
+    Language.Sprite.Syntax.Front.Abs.PAnd pred1 pred2 -> prPrec i 2 (concatD [prt 2 pred1, doc (showString "&&"), prt 3 pred2])
+    Language.Sprite.Syntax.Front.Abs.PEq pred1 pred2 -> prPrec i 3 (concatD [prt 3 pred1, doc (showString "=="), prt 4 pred2])
+    Language.Sprite.Syntax.Front.Abs.PLessThan pred1 pred2 -> prPrec i 4 (concatD [prt 4 pred1, doc (showString "<"), prt 5 pred2])
+    Language.Sprite.Syntax.Front.Abs.PLessOrEqThan pred1 pred2 -> prPrec i 4 (concatD [prt 4 pred1, doc (showString "<="), prt 5 pred2])
+    Language.Sprite.Syntax.Front.Abs.PGreaterThan pred1 pred2 -> prPrec i 4 (concatD [prt 4 pred1, doc (showString ">"), prt 5 pred2])
+    Language.Sprite.Syntax.Front.Abs.PGreaterOrEqThan pred1 pred2 -> prPrec i 4 (concatD [prt 4 pred1, doc (showString ">="), prt 5 pred2])
+    Language.Sprite.Syntax.Front.Abs.PPlus pred1 pred2 -> prPrec i 5 (concatD [prt 5 pred1, doc (showString "+"), prt 6 pred2])
+    Language.Sprite.Syntax.Front.Abs.PMinus pred1 pred2 -> prPrec i 5 (concatD [prt 5 pred1, doc (showString "-"), prt 6 pred2])
+    Language.Sprite.Syntax.Front.Abs.PMultiply pred1 pred2 -> prPrec i 5 (concatD [prt 5 pred1, doc (showString "*"), prt 6 pred2])
 
 instance Print Language.Sprite.Syntax.Front.Abs.BaseType where
   prt i = \case
     Language.Sprite.Syntax.Front.Abs.BaseTypeInt -> prPrec i 0 (concatD [doc (showString "int")])
     Language.Sprite.Syntax.Front.Abs.BaseTypeBool -> prPrec i 0 (concatD [doc (showString "bool")])
 
+instance Print Language.Sprite.Syntax.Front.Abs.FunArgName where
+  prt i = \case
+    Language.Sprite.Syntax.Front.Abs.FunArgName varident -> prPrec i 0 (concatD [prt 0 varident])
+
+instance Print [Language.Sprite.Syntax.Front.Abs.FunArgName] where
+  prt _ [] = concatD []
+  prt _ [x] = concatD [prt 0 x]
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
+
 instance Print Language.Sprite.Syntax.Front.Abs.FuncAppArg where
   prt i = \case
     Language.Sprite.Syntax.Front.Abs.FuncAppArgBool constbool -> prPrec i 0 (concatD [prt 0 constbool])
     Language.Sprite.Syntax.Front.Abs.FuncAppArgInt n -> prPrec i 0 (concatD [prt 0 n])
     Language.Sprite.Syntax.Front.Abs.FuncAppArgVar varident -> prPrec i 0 (concatD [prt 0 varident])
+
+instance Print [Language.Sprite.Syntax.Front.Abs.FuncAppArg] where
+  prt _ [] = concatD []
+  prt _ [x] = concatD [prt 0 x]
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]

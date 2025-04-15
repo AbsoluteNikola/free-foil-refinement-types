@@ -22,181 +22,183 @@ import qualified Data.Array
 alex_tab_size :: Int
 alex_tab_size = 8
 alex_base :: Data.Array.Array Int Int
-alex_base = Data.Array.listArray (0 :: Int, 14)
+alex_base = Data.Array.listArray (0 :: Int, 16)
   [ -8
   , -42
   , 91
   , 86
   , 239
-  , -31
+  , -22
+  , -30
+  , -106
   , 0
-  , -44
+  , -41
   , 122
   , 234
-  , -46
+  , -45
   , 85
-  , -23
+  , -21
   , 307
-  , -41
+  , -39
   ]
 
 alex_table :: Data.Array.Array Int Int
 alex_table = Data.Array.listArray (0 :: Int, 562)
   [ 0
+  , 10
+  , 10
+  , 10
+  , 10
+  , 10
+  , 1
+  , 1
+  , 1
+  , 1
+  , 1
+  , 1
+  , 1
+  , 1
+  , 1
+  , 1
   , 8
   , 8
   , 8
   , 8
   , 8
-  , 1
-  , 1
-  , 1
-  , 1
-  , 1
-  , 1
-  , 1
-  , 1
-  , 1
-  , 1
-  , 6
-  , 6
-  , 6
-  , 11
-  , 6
-  , 6
-  , 0
-  , 0
+  , 13
   , 8
+  , 8
+  , 10
   , 0
   , 0
   , 0
   , 0
   , 0
-  , 0
-  , 0
-  , 6
-  , 6
   , 5
+  , 8
+  , 8
+  , 8
   , 6
-  , 6
-  , 6
+  , 8
+  , 8
+  , 8
+  , 0
+  , 14
+  , 1
+  , 1
+  , 1
+  , 1
+  , 1
+  , 1
+  , 1
+  , 1
+  , 1
+  , 1
+  , 8
+  , 8
+  , 9
+  , 16
+  , 9
+  , 8
+  , 0
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 8
+  , 0
+  , 8
+  , 0
+  , 8
+  , 0
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 4
+  , 8
+  , 7
+  , 8
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
   , 0
   , 12
-  , 1
-  , 1
-  , 1
-  , 1
-  , 1
-  , 1
-  , 1
-  , 1
-  , 1
-  , 1
-  , 6
-  , 6
-  , 7
-  , 14
-  , 7
-  , 6
+  , 0
   , 0
   , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 6
-  , 0
-  , 6
+  , 10
+  , 10
+  , 10
+  , 10
+  , 10
   , 0
   , 0
   , 0
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 4
-  , 6
-  , 6
-  , 6
-  , 0
-  , 0
-  , 0
-  , 0
-  , 0
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 2
+  , 8
   , 0
   , 0
   , 0
   , 0
   , 10
-  , 0
-  , 0
-  , 2
-  , 8
-  , 8
-  , 8
-  , 8
-  , 8
-  , 0
-  , 0
-  , 0
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 2
-  , 6
-  , 0
-  , 0
-  , 0
-  , 0
-  , 8
   , 0
   , 2
   , 2
@@ -328,7 +330,7 @@ alex_table = Data.Array.listArray (0 :: Int, 562)
   , 0
   , 0
   , 0
-  , 9
+  , 11
   , 4
   , 4
   , 4
@@ -476,7 +478,7 @@ alex_table = Data.Array.listArray (0 :: Int, 562)
   , 0
   , 0
   , 0
-  , 13
+  , 15
   , 4
   , 4
   , 4
@@ -625,22 +627,22 @@ alex_check = Data.Array.listArray (0 :: Int, 562)
   , 55
   , 56
   , 57
+  , 38
   , 47
-  , 61
+  , 124
   , 64
+  , 61
   , 42
   , 61
   , 62
-  , -1
-  , -1
   , 32
   , -1
   , -1
   , -1
   , -1
   , -1
-  , -1
-  , -1
+  , 38
+  , 39
   , 40
   , 41
   , 42
@@ -696,7 +698,7 @@ alex_check = Data.Array.listArray (0 :: Int, 562)
   , -1
   , 93
   , -1
-  , -1
+  , 95
   , -1
   , 97
   , 98
@@ -1175,7 +1177,7 @@ alex_check = Data.Array.listArray (0 :: Int, 562)
   ]
 
 alex_deflt :: Data.Array.Array Int Int
-alex_deflt = Data.Array.listArray (0 :: Int, 14)
+alex_deflt = Data.Array.listArray (0 :: Int, 16)
   [ -1
   , -1
   , -1
@@ -1191,11 +1193,15 @@ alex_deflt = Data.Array.listArray (0 :: Int, 14)
   , -1
   , -1
   , -1
+  , -1
+  , -1
   ]
 
-alex_accept = Data.Array.listArray (0 :: Int, 14)
+alex_accept = Data.Array.listArray (0 :: Int, 16)
   [ AlexAccNone
+  , AlexAcc 7
   , AlexAcc 6
+  , AlexAccNone
   , AlexAcc 5
   , AlexAccNone
   , AlexAcc 4
@@ -1211,10 +1217,11 @@ alex_accept = Data.Array.listArray (0 :: Int, 14)
   , AlexAcc 0
   ]
 
-alex_actions = Data.Array.array (0 :: Int, 7)
-  [ (6,alex_action_4)
-  , (5,alex_action_3)
-  , (4,alex_action_2)
+alex_actions = Data.Array.array (0 :: Int, 8)
+  [ (7,alex_action_4)
+  , (6,alex_action_3)
+  , (5,alex_action_2)
+  , (4,alex_action_1)
   , (3,alex_action_1)
   , (2,alex_action_1)
   , (1,alex_action_1)
@@ -1556,21 +1563,21 @@ eitherResIdent tv s = treeFind resWords
 -- | The keywords and symbols of the language organized as binary search tree.
 resWords :: BTree
 resWords =
-  b ">=" 18
-    (b "/*@" 9
-       (b "+" 5
-          (b "*" 3 (b ")" 2 (b "(" 1 N N) N) (b "*/" 4 N N))
-          (b "-" 7 (b "," 6 N N) (b "/**@" 8 N N)))
-       (b "=" 14
-          (b "<" 12 (b ";" 11 (b ":" 10 N N) N) (b "<=" 13 N N))
-          (b "=>" 16 (b "==" 15 N N) (b ">" 17 N N))))
-    (b "let" 27
-       (b "else" 23
-          (b "]" 21 (b "[" 20 (b "?" 19 N N) N) (b "bool" 22 N N))
-          (b "if" 25 (b "false" 24 N N) (b "int" 26 N N)))
-       (b "val" 31
-          (b "rec" 29 (b "qualif" 28 N N) (b "true" 30 N N))
-          (b "|" 33 (b "{" 32 N N) (b "}" 34 N N))))
+  b ">=" 20
+    (b "/**@" 10
+       (b "*" 5
+          (b "(" 3 (b "'" 2 (b "&&" 1 N N) N) (b ")" 4 N N))
+          (b "," 8 (b "+" 7 (b "*/" 6 N N) N) (b "-" 9 N N)))
+       (b "<=" 15
+          (b ";" 13 (b ":" 12 (b "/*@" 11 N N) N) (b "<" 14 N N))
+          (b "=>" 18 (b "==" 17 (b "=" 16 N N) N) (b ">" 19 N N))))
+    (b "let" 30
+       (b "bool" 25
+          (b "]" 23 (b "[" 22 (b "?" 21 N N) N) (b "_" 24 N N))
+          (b "if" 28 (b "false" 27 (b "else" 26 N N) N) (b "int" 29 N N)))
+       (b "{" 35
+          (b "true" 33 (b "rec" 32 (b "qualif" 31 N N) N) (b "val" 34 N N))
+          (b "||" 37 (b "|" 36 N N) (b "}" 38 N N))))
   where
   b s n = B bs (TS bs n)
     where

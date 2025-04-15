@@ -27,15 +27,25 @@ data CheckerDebugEnv = CheckerDebugEnv
   }
 
 data CheckerState = CheckerState
+  -- refinement check env
   { hornVarIndex :: Int
   , hornVars :: [H.Var Text]
+  -- elaboration env
+  -- Завтрашний я: как будто хранить констреинты не надо, можно сразу в типы делать подстановку и потом ловить ошибки, ну кароч как в спрайте сделано
+  , typeConstraints :: [(Inner.VarIdent, Term F.VoidS)]
+  , typeVarIndex :: Int
   }
 
 defaultCheckerDebugEnv :: CheckerDebugEnv
 defaultCheckerDebugEnv = CheckerDebugEnv "" ""
 
 defaultCheckerState :: CheckerState
-defaultCheckerState = CheckerState 0 []
+defaultCheckerState = CheckerState
+  { hornVarIndex = 0
+  , hornVars = []
+  , typeConstraints = []
+  , typeVarIndex = 0
+  }
 
 newtype CheckerM a = CheckerM {runCheckerM :: (ExceptT Text (ReaderT CheckerDebugEnv (StateT CheckerState IO))) a }
   deriving newtype (Functor, Applicative, Monad, MonadError Text, MonadReader CheckerDebugEnv, MonadState CheckerState, MonadIO)
@@ -114,8 +124,20 @@ mkFreshHornVar sorts = do
   let varName = "k" <> show newIndex
   let hv = H.HVar (FP.symbol varName) sorts "fake"
   modify $ \s ->
-    CheckerState
+     s
      { hornVarIndex = newIndex + 1
      , hornVars = hv : s.hornVars
      }
   pure $ Inner.VarIdent varName
+
+-- returns 'tmp76 where tmp76 uniq var id in program
+mkFreshTempTypVar :: CheckerM (Term F.VoidS)
+mkFreshTempTypVar = do
+  newIndex <- gets (.typeVarIndex)
+  let varName = Inner.VarIdent $ "tmp" <> show newIndex
+  modify $ \s ->
+     s
+     { typeVarIndex = newIndex + 1
+     }
+  pure $ F.withFreshBinder F.emptyScope $ \newBinder ->
+      TypeRefined (BaseTypeTempVar varName) (PatternVar newBinder) (Boolean Inner.ConstTrue)

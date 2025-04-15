@@ -1,7 +1,7 @@
-/*@ val cassert : b : bool[b|b] => int[v|true] */
+/*@ val cassert : b : bool[b|b] => int */
 let cassert = (b) => { 0 };
 
-/*@ val abs : x:int[v|true] => int[?] */
+/*@ val abs : x:int => int[?] */
 let abs = (x) => {
   let pos = x >= 0;
   if (pos) {
@@ -11,7 +11,7 @@ let abs = (x) => {
   }
 };
 
-/*@ val main : x : int[v|true] => int[v|true] */
+/*@ val main : x : int => int */
 let main = (y) => {
   let ya  = abs(y);
   let ok  = 0 <= ya;

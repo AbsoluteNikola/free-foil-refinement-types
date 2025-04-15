@@ -1,10 +1,10 @@
 
-/*@ val cassert : arg0:bool[b|b] => int[v|true] */
+/*@ val cassert : _:bool[b|b] => int */
 let cassert = (b) => {
   0
 };
 
-/*@ val main : arg0:int[v|true] => int[v|true] */
+/*@ val main : _:int => int */
 let main = (x) => {
   let x1 = x + 1;
   let cond = x < x1;

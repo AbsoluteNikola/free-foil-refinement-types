@@ -18,6 +18,7 @@ import qualified Language.Fixpoint.Types.Config as FC
 import qualified Language.Fixpoint.Utils.Files as F
 import qualified Language.Fixpoint.Misc as F
 import qualified Data.Text as T
+import qualified Data.Text.IO as TIO
 import qualified Text.PrettyPrint.HughesPJ.Compat as PJ
 import Data.Foldable (for_)
 import Control.Monad.Trans.Except (runExceptT)
@@ -27,26 +28,42 @@ import Control.Monad.State (StateT (runStateT))
 import qualified Language.Sprite.TypeCheck.Types as S
 import qualified Language.Fixpoint.Horn.Types as F
 import qualified Language.Sprite.Syntax.Convert.QualifierToFTR as QualifiersToFTR
+import qualified Language.Sprite.TypeCheck.Elaboration as Elaboration
+import qualified Language.Sprite.Syntax.Inner.Print as Inner
+import Text.Pretty.Simple (pPrint)
 
 -- TODO: add better errors
 instance F.Loc T.Text where
   srcSpan _ = F.dummySpan
 
 
+runM :: Check.CheckerM a -> IO (Either Text a, Check.CheckerState)
+runM =  flip runStateT Check.defaultCheckerState
+  . flip runReaderT Check.defaultCheckerDebugEnv
+  . runExceptT
+  . Check.runCheckerM
+
 vcgen :: [F.Qualifier] -> S.Term Foil.VoidS -> IO (Either Text (H.Query Text))
 vcgen qualifiers term = do
   let
     programType = S.anyIntT
+  elaboratedTerm <- runM (Elaboration.check Foil.emptyScope Check.EmptyEnv term programType)
+    >>= \case
+      (Left err, _) -> do
+        print ("Elaboration errors:" :: Text)
+        print err
+        exitFailure
+      (Right t, _) -> pure t
+  -- pPrint $ S.fromTerm elaboratedTerm
+  print ("Elaborated term:" :: Text)
+  TIO.putStrLn $ Check.showT elaboratedTerm
   (eConstraints, checkerState) <-
-    flip runStateT Check.defaultCheckerState
-    . flip runReaderT Check.defaultCheckerDebugEnv
-    . runExceptT
-    . Check.runCheckerM
-    $ Check.check Foil.emptyScope Check.EmptyEnv term programType
+    runM $ Check.check Foil.emptyScope Check.EmptyEnv elaboratedTerm programType
   let
     mkQuery c = do
       c' <- first Check.showT $ Check.constraintsToFHT c
       pure $ H.Query qualifiers checkerState.hornVars c' mempty mempty mempty mempty mempty mempty mempty
+  pPrint eConstraints
   pure $ eConstraints >>= mkQuery
 
 config :: FC.Config
@@ -84,7 +101,9 @@ run filePath (Front.Program rawQualifiers rawFrontTerm) = do
       print errs
       exitFailure
   let scopedTerm =  S.toTerm Foil.emptyScope Map.empty rawInnerTerm
-  -- pPrint rawFrontTerm
+  putStrLn "Raw inner term"
+  putStrLn $ Inner.printTree rawInnerTerm
+  putStrLn "Raw scoped term"
   print scopedTerm
   result <- vcgen qualifiers scopedTerm >>= \case
     Left err -> do

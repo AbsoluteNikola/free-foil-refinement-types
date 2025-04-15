@@ -13,17 +13,23 @@ App.          Term ::= Term "(" Term ")" ;
 Ann.          Term ::= "/*@" Term "*/" Term; -- FIXME: Problem with TH generations when "/*@" Pattern : Term "*/" Term;
 OpExpr.       Term ::= "(" Term Op Term ")";
 
--- type terms
-TypeRefined.         Term ::= BaseType "[" Pattern "|" ScopedTerm "]" ;
-TypeRefinedUnknown.  Term ::= BaseType "[" "?" "]" ;
-TypeFun.             Term ::= Pattern ":" Term "=>" ScopedTerm ;   -- FIXME: same problem as with Let
+-- polymorphism
+TLam.         Term ::= "/\\" Pattern ":" ScopedTerm ;
+TApp.         Term ::= Term "t(" Term ")" ;
 
--- predicate terms
+-- type terms, first term should be one of base types
+TypeRefined.         Term ::= Term "[" Pattern "|" ScopedTerm "]" ;
+TypeFun.             Term ::= Pattern ":" Term "=>" ScopedTerm ;
+TypeForall.          Term ::= "∀" Pattern ":" ScopedTerm ;
+
 ConstTrue.      ConstBool ::= "true" ;
 ConstFalse.     ConstBool ::= "false" ;
 
+-- predicate terms
 -- Horn Variables managed separately
 HVar.  Term ::= VarIdent "(" [Term] ")" ;
+
+Unknown. Term ::= "?";
 
 EqOp.            Op ::= "==";
 LessOrEqOp.      Op ::= "<=";
@@ -39,7 +45,13 @@ OrOp.            Op ::= "||";
 PatternVar. Pattern ::= VarIdent ;
 ScopedTerm. ScopedTerm ::= Term ;
 
-BaseTypeInt.  BaseType ::= "int" ;
-BaseTypeBool.  BaseType ::= "bool" ;
+-- base types
+BaseTypeInt.      Term ::= "int" ;
+BaseTypeBool.     Term ::= "bool" ;
+BaseTypeVar.      Term ::= "'" Term; -- should be Var
+
+-- used only on elaboration phase to infer types.
+-- Should not appear on refinement check phase
+BaseTypeTempVar.  Term ::= "''" VarIdent;
 
 separator nonempty Term " " ;

@@ -13,7 +13,6 @@ module Language.Sprite.Syntax.Inner.Par
   , pOp
   , pPattern
   , pScopedTerm
-  , pBaseType
   , pListTerm
   ) where
 
@@ -29,44 +28,48 @@ import Language.Sprite.Syntax.Inner.Lex
 %name pOp Op
 %name pPattern Pattern
 %name pScopedTerm ScopedTerm
-%name pBaseType BaseType
 %name pListTerm ListTerm
 -- no lexer declaration
 %monad { Err } { (>>=) } { return }
 %tokentype {Token}
 %token
   '&&'       { PT _ (TS _ 1)        }
-  '('        { PT _ (TS _ 2)        }
-  ')'        { PT _ (TS _ 3)        }
-  '*'        { PT _ (TS _ 4)        }
-  '*/'       { PT _ (TS _ 5)        }
-  '+'        { PT _ (TS _ 6)        }
-  '-'        { PT _ (TS _ 7)        }
-  '/*@'      { PT _ (TS _ 8)        }
-  ':'        { PT _ (TS _ 9)        }
-  ';'        { PT _ (TS _ 10)       }
-  '<'        { PT _ (TS _ 11)       }
-  '<='       { PT _ (TS _ 12)       }
-  '='        { PT _ (TS _ 13)       }
-  '=='       { PT _ (TS _ 14)       }
-  '=>'       { PT _ (TS _ 15)       }
-  '>'        { PT _ (TS _ 16)       }
-  '>='       { PT _ (TS _ 17)       }
-  '?'        { PT _ (TS _ 18)       }
-  '['        { PT _ (TS _ 19)       }
-  ']'        { PT _ (TS _ 20)       }
-  'bool'     { PT _ (TS _ 21)       }
-  'else'     { PT _ (TS _ 22)       }
-  'false'    { PT _ (TS _ 23)       }
-  'if'       { PT _ (TS _ 24)       }
-  'int'      { PT _ (TS _ 25)       }
-  'let'      { PT _ (TS _ 26)       }
-  'rec'      { PT _ (TS _ 27)       }
-  'true'     { PT _ (TS _ 28)       }
-  '{'        { PT _ (TS _ 29)       }
-  '|'        { PT _ (TS _ 30)       }
-  '||'       { PT _ (TS _ 31)       }
-  '}'        { PT _ (TS _ 32)       }
+  '\''       { PT _ (TS _ 2)        }
+  '\'\''     { PT _ (TS _ 3)        }
+  '('        { PT _ (TS _ 4)        }
+  ')'        { PT _ (TS _ 5)        }
+  '*'        { PT _ (TS _ 6)        }
+  '*/'       { PT _ (TS _ 7)        }
+  '+'        { PT _ (TS _ 8)        }
+  '-'        { PT _ (TS _ 9)        }
+  '/*@'      { PT _ (TS _ 10)       }
+  '/\\'      { PT _ (TS _ 11)       }
+  ':'        { PT _ (TS _ 12)       }
+  ';'        { PT _ (TS _ 13)       }
+  '<'        { PT _ (TS _ 14)       }
+  '<='       { PT _ (TS _ 15)       }
+  '='        { PT _ (TS _ 16)       }
+  '=='       { PT _ (TS _ 17)       }
+  '=>'       { PT _ (TS _ 18)       }
+  '>'        { PT _ (TS _ 19)       }
+  '>='       { PT _ (TS _ 20)       }
+  '?'        { PT _ (TS _ 21)       }
+  '['        { PT _ (TS _ 22)       }
+  ']'        { PT _ (TS _ 23)       }
+  'bool'     { PT _ (TS _ 24)       }
+  'else'     { PT _ (TS _ 25)       }
+  'false'    { PT _ (TS _ 26)       }
+  'if'       { PT _ (TS _ 27)       }
+  'int'      { PT _ (TS _ 28)       }
+  'let'      { PT _ (TS _ 29)       }
+  'rec'      { PT _ (TS _ 30)       }
+  't('       { PT _ (TS _ 31)       }
+  'true'     { PT _ (TS _ 32)       }
+  '{'        { PT _ (TS _ 33)       }
+  '|'        { PT _ (TS _ 34)       }
+  '||'       { PT _ (TS _ 35)       }
+  '}'        { PT _ (TS _ 36)       }
+  '∀'        { PT _ (TS _ 37)       }
   L_integ    { PT _ (TI $$)         }
   L_VarIdent { PT _ (T_VarIdent $$) }
 
@@ -90,10 +93,17 @@ Term
   | Term '(' Term ')' { Language.Sprite.Syntax.Inner.Abs.App $1 $3 }
   | '/*@' Term '*/' Term { Language.Sprite.Syntax.Inner.Abs.Ann $2 $4 }
   | '(' Term Op Term ')' { Language.Sprite.Syntax.Inner.Abs.OpExpr $2 $3 $4 }
-  | BaseType '[' Pattern '|' ScopedTerm ']' { Language.Sprite.Syntax.Inner.Abs.TypeRefined $1 $3 $5 }
-  | BaseType '[' '?' ']' { Language.Sprite.Syntax.Inner.Abs.TypeRefinedUnknown $1 }
+  | '/\\' Pattern ':' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.TLam $2 $4 }
+  | Term 't(' Term ')' { Language.Sprite.Syntax.Inner.Abs.TApp $1 $3 }
+  | Term '[' Pattern '|' ScopedTerm ']' { Language.Sprite.Syntax.Inner.Abs.TypeRefined $1 $3 $5 }
   | Pattern ':' Term '=>' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.TypeFun $1 $3 $5 }
+  | '∀' Pattern ':' ScopedTerm { Language.Sprite.Syntax.Inner.Abs.TypeForall $2 $4 }
   | VarIdent '(' ListTerm ')' { Language.Sprite.Syntax.Inner.Abs.HVar $1 $3 }
+  | '?' { Language.Sprite.Syntax.Inner.Abs.Unknown }
+  | 'int' { Language.Sprite.Syntax.Inner.Abs.BaseTypeInt }
+  | 'bool' { Language.Sprite.Syntax.Inner.Abs.BaseTypeBool }
+  | '\'' Term { Language.Sprite.Syntax.Inner.Abs.BaseTypeVar $2 }
+  | '\'\'' VarIdent { Language.Sprite.Syntax.Inner.Abs.BaseTypeTempVar $2 }
 
 ConstBool :: { Language.Sprite.Syntax.Inner.Abs.ConstBool }
 ConstBool
@@ -120,11 +130,6 @@ Pattern
 ScopedTerm :: { Language.Sprite.Syntax.Inner.Abs.ScopedTerm }
 ScopedTerm
   : Term { Language.Sprite.Syntax.Inner.Abs.ScopedTerm $1 }
-
-BaseType :: { Language.Sprite.Syntax.Inner.Abs.BaseType }
-BaseType
-  : 'int' { Language.Sprite.Syntax.Inner.Abs.BaseTypeInt }
-  | 'bool' { Language.Sprite.Syntax.Inner.Abs.BaseTypeBool }
 
 ListTerm :: { [Language.Sprite.Syntax.Inner.Abs.Term] }
 ListTerm : Term { (:[]) $1 } | Term ListTerm { (:) $1 $2 }

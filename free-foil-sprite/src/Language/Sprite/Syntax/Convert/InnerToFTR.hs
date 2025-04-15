@@ -10,8 +10,9 @@ import Data.Traversable (for)
 -- TODO: pretty printer
 data ConvertError
   = UnsupportedTerm I.Term
-  | HVarArgumentNotVar I.Term
+  | HVarArgumentNotVar I.VarIdent I.Term
   | FlattedMoreThanOneAnd [I.Term]
+  | UnknownBaseType I.Term
   deriving (Show)
 
 convertTerm :: I.Term -> Either ConvertError T.Expr
@@ -54,7 +55,7 @@ convert (flattenAnd -> terms) = case terms of
   [I.HVar (I.VarIdent hornVarName) args] -> do
     argIds <- for args $ \case
       I.Var (I.VarIdent argId) -> pure $ T.symbol argId
-      otherTerm  -> Left $ HVarArgumentNotVar otherTerm
+      otherTerm  -> Left $ HVarArgumentNotVar (I.VarIdent hornVarName) otherTerm
     pure $ H.Var (T.symbol hornVarName) argIds
 
   [otherTerm] -> do

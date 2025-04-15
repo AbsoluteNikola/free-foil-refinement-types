@@ -21,7 +21,7 @@ data BinOpType startScope where
 binOpTypes :: F.Distinct o => F.Scope o -> Inner.Op -> BinOpType o
 binOpTypes startScope op = F.withFreshBinder startScope $ \xBinder ->
   let
-    (argumentBaseType, resultBaseType) = getBaseTypesForOp op
+    (argumentBaseType, resultBaseType) = getBaseTypesForOp startScope op
     scopeWithX = F.extendScope xBinder startScope
     xPat = PatternVar xBinder
     xType =  TypeRefined argumentBaseType xPat (Boolean Inner.ConstTrue)
@@ -34,7 +34,7 @@ binOpTypes startScope op = F.withFreshBinder startScope $ \xBinder ->
               let
                 scopeWithY = F.extendScope yBinder scopeWithX
                 yPat = PatternVar yBinder
-                yType =  TypeRefined argumentBaseType yPat (Boolean Inner.ConstTrue)
+                yType =  TypeRefined (F.sink argumentBaseType) yPat (Boolean Inner.ConstTrue)
               in
                 F.withFreshBinder scopeWithY $ \opResBinder ->
                   case (F.assertDistinct opResBinder, F.assertExt opResBinder) of
@@ -42,7 +42,7 @@ binOpTypes startScope op = F.withFreshBinder startScope $ \xBinder ->
                       let
                         resType =
                           TypeRefined
-                            resultBaseType
+                            (F.sink resultBaseType)
                             (PatternVar opResBinder)
                             (OpExpr
                               (F.Var . F.nameOf $ opResBinder) Inner.EqOp
@@ -50,15 +50,15 @@ binOpTypes startScope op = F.withFreshBinder startScope $ \xBinder ->
                       in
                         BinOpType xBinder xType yBinder yType resType
 
-getBaseTypesForOp :: Inner.Op -> (Inner.BaseType {- Arguments base type-}, Inner.BaseType {- result base type-})
-getBaseTypesForOp = \case
-  Inner.PlusOp -> (Inner.BaseTypeInt, Inner.BaseTypeInt)
-  Inner.MinusOp -> (Inner.BaseTypeInt, Inner.BaseTypeInt)
-  Inner.MultiplyOp -> (Inner.BaseTypeInt, Inner.BaseTypeInt)
-  Inner.EqOp -> (Inner.BaseTypeInt, Inner.BaseTypeBool)
-  Inner.LessOp -> (Inner.BaseTypeInt, Inner.BaseTypeBool)
-  Inner.LessOrEqOp -> (Inner.BaseTypeInt, Inner.BaseTypeBool)
-  Inner.GreaterOp -> (Inner.BaseTypeInt, Inner.BaseTypeBool)
-  Inner.GreaterOrEqOp -> (Inner.BaseTypeInt, Inner.BaseTypeBool)
-  Inner.AndOp -> (Inner.BaseTypeBool, Inner.BaseTypeBool)
-  Inner.OrOp -> (Inner.BaseTypeBool, Inner.BaseTypeBool)
+getBaseTypesForOp :: F.Scope o -> Inner.Op -> (Term o {- Arguments base type-}, Term o {- result base type-})
+getBaseTypesForOp _ = \case
+  Inner.PlusOp -> (BaseTypeInt, BaseTypeInt)
+  Inner.MinusOp -> (BaseTypeInt, BaseTypeInt)
+  Inner.MultiplyOp -> (BaseTypeInt, BaseTypeInt)
+  Inner.EqOp -> (BaseTypeInt, BaseTypeBool)
+  Inner.LessOp -> (BaseTypeInt, BaseTypeBool)
+  Inner.LessOrEqOp -> (BaseTypeInt, BaseTypeBool)
+  Inner.GreaterOp -> (BaseTypeInt, BaseTypeBool)
+  Inner.GreaterOrEqOp -> (BaseTypeInt, BaseTypeBool)
+  Inner.AndOp -> (BaseTypeBool, BaseTypeBool)
+  Inner.OrOp -> (BaseTypeBool, BaseTypeBool)

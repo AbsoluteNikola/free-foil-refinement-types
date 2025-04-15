@@ -21,8 +21,8 @@ Bool.         Term ::= ConstBool ;
 Var.          Term ::= VarIdent ;
 If.           Term ::= "if" "(" FuncAppArg ")" "{" Term "}" "else" "{" Term "}";
 Let.          Term ::= Decl Term ;
-Fun.          Term ::= "(" VarIdent ")" "=>" "{" Term "}" ;
-App.          Term ::= VarIdent "(" FuncAppArg ")"; -- Program should be in ANF. See page 14
+Fun.          Term ::= "(" [FunArgName] ")" "=>" "{" Term "}" ;
+App.          Term ::= VarIdent "(" [FuncAppArg] ")"; -- Program should be in ANF. See page 14
 Op.           Term ::= FuncAppArg IntOp FuncAppArg; -- Program should be in ANF. See page 14
 _.            Term ::= "(" Term ")";
 
@@ -45,40 +45,42 @@ IntGreaterThan. IntOp ::= ">";
 IntGreaterOrEqThan. IntOp ::= ">=";
 
 -- type terms
-TypeRefined.         RType2 ::= BaseType "[" VarIdent "|" Pred "]" ;
-TypeRefinedUnknown.  RType2 ::= BaseType "[" "?" "]" ;
-TypeFun.             RType1 ::= FuncArg "=>" RType2 ;
+-- TODO: rewrite to move type var to base type
+TypeFun.             RType ::= FuncArg "=>" RType ;
+TypeRefined.         RType ::= BaseType "[" VarIdent "|" Pred "]" ;
+TypeRefinedUnknown.  RType ::= BaseType "[" "?" "]" ;
+TypeVar.             RType ::= "'" VarIdent;
+TypeRefinedSimple.   RType ::= BaseType;
 
-coercions RType 2;
+coercions RType 3;
 
 NamedFuncArg.   FuncArg ::= VarIdent ":" RType;
+UnNamedFuncArg. FuncArg ::= "_" ":" RType;
 
 -- predicates
-PVar.               Pred4 ::= VarIdent;
-PBool.              Pred4 ::= ConstBool ;
-PInt.               Pred4 ::= Integer ;
-PEq.                Pred1 ::= Pred1 "==" Pred2 ;
-PLessThan.          Pred2 ::= Pred2 "<" Pred3 ;
-PLessOrEqThan.      Pred2 ::= Pred2 "<=" Pred3 ;
-PGreaterThan.       Pred2 ::= Pred2 ">" Pred3 ;
-PGreaterOrEqThan.   Pred2 ::= Pred2 ">=" Pred3 ;
-PPlus.              Pred3 ::= Pred3 "+" Pred4 ;
-PMinus.             Pred3 ::= Pred3 "-" Pred4 ;
-PMultiply.          Pred3 ::= Pred3 "*" Pred4 ;
+PVar.               Pred6 ::= VarIdent;
+PBool.              Pred6 ::= ConstBool ;
+PInt.               Pred6 ::= Integer ;
+POr.                Pred1 ::= Pred1 "||" Pred2;
+PAnd.               Pred2 ::= Pred2 "&&" Pred3;
+PEq.                Pred3 ::= Pred3 "==" Pred4 ;
+PLessThan.          Pred4 ::= Pred4 "<" Pred5 ;
+PLessOrEqThan.      Pred4 ::= Pred4 "<=" Pred5 ;
+PGreaterThan.       Pred4 ::= Pred4 ">" Pred5 ;
+PGreaterOrEqThan.   Pred4 ::= Pred4 ">=" Pred5 ;
+PPlus.              Pred5 ::= Pred5 "+" Pred6 ;
+PMinus.             Pred5 ::= Pred5 "-" Pred6 ;
+PMultiply.          Pred5 ::= Pred5 "*" Pred6 ;
 
-coercions Pred 4 ;
-
-PatternVar. Pattern ::= VarIdent ;
-
+coercions Pred 6 ;
 
 BaseTypeInt.  BaseType ::= "int" ;
 BaseTypeBool.  BaseType ::= "bool" ;
 
--- FunArgName. FunArgName ::= VarIdent;
--- separator nonempty FunArgsName "," ;
--- ArgList. ArgList ::= Term ;
--- separator nonempty ArgList "," ;
+FunArgName. FunArgName ::= VarIdent;
+separator nonempty FunArgName "," ;
 
 FuncAppArgBool. FuncAppArg ::= ConstBool;
 FuncAppArgInt. FuncAppArg ::= Integer;
 FuncAppArgVar. FuncAppArg ::= VarIdent;
+separator nonempty FuncAppArg "," ;
