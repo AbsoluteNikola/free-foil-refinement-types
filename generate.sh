@@ -9,7 +9,7 @@ bnfc --haskell -d -p Language.Sprite.Syntax --generic -o src/ grammar/Sprite/Inn
 echo "use alex and happy for front"
 cd src/Language/Sprite/Syntax/Front
 alex Lex.x
-happy --ghc --info=syntax.info Par.y
+happy --ghc  Par.y
 
 
 echo "use alex and happy for inner"

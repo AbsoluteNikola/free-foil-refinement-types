@@ -368,13 +368,10 @@ synths scope env currentTerm = case currentTerm of
   -}
   F.Var varId -> withRule "[Syn-Var]" $ do
     let
-      typ = lookupEnv env varId
-    typExtended <- extendTypeToCurrentScope scope typ
-    let
-      typWithSelf = singletonT varId typExtended
+      typ = LR.lookupEnvWithStrengthening scope env varId
     debugPrintT $ "lookup: " <> showT currentTerm
-    debugPrintT $ "typ: " <> showT typWithSelf
-    pure (LR.cTrue, typWithSelf)
+    debugPrintT $ "typ: " <> showT typ
+    pure (LR.cTrue, typ)
 
   Constructor conName -> withRule "[Syn-Constructor]" $ do
     typ <- lookupConstructor conName

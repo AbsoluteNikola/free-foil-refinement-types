@@ -18,6 +18,7 @@ import Data.Bitraversable (Bitraversable)
 import Language.Refinements.TypeSignature (typeToSort)
 import Data.Maybe (mapMaybe, fromMaybe)
 import qualified Data.Text as Text
+import Debug.Trace (trace, traceShowId)
 
 -- Env
 
@@ -34,6 +35,16 @@ withExtendedEnv :: (Foil.DExt i o, Foil.CoSinkable binder) => Env sig binder i -
 withExtendedEnv env binder typ action = do
   let env' = NonEmptyEnv env binder typ
   action env'
+
+lookupEnvWithStrengthening ::
+  (Foil.Distinct o, Bifunctor sig, IsType sig binder, Foil.CoSinkable binder) =>
+  Foil.Scope o ->
+  Env sig binder o ->
+  Foil.Name o ->
+  Foil.AST binder sig o
+lookupEnvWithStrengthening scope env name = singletonT name $ Foil.refreshAST scope resTyp
+  where
+    resTyp = lookupEnv env name
 
 lookupEnv :: (Bifunctor sig, IsType sig binder) => Env sig binder o -> Foil.Name o -> Foil.AST binder sig o
 lookupEnv env varId = case env of
@@ -113,7 +124,7 @@ cAnd = CAnd
 
 -- Working with types and predicates
 data WithPred sig binder (i :: Foil.S) where
-  WithPred :: (IsPred sig binder, Foil.DExt i o) => Foil.NameBinder i o -> Foil.AST binder sig o -> WithPred sig binder i
+  WithPred :: (IsPred sig binder, Foil.DExt i o, Show (Foil.AST binder sig o)) => Foil.NameBinder i o -> Foil.AST binder sig o -> WithPred sig binder i
 
 class IsType sig binder where
   withPred ::
@@ -135,16 +146,17 @@ singletonT varName typ = snd $ withPred typ $ \(WithPred pNameBinder p) ->
   case (Foil.assertDistinct pNameBinder, Foil.assertExt pNameBinder) of
     (Foil.Distinct, Foil.Ext) ->
       let
-        newPred =
-          WithPred pNameBinder
-          ( mkAnd
+        msg = "VarName: " <> show varName
+          <> " Binder: " <> show (Foil.nameOf pNameBinder)
+          <> " Old pattern" <> show p
+          <> " New pattern" <> show newPred <> "\n"
+        newPred = mkAnd
             p
             ( mkEq
-              (Foil.Var $ Foil.sink varName)
+              (Foil.Var $ Foil.sink $ varName)
               (Foil.Var $ Foil.nameOf pNameBinder)
             )
-          )
-      in ((), newPred)
+      in ((), trace msg $  WithPred pNameBinder newPred)
 
 freshTypeWithPredicate ::
   (Bitraversable sig, Foil.Distinct n, IsType sig binder) =>
