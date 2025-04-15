@@ -8,14 +8,12 @@ import Control.Monad.Free.Foil qualified as F
 import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import Language.Sprite.TypeCheck.Monad
 import Control.Monad.Error.Class (MonadError(throwError))
-import Data.Maybe (catMaybes)
-import Language.Sprite.TypeCheck.Constraints (sortPred, getTypeSort)
 import Data.Traversable (for)
 import Data.Biapplicative (bimap)
-import qualified Language.Fixpoint.Types.Sorts as FTS
 import Data.Bifoldable (bifoldr)
 import Language.Refinements.Constraint (withExtendedEnv)
-import Language.Refinements.Constraint (envToList)
+import Control.Monad.State (MonadState (state))
+import qualified Language.Refinements.Constraint as LR
 
 constIntT :: Integer -> Term F.VoidS
 constIntT x = F.withFreshBinder F.emptyScope $
@@ -61,33 +59,6 @@ mkPredicatesInTypeUnknown scope typ = do
       "mkPredicatesInTypeUnknown should be called only on type, not term\n"
       <> showT typ
 
-
-{- |  see 4.3.2 Synthesis and figure 4.3
-
-G(x) = b[v|p] -> b[v|p && v = x]
--}
-singletonT ::
-  (F.Distinct i) =>
-  -- | var name
-  F.Name i ->
-  -- | var type
-  Term i ->
-  --  | type with singleton Type Strengthening
-  Term i
-singletonT varName typ = case typ of
-  TypeRefined base (PatternVar typVar) predicate ->
-    case (F.assertDistinct typVar, F.assertExt typVar) of
-      (F.Distinct, F.Ext) -> TypeRefined base (PatternVar typVar)
-        (OpExpr predicate Inner.AndOp
-          (OpExpr (F.Var (F.sink varName)) Inner.EqOp (F.Var (F.nameOf typVar))))
-  TypeData typeName typeArgs (PatternVar typVar) predicate ->
-    case (F.assertDistinct typVar, F.assertExt typVar) of
-      (F.Distinct, F.Ext) -> TypeData typeName typeArgs (PatternVar typVar)
-        (OpExpr predicate Inner.AndOp
-          (OpExpr (F.Var (F.sink varName)) Inner.EqOp (F.Var (F.nameOf typVar))))
-  _ -> typ
-
-
 {- See 5.4, Figure 5.4, page 34 -}
 fresh ::F.Distinct i => F.Scope i -> Env i -> Term i -> CheckerM (Term i)
 fresh scope env curType = case curType of
@@ -97,39 +68,26 @@ fresh scope env curType = case curType of
     v = fresh binder
     ...x = arguments from env
   -}
-  TypeRefined base pat@(PatternVar patVar) refPred -> do
-    namesAndSorts <- envSorts scope env
-    typeSort <-  case getTypeSort curType of
-      Right sort -> pure sort
-      Left err -> throwError err
-    case (F.assertDistinct pat, F.assertExt pat) of
-      (F.Distinct, F.Ext) -> do
-        refPred' <- case refPred of
-          Unknown -> mkHornVarPred patVar typeSort namesAndSorts
-          _ -> pure refPred
-        pure $
-          TypeRefined
-            base
-            (PatternVar patVar) -- v
-            refPred'
+  TypeRefined{} ->
+    state $ \(s :: CheckerState) ->
+      let (freshedTyp, refinementCheckState') = LR.freshTypeWithPredicate s.refinementCheckState env curType
+      in  ( freshedTyp
+          , s{refinementCheckState = refinementCheckState'})
 
-  TypeData typName typArgs pat@(PatternVar patVar) refPred -> do
-    namesAndSorts <- envSorts scope env
-    typeSort <-  case getTypeSort curType of
-      Right sort -> pure sort
-      Left err -> throwError err
+  TypeData typName typArgs pat refPred -> do
     typArgs' <- for typArgs (fresh scope env)
-    case (F.assertDistinct pat, F.assertExt pat) of
-      (F.Distinct, F.Ext) -> do
-        refPred' <- case refPred of
-          Unknown -> mkHornVarPred patVar typeSort namesAndSorts
-          _ -> pure refPred
-        pure $
-          TypeData
-            typName
-            typArgs'
-            (PatternVar patVar) -- v
-            refPred'
+    state $ \(s :: CheckerState) ->
+      let
+        (freshedTyp, refinementCheckState') =
+          LR.freshTypeWithPredicate s.refinementCheckState env $
+            TypeData
+              typName
+              typArgs'
+              pat -- v
+              refPred
+      in  ( freshedTyp
+          , s{refinementCheckState = refinementCheckState'})
+
 
   {-
   fresh(G, x:s -> t) = x:s' -> t'
@@ -159,30 +117,6 @@ fresh scope env curType = case curType of
 
   otherTerm -> throwError $
     "fresh should be called only on type, not term:\n" <> showT otherTerm
-
-mkHornVarPred ::
-  ( F.DExt i o) =>
-  F.NameBinder i o ->
-  FTS.Sort ->
-  [(F.Name i, FTS.Sort)] ->
-  CheckerM (Term o)
-mkHornVarPred freshBinder typeSort (unzip -> (names, sorts)) = do
-  newHornVarName <- mkFreshHornVar (typeSort : sorts)
-  debugPrintT $ "Horn var name: " <> showT newHornVarName
-  debugPrintT $ "Horn var args: " <> showT names
-  debugPrintT $ "Horn var sorts: " <> showT sorts
-  let
-    hornVarPred = HVar newHornVarName
-      $ F.Var (F.nameOf freshBinder) : (F.Var . F.sink <$> names )
-  pure hornVarPred
-
-envSorts :: F.Distinct i => F.Scope i -> Env i -> CheckerM [(F.Name i, FTS.Sort)]
-envSorts scope env = do
-  namesAndSorts <- for (envToList env) $ \(name, typ) -> do
-    sortPred scope name typ >>= \case
-        Nothing -> pure Nothing
-        Just (sort, _) -> pure $ Just (name, sort)
-  pure $ catMaybes namesAndSorts
 
 containsVar ::
   F.Distinct i =>

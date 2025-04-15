@@ -2,7 +2,6 @@
 {-# HLINT ignore "Use newtype instead of data" #-}
 module Language.Sprite.TypeCheck.Monad where
 import qualified Control.Monad.Foil as F
-import qualified Control.Monad.Foil.Internal as F
 import Data.Text (Text)
 import Control.Monad.Trans.Except (ExceptT)
 import Control.Monad.Trans.Reader (ReaderT)
@@ -16,10 +15,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import Control.Monad.Trans.State (StateT)
 import Control.Monad.State (MonadState, gets, modify)
-import Language.Fixpoint.Horn.Types qualified as H
 import qualified Language.Sprite.Syntax.Inner.Abs as Inner
-import qualified Language.Fixpoint.Types.Sorts as FP
-import qualified Language.Fixpoint.Types as FP
 import qualified Data.Map.Strict as Map
 import qualified Language.Refinements.Constraint as LR
 
@@ -81,20 +77,6 @@ withRule rule action = do
   res <- local (\debugEnv -> debugEnv{offset = debugEnv.offset <> "  "}) action
   liftIO . TIO.putStrLn $ denv.offset <> "  " <> rule <> " done"
   pure res
-
-mkFreshHornVar :: [FP.Sort] -> CheckerM Inner.VarIdent
-mkFreshHornVar sorts = do
-  newIndex <- gets (.refinementCheckState.nextHornVarIndex)
-  let varName = "k" <> show newIndex
-  let hv = H.HVar (FP.symbol varName) sorts "fake"
-  modify $ \s ->
-     s
-     { refinementCheckState = s.refinementCheckState
-       { LR.hornVars = LR.HornVar hv : s.refinementCheckState.hornVars
-       ,   LR.nextHornVarIndex = newIndex + 1
-       }
-     }
-  pure $ Inner.VarIdent varName
 
 -- returns 'tmp76 where tmp76 uniq var id in program
 mkFreshTempTypVar :: CheckerM (Term F.VoidS)

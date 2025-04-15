@@ -44,7 +44,6 @@ library
       Language.Sprite.FreeFoilConfig
       Language.Sprite.Syntax
       Language.Sprite.Syntax.Convert.FrontToInner
-      Language.Sprite.Syntax.Convert.InnerToFTR
       Language.Sprite.Syntax.Convert.QualifierToLR
       Language.Sprite.Syntax.Front.Abs
       Language.Sprite.Syntax.Front.Lex
@@ -85,7 +84,6 @@ library
     , transformers
     , mtl
     , text
-    , liquid-fixpoint
     , free-foil-refinements
 
   default-language: Haskell2010
