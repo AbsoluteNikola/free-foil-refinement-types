@@ -55,10 +55,10 @@ All other symbols are terminals.
   | //Qualifier// | -> | ``/*Q`` //VarIdent// ``(`` //[QualifierArg]// ``)`` ``:`` ``(`` //Pred// ``)`` ``*/``
   | //[Qualifier]// | -> | **eps**
   |  |  **|**  | //Qualifier// //[Qualifier]//
-  | //QualifierArg// | -> | //VarIdent// ``:`` //BaseType//
+  | //QualifierArg// | -> | //VarIdent// ``:`` //RType//
   | //[QualifierArg]// | -> | //QualifierArg//
   |  |  **|**  | //QualifierArg// ``,`` //[QualifierArg]//
-  | //Measure// | -> | ``/*M`` //MeasureIdent// ``:`` //RType// ``*/``
+  | //Measure// | -> | ``/*M`` //VarIdent// ``:`` //RType// ``*/``
   | //[Measure]// | -> | **eps**
   |  |  **|**  | //Measure// //[Measure]//
   | //MeasureIdent// | -> | //VarIdent//

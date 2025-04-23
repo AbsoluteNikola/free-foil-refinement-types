@@ -13,6 +13,8 @@ import qualified Language.Sprite.Syntax.Inner.Abs as Inner
 import Data.Maybe (mapMaybe)
 import Unsafe.Coerce (unsafeCoerce)
 import Data.Traversable (for)
+import Language.Refinements.Constraint (withExtendedEnv)
+import Language.Refinements.Constraint (lookupEnv)
 
 type TempTypeVarUnification i = [(Inner.VarIdent, Term i)]
 

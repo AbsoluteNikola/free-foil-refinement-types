@@ -92,7 +92,7 @@ ListQualifier
 
 QualifierArg :: { Language.Sprite.Syntax.Front.Abs.QualifierArg }
 QualifierArg
-  : VarIdent ':' BaseType { Language.Sprite.Syntax.Front.Abs.QualifierArg $1 $3 }
+  : VarIdent ':' RType { Language.Sprite.Syntax.Front.Abs.QualifierArg $1 $3 }
 
 ListQualifierArg :: { [Language.Sprite.Syntax.Front.Abs.QualifierArg] }
 ListQualifierArg
@@ -101,7 +101,7 @@ ListQualifierArg
 
 Measure :: { Language.Sprite.Syntax.Front.Abs.Measure }
 Measure
-  : '/*M' MeasureIdent ':' RType '*/' { Language.Sprite.Syntax.Front.Abs.Measure $2 $4 }
+  : '/*M' VarIdent ':' RType '*/' { Language.Sprite.Syntax.Front.Abs.Measure $2 $4 }
 
 ListMeasure :: { [Language.Sprite.Syntax.Front.Abs.Measure] }
 ListMeasure

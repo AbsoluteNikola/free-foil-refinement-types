@@ -1,3 +1,6 @@
 free-foil-sprite/src/Language/Sprite/Syntax/**/* linguist-generated=true
 free-foil-sprite/src/Language/Sprite/Syntax/Front/Abs.hs linguist-generated=false
 free-foil-sprite/src/Language/Sprite/Syntax/Inner/Abs.hs linguist-generated=false
+free-foil-sprite/src/Language/Sprite/Syntax/Convert/* linguist-generated=false
+free-foil-refinements/src/Language/Refinements/Predicates/* linguist-generated=true
+free-foil-refinements/src/Language/Refinements/Predicates/Abs.hs linguist-generated=true

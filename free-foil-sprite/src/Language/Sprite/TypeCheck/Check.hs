@@ -20,6 +20,9 @@ import Data.Traversable (for)
 import Data.Bifunctor (bimap)
 import qualified Data.List as List
 import Control.Monad (foldM)
+import Language.Refinements.Constraint (withExtendedEnv, envToList, changeVarTypeInEnv)
+import Language.Refinements.Constraint (lookupEnv)
+import qualified Language.Refinements.Constraint as LR
 
 mkSolverErrorMessage :: Text -> CheckerM Text
 mkSolverErrorMessage baseMsg = do
@@ -27,7 +30,7 @@ mkSolverErrorMessage baseMsg = do
   debugPrintT $ "Set error with id " <> showT errId
   pure $ baseMsg <> "\nError id: " <> showT errId
 
-subtype :: F.Distinct i => F.Scope i -> Term  i -> Term i -> CheckerM Constraint
+subtype :: F.Distinct i => F.Scope i -> Term  i -> Term i -> CheckerM LR.Constraint
 
 {- | [Sub-Base]
   Γ ⊢ ∀ (v : t). p => q[w := v]
@@ -49,8 +52,8 @@ subtype scope lt@(TypeRefined lb leftVarPat@(PatternVar v) _) (TypeRefined rb ri
             scope' = F.extendScopePattern leftVarPat scope
             subst = F.addRename (F.sink F.identitySubst) w (F.nameOf v)
             rightPredicate' = F.substitute scope' subst rightPredicate
-            conclusionPred = CPred (fromTerm rightPredicate') predMsg
-          buildImplicationFromType implMsg scope' leftVarPat (F.sink lt) conclusionPred
+            conclusionPred = LR.cPred rightPredicate' predMsg
+          pure $ LR.сImplicationFromType  scope (getNameBinderFromPattern leftVarPat) lt conclusionPred implMsg
 
 {- | [Sub-Fun]
 
@@ -84,8 +87,13 @@ subtype scope
       returnTypesSubtypingConstraints <- subtype scope' leftFunRetTypeSubstituted rightFunRetT
       implMsg <- mkSolverErrorMessage $ "Function subtype error: x2:s2 |- t1[x1:=x2] <: t2. Where x2="  <> showT rightFunArgPat
       debugPrintT $ "rightArgPat = " <> showT rightFunArgPat <> ", leftFunRetT' = " <> showT leftFunRetT
-      returnTypesConstraints <- buildImplicationFromType implMsg scope' rightFunArgPat (F.sink rightFunArgT) returnTypesSubtypingConstraints
-      pure $ CAnd [argSubtypingConstrains, returnTypesConstraints]
+      let
+        returnTypesConstraints = LR.сImplicationFromType
+          scope
+          (getNameBinderFromPattern rightFunArgPat)
+          rightFunArgT
+          returnTypesSubtypingConstraints implMsg
+      pure $ LR.cAnd [argSubtypingConstrains, returnTypesConstraints]
 
 {-
 G,v:p |- q[w:=v]     G |- si <: ti
@@ -97,7 +105,7 @@ subtype scope
   (TypeData typeNameR typeArgsR typVarR typPredR)
   | typeNameL == typeNameR
   , length typeArgsL == length typeArgsR = do
-    (CAnd -> argsConstraints) <- traverse (\(s1, s2) -> subtype scope s1 s2) (zip typeArgsL typeArgsR)
+    (LR.cAnd -> argsConstraints) <- traverse (\(s1, s2) -> subtype scope s1 s2) (zip typeArgsL typeArgsR)
     case (F.assertDistinct typVarL, F.assertExt typVarL) of
       (F.Distinct, F.Ext) -> do
         implMsg <- mkSolverErrorMessage $ "type data subtype error: (v::t) => q[w := v]. Where v="
@@ -112,9 +120,9 @@ subtype scope
             (getNameBinderFromPattern typVarR)
             (F.nameOf $ getNameBinderFromPattern typVarL)
           rightPredicate' = F.substitute scope' subst typPredR
-          conclusionPred = CPred (fromTerm rightPredicate') predMsg
-        implPred <- buildImplicationFromType implMsg scope' typVarL (F.sink lt) conclusionPred
-        pure $ CAnd [argsConstraints, implPred]
+          conclusionPred = LR.cPred rightPredicate' predMsg
+        let implPred = LR.сImplicationFromType scope (getNameBinderFromPattern typVarL) lt conclusionPred  implMsg
+        pure $ LR.cAnd [argsConstraints, implPred]
 
 subtype _ lt rt = throwError $
   "can't subtype:\n"
@@ -128,7 +136,7 @@ check :: (F.DExt F.VoidS i) =>
   Term i ->
   -- | type to check with
   Term i ->
-  CheckerM Constraint
+  CheckerM LR.Constraint
 check scope env currentTerm currentType = case currentTerm of
   {- [Chk-Lam]
   G, x:s |- e[y := x] <== t
@@ -150,11 +158,16 @@ check scope env currentTerm currentType = case currentTerm of
                   (F.nameOf typeFunArgIdBinder)
               bodySubstituted = F.substitute scope' bodySubst body
 
-            bodyCheckConstraints :: Constraint <- withExtendedEnv env typeFunArgIdBinder argType $ \env' ->
+            bodyCheckConstraints <- withExtendedEnv env typeFunArgIdBinder argType $ \env' ->
               check scope' env' bodySubstituted returnType
             debugPrintT $ "Arg type: " <> showT argType
             implMsg <- mkSolverErrorMessage "Checking func error"
-            buildImplicationFromType implMsg scope' typeFunArgIdPat (F.sink argType) bodyCheckConstraints
+            pure $ LR.сImplicationFromType
+              scope
+              (getNameBinderFromPattern typeFunArgIdPat)
+              argType
+              bodyCheckConstraints
+              implMsg
       _ -> throwError $ "Function type should be Function, not: " <> pShowT extendedCurrentType
 
   {- [Chk-Let]
@@ -174,10 +187,14 @@ check scope env currentTerm currentType = case currentTerm of
           extendedCurrentType <- extendTypeToCurrentScope scope' (F.sink currentType)
           bodyConstraints <- check scope' env' body extendedCurrentType
           implMsg <- mkSolverErrorMessage "Checking let error"
-          implLetBodyConstraint <-
-            buildImplicationFromType implMsg scope' newVarPat (F.sink newVarType) bodyConstraints
-
-          pure $ CAnd [newVarConstraints, implLetBodyConstraint]
+          let
+            implLetBodyConstraint = LR.сImplicationFromType
+              scope
+              (getNameBinderFromPattern newVarPat)
+              newVarType
+              bodyConstraints
+              implMsg
+          pure $ LR.cAnd [newVarConstraints, implLetBodyConstraint]
 
   {- [Chk-Rec]
     s1 |> t1
@@ -201,15 +218,25 @@ check scope env currentTerm currentType = case currentTerm of
             scope' = F.extendScopePattern newVarPat1 scope
           newVarConstraints <- check scope' env' newVarValue =<< extendTypeToCurrentScope scope' (F.sink freshedNewVarType)
           implBodyMsg <- mkSolverErrorMessage "Chk-Rec: new var"
-          buildImplicationFromType implBodyMsg scope' newVarPat1 (F.sink freshedNewVarType) newVarConstraints
+          pure $ LR.сImplicationFromType
+            scope
+            (getNameBinderFromPattern newVarPat1)
+            freshedNewVarType
+            newVarConstraints
+            implBodyMsg
         -- G, x:t1 |- e2 <== t2
         bodyC <- withExtendedEnv env (getNameBinderFromPattern newVarPat2) freshedNewVarType $ \env' -> do
           let scope' = F.extendScopePattern newVarPat2 scope
           extendedCurrentType <- extendTypeToCurrentScope scope' (F.sink currentType)
           bodyConstraints <- check scope' env' body extendedCurrentType
           implBodyMsg <- mkSolverErrorMessage "Chk-Rec: body"
-          buildImplicationFromType implBodyMsg scope' newVarPat2 (F.sink freshedNewVarType) bodyConstraints
-        pure $ CAnd [newVarC, bodyC]
+          pure $ LR.сImplicationFromType
+            scope
+            (getNameBinderFromPattern newVarPat2)
+            freshedNewVarType
+            bodyConstraints
+            implBodyMsg
+        pure $ LR.cAnd [newVarC, bodyC]
 
   {- [Chk-If]
   y is fresh, need to pass condition value to constraints,
@@ -227,7 +254,7 @@ check scope env currentTerm currentType = case currentTerm of
     elseConstraints <- mkIfBranchCheck Inner.ConstFalse elseTerm
       "type check If error in else branch"
 
-    pure $ CAnd [condCheckConstraints, thenConstraints, elseConstraints]
+    pure $ LR.cAnd [condCheckConstraints, thenConstraints, elseConstraints]
     where
       mkIfBranchCheck condShouldBe brachTerm message = do
         F.withFreshBinder scope $ \freshY ->
@@ -244,7 +271,7 @@ check scope env currentTerm currentType = case currentTerm of
                       (Boolean condShouldBe))
                 extendedCurrentType <- extendTypeToCurrentScope scope' (F.sink currentType)
                 branchCheckConstraints <- check scope' env' (F.refreshAST scope' $ F.sink brachTerm) extendedCurrentType
-                buildImplicationFromType message scope' (PatternVar freshY) (F.sink t) branchCheckConstraints
+                pure $ LR.сImplicationFromType scope freshY (F.sink t) branchCheckConstraints message
   {- [Chk-TLam]
 
   G, a |- e <== t
@@ -303,12 +330,13 @@ check scope env currentTerm currentType = case currentTerm of
             implConstraints <- foldM
               (\c (addedVarName, addedVarType) ->
                 buildImplicationFromType' msg scope' addedVarName addedVarType c
+                -- pure $ LR.сImplicationFromType scope
               )
               caseConstraint
               ((F.sink varName, strengthenVarType) : varsAddedInCasePatternMatch)
             pure implConstraints
       otherTerm -> throwError $ "switch case not CaseAlt: " <> showT otherTerm
-    pure $ CAnd caseConstraints
+    pure $ LR.cAnd caseConstraints
 
 
   {- [Chk-Syn]
@@ -324,14 +352,14 @@ check scope env currentTerm currentType = case currentTerm of
     debugPrintT "left type: " >> debugPrint termType
     debugPrintT "right type: " >> debugPrint extendedCurrentType
     subtypingConstraints <- subtype scope termType extendedCurrentType
-    pure $ CAnd [synthsConstraints, subtypingConstraints]
+    pure $ LR.cAnd [synthsConstraints, subtypingConstraints]
 
 synths ::
   (F.DExt F.VoidS i) =>
   F.Scope i ->
   Env i ->
   Term i ->
-  CheckerM (Constraint, Term i)
+  CheckerM (LR.Constraint, Term i)
 synths scope env currentTerm = case currentTerm of
   {- [Syn-Var]
     G(x) = t
@@ -340,18 +368,15 @@ synths scope env currentTerm = case currentTerm of
   -}
   F.Var varId -> withRule "[Syn-Var]" $ do
     let
-      typ = lookupEnv env varId
-    typExtended <- extendTypeToCurrentScope scope typ
-    let
-      typWithSelf = singletonT varId typExtended
+      typ = LR.lookupEnvWithStrengthening scope env varId
     debugPrintT $ "lookup: " <> showT currentTerm
-    debugPrintT $ "typ: " <> showT typWithSelf
-    pure (cTrue, typWithSelf)
+    debugPrintT $ "typ: " <> showT typ
+    pure (LR.cTrue, typ)
 
   Constructor conName -> withRule "[Syn-Constructor]" $ do
     typ <- lookupConstructor conName
     typExtended <- extendTypeToCurrentScope scope (F.sink typ)
-    pure (cTrue, typExtended)
+    pure (LR.cTrue, typExtended)
 
   {- [Syn-Con]
    -----------------
@@ -360,7 +385,7 @@ synths scope env currentTerm = case currentTerm of
   ConstInt x -> withRule "[Syn-Con]" $ do
     debugPrintT "type: " >> debugPrint (constIntT x)
     extendedConstInt <- extendTypeToCurrentScope scope (F.sink (constIntT x))
-    pure (cTrue, extendedConstInt)
+    pure (LR.cTrue, extendedConstInt)
 
   {- [Syn-App]
    G |- e ==> x:s -> t       G |- y <== s
@@ -381,7 +406,7 @@ synths scope env currentTerm = case currentTerm of
           resultType =
             F.substitutePattern scope F.identitySubst varPattern [argTerm] returnType
         debugPrintT "resultType: " >> debugPrint resultType
-        pure (CAnd [funcConstraints, argConstraints], resultType)
+        pure (LR.cAnd [funcConstraints, argConstraints], resultType)
       _ -> throwError "Application to non function"
 
   {- [Syn-TApp]
@@ -434,9 +459,9 @@ synths scope env currentTerm = case currentTerm of
         substitutedReturnType = F.substitute scope xSubst $
           F.substitute scopeWithX ySubst resType
       debugPrintT "return type" >> debugPrint substitutedReturnType
-      pure (CAnd [leftTermConstraints, rightTermConstraints], substitutedReturnType)
+      pure (LR.cAnd [leftTermConstraints, rightTermConstraints], substitutedReturnType)
   Boolean b -> do
     typ <- extendTypeToCurrentScope scope $ F.sink $ boolWithT b
-    pure (cTrue, typ)
+    pure (LR.cTrue, typ)
 
   _ -> throwError $ "unimplemented case:\n" <> showT currentTerm

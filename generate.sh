@@ -9,11 +9,22 @@ bnfc --haskell -d -p Language.Sprite.Syntax --generic -o src/ grammar/Sprite/Inn
 echo "use alex and happy for front"
 cd src/Language/Sprite/Syntax/Front
 alex Lex.x
-happy --ghc --info=syntax.info Par.y
+happy --ghc  Par.y
 
 
 echo "use alex and happy for inner"
 cd "../Inner"
+alex Lex.x
+happy --ghc Par.y
+
+cd ../../../../../..
+
+cd free-foil-refinements
+
+bnfc --haskell -d -p Language.Refinements --generic -o src/ grammar/Predicates.cf
+
+echo "use alex and happy for predicates"
+cd src/Language/Refinements/Predicates
 alex Lex.x
 happy --ghc Par.y
 
